@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('specialties', function (Blueprint $table) {
             $table->id();
+
+            $table->string('name', 150);
+            $table->string('slug', 150)->unique();
+
+            $table->boolean('active')->default(true);
+
             $table->timestamps();
+
+            $table->index(['active', 'name']);
         });
     }
 

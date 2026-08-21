@@ -13,7 +13,33 @@ return new class extends Migration
     {
         Schema::create('schedule_exceptions', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('tenant_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
+            $table->foreignId('doctor_profile_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->date('date');
+
+            $table->string('type', 20);
+
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
+
+            $table->string('reason', 255)->nullable();
+
             $table->timestamps();
+
+            $table->index([
+                'tenant_id',
+                'doctor_profile_id',
+                'date'
+            ]);
         });
     }
 
