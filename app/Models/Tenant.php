@@ -21,6 +21,8 @@ class Tenant extends Model
         'currency',
         'suspended_at',
         'deletion_due_at',
+        'trial_started_at',
+        'trial_ends_at',
     ];
 
     protected $attributes = [
@@ -35,6 +37,8 @@ class Tenant extends Model
         return [
             'suspended_at' => 'datetime',
             'deletion_due_at' => 'datetime',
+            'trial_started_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
@@ -66,5 +70,19 @@ class Tenant extends Model
     public function patients(): HasMany
     {
         return $this->hasMany(Patient::class);
+    }
+
+    public function isOnTrial(): bool
+    {
+        return $this->status === 'trial'
+            && $this->trial_ends_at
+            && $this->trial_ends_at->isFuture();
+    }
+
+    public function trialHasExpired(): bool
+    {
+        return $this->status === 'trial'
+            && $this->trial_ends_at
+            && $this->trial_ends_at->isPast();
     }
 }
