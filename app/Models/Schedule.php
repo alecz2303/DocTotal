@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Schedule extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'tenant_id',
         'doctor_profile_id',
@@ -28,11 +31,6 @@ class Schedule extends Model
             'buffer_after' => 'integer',
             'active' => 'boolean',
         ];
-    }
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
     }
 
     public function doctorProfile(): BelongsTo

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScheduleException extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'tenant_id',
         'doctor_profile_id',
@@ -22,11 +25,6 @@ class ScheduleException extends Model
         return [
             'date' => 'date',
         ];
-    }
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
     }
 
     public function doctorProfile(): BelongsTo
