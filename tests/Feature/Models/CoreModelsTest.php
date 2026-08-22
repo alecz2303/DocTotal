@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Support\TenantContext;
 
 class CoreModelsTest extends TestCase
 {
@@ -55,6 +56,8 @@ class CoreModelsTest extends TestCase
             'slug' => 'consultorio-test',
         ]);
 
+        app(TenantContext::class)->set($tenant);
+
         $specialty = Specialty::create([
             'name' => 'Medicina General',
             'slug' => 'medicina-general',
@@ -88,6 +91,8 @@ class CoreModelsTest extends TestCase
             'name' => 'Consultorio Test',
             'slug' => 'consultorio-test',
         ]);
+
+        app(TenantContext::class)->set($tenant);
 
         $user = User::create([
             'tenant_id' => $tenant->id,

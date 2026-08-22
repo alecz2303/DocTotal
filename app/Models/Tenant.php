@@ -62,4 +62,9 @@ class Tenant extends Model
     {
         return $this->hasMany(ScheduleException::class);
     }
+
+    public function patients(): HasMany
+    {
+        return $this->hasMany(Patient::class);
+    }
 }
