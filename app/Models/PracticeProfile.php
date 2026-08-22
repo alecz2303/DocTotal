@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PracticeProfile extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'tenant_id',
         'public_name',
@@ -37,8 +40,4 @@ class PracticeProfile extends Model
         ];
     }
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
 }
