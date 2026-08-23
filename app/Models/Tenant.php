@@ -23,6 +23,7 @@ class Tenant extends Model
         'deletion_due_at',
         'trial_started_at',
         'trial_ends_at',
+        'onboarding_completed_at',
     ];
 
     protected $attributes = [
@@ -39,6 +40,7 @@ class Tenant extends Model
             'deletion_due_at' => 'datetime',
             'trial_started_at' => 'datetime',
             'trial_ends_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
         ];
     }
 
@@ -84,5 +86,10 @@ class Tenant extends Model
         return $this->status === 'trial'
             && $this->trial_ends_at
             && $this->trial_ends_at->isPast();
+    }
+
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarding_completed_at !== null;
     }
 }

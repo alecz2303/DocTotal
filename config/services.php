@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'sepomex' => [
+        'base_url' => env(
+            'SEPOMEX_BASE_URL',
+            'https://sepomex.kurenn.dev/api/v1'
+        ),
+    ],
 ];
