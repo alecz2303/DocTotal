@@ -34,8 +34,12 @@
                     Dashboard
                 </a>
 
-                <a href="#"
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <a
+                    href="{{ route('appointments.index') }}"
+                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium
+                        {{ request()->routeIs('appointments.*')
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     Agenda
                 </a>
 
