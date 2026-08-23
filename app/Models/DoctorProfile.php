@@ -56,4 +56,9 @@ class DoctorProfile extends Model
     {
         return $this->hasMany(Prescription::class);
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }
