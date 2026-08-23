@@ -79,6 +79,10 @@ class AuthenticationTest extends TestCase
             'slug' => 'consultorio-test',
         ]);
 
+        $tenant->update([
+            'onboarding_completed_at' => now(),
+        ]);
+
         $user = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Dr. Test',
