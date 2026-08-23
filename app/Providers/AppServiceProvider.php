@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Support\TenantContext;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::addNamespace(
+            'layouts',
+            resource_path('views/components/layouts')
+        );
     }
 }

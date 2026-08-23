@@ -13,7 +13,10 @@ class PracticeProfile extends Model
     protected $fillable = [
         'tenant_id',
         'public_name',
+        'legal_name',
+        'tax_id',
         'description',
+        'logo_path',
         'phone',
         'whatsapp',
         'email',
@@ -28,6 +31,7 @@ class PracticeProfile extends Model
         'longitude',
         'website_enabled',
         'booking_enabled',
+        'print_footer',
     ];
 
     protected function casts(): array
@@ -39,5 +43,4 @@ class PracticeProfile extends Model
             'booking_enabled' => 'boolean',
         ];
     }
-
 }
