@@ -50,8 +50,23 @@ class Patient extends Model
         return $this->hasMany(PatientEmergencyContact::class);
     }
 
+    public function consultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
     public function medicalHistory(): HasOne
     {
         return $this->hasOne(PatientMedicalHistory::class);
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class);
     }
 }

@@ -42,8 +42,18 @@ class DoctorProfile extends Model
         return $this->hasMany(Schedule::class);
     }
 
+    public function consultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
     public function scheduleExceptions(): HasMany
     {
         return $this->hasMany(ScheduleException::class);
+    }
+
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class);
     }
 }

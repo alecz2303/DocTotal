@@ -39,18 +39,30 @@
                     Agenda
                 </a>
 
-                <a href="#"
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <a
+                    href="{{ route('patients.index') }}"
+                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium
+                        {{ request()->routeIs('patients.*')
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     Pacientes
                 </a>
 
-                <a href="#"
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <a
+                    href="{{ route('consultations.index') }}"
+                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium
+                        {{ request()->routeIs('consultations.*')
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     Consultas
                 </a>
 
-                <a href="#"
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <a
+                    href="{{ route('prescriptions.index') }}"
+                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium
+                        {{ request()->routeIs('prescriptions.*')
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     Recetas
                 </a>
 
@@ -63,8 +75,12 @@
 
             <div class="border-t border-slate-200 p-4">
 
-                <a href="#"
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+                <a
+                    href="{{ route('settings.profile') }}"
+                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium
+                        {{ request()->routeIs('settings.*')
+                            ? 'bg-slate-900 text-white'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     Configuración
                 </a>
 
