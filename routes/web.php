@@ -377,5 +377,15 @@ Route::middleware('auth')->group(function () {
             '/appointments/{uuid}',
             'pages::appointments.show'
         )->name('appointments.show');
+
+        Route::livewire(
+            '/appointments/{uuid}/edit',
+            'pages::appointments.edit'
+        )->name('appointments.edit');
+
+        Route::livewire(
+            '/appointments/{uuid}/reschedule',
+            'pages::appointments.reschedule'
+        )->name('appointments.reschedule');
     });
 });

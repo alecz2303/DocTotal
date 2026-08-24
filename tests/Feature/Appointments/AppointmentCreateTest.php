@@ -252,6 +252,12 @@ class AppointmentCreateTest extends TestCase
 
     public function test_available_slots_are_displayed_from_doctor_schedule(): void
     {
+        $this->travelTo(
+            \Illuminate\Support\Carbon::parse(
+                '2026-08-23 08:00:00'
+            )
+        );
+
         [
             $tenant,
             $user,
