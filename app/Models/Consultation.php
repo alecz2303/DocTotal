@@ -5,20 +5,20 @@ namespace App\Models;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Consultation extends Model
 {
-    use BelongsToTenant;
-    use SoftDeletes;
+    use BelongsToTenant, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
         'uuid',
         'patient_id',
         'doctor_profile_id',
+        'appointment_id',
         'consultation_at',
         'reason',
         'subjective',
@@ -68,6 +68,11 @@ class Consultation extends Model
     public function doctorProfile(): BelongsTo
     {
         return $this->belongsTo(DoctorProfile::class);
+    }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     public function diagnoses(): HasMany

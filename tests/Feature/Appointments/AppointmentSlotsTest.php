@@ -19,6 +19,17 @@ class AppointmentSlotsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->travelTo(
+            \Illuminate\Support\Carbon::parse(
+                '2026-08-23 08:00:00'
+            )
+        );
+    }
+
     public function test_slots_are_generated_from_regular_schedule(): void
     {
         [
@@ -503,5 +514,48 @@ class AppointmentSlotsTest extends TestCase
             'ends_at' => $endsAt,
             'status' => 'scheduled',
         ]);
+    }
+
+    public function test_past_slots_are_not_returned_for_today(): void
+    {
+        $this->travelTo(
+            \Illuminate\Support\Carbon::parse(
+                '2026-08-24 10:15:00'
+            )
+        );
+
+        [
+            $tenant,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(\App\Support\TenantContext::class)
+            ->set($tenant);
+
+        $this->createSchedule(
+            $doctor,
+            dayOfWeek: 1,
+            startTime: '09:00',
+            endTime: '12:00',
+            duration: 30
+        );
+
+        $slots = $this->service()
+            ->slotsForDate(
+                $doctor,
+                '2026-08-24'
+            );
+
+        $this->assertSame(
+            [
+                '10:30',
+                '11:00',
+                '11:30',
+            ],
+            $slots
+                ->map(fn($slot) => $slot->format('H:i'))
+                ->all()
+        );
     }
 }

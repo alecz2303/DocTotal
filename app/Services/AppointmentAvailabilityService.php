@@ -309,6 +309,7 @@ class AppointmentAvailabilityService
         DoctorProfile $doctor,
         CarbonInterface|string $date,
         ?int $durationMinutes = null,
+        ?Appointment $ignoreAppointment = null,
     ): Collection {
         $date = $date instanceof CarbonInterface
             ? Carbon::instance($date)->startOfDay()
@@ -356,7 +357,8 @@ class AppointmentAvailabilityService
                     $this->isAvailable(
                         $doctor,
                         $cursor,
-                        $duration
+                        $duration,
+                        $ignoreAppointment
                     )
                 ) {
                     $slots->push(
@@ -406,7 +408,8 @@ class AppointmentAvailabilityService
                     $this->isAvailable(
                         $doctor,
                         $cursor,
-                        $duration
+                        $duration,
+                        $ignoreAppointment
                     )
                 ) {
                     $slots->push(
@@ -426,6 +429,12 @@ class AppointmentAvailabilityService
             ->sortBy(
                 fn(Carbon $slot) =>
                 $slot->timestamp
+            )
+            ->filter(
+                fn(Carbon $slot) =>
+                $slot->greaterThan(
+                    now()->addMinutes(5)
+                )
             )
             ->values();
     }
