@@ -8,10 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use LogicException;
 
 class Consultation extends Model
 {
     use BelongsToTenant, SoftDeletes;
+
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
         'tenant_id',
@@ -34,12 +38,15 @@ class Consultation extends Model
         'temperature_c',
         'oxygen_saturation',
         'status',
+        'completed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'consultation_at' => 'datetime',
+            'completed_at' => 'datetime',
+
             'weight_kg' => 'decimal:2',
             'height_cm' => 'decimal:2',
             'temperature_c' => 'decimal:1',
@@ -51,6 +58,10 @@ class Consultation extends Model
         static::creating(function (Consultation $consultation): void {
             if (! $consultation->uuid) {
                 $consultation->uuid = (string) Str::uuid();
+            }
+
+            if (! $consultation->status) {
+                $consultation->status = self::STATUS_DRAFT;
             }
         });
     }
@@ -77,11 +88,52 @@ class Consultation extends Model
 
     public function diagnoses(): HasMany
     {
-        return $this->hasMany(ConsultationDiagnosis::class);
+        return $this->hasMany(
+            ConsultationDiagnosis::class
+        );
     }
 
     public function prescriptions(): HasMany
     {
-        return $this->hasMany(Prescription::class);
+        return $this->hasMany(
+            Prescription::class
+        );
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_DRAFT;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === self::STATUS_COMPLETED;
+    }
+
+    public function canEdit(): bool
+    {
+        return $this->isDraft();
+    }
+
+    public function canComplete(): bool
+    {
+        return $this->isDraft();
+    }
+
+    public function complete(): void
+    {
+        if (! $this->canComplete()) {
+            throw new LogicException(
+                sprintf(
+                    'La consulta no puede finalizarse desde el estado "%s".',
+                    $this->status
+                )
+            );
+        }
+
+        $this->update([
+            'status' => self::STATUS_COMPLETED,
+            'completed_at' => now(),
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Consultations;
 
+use App\Models\Appointment;
 use App\Models\Consultation;
 use App\Models\DoctorProfile;
 use App\Models\Patient;
@@ -27,7 +28,9 @@ class ConsultationIndexTest extends TestCase
             ->get(route('consultations.index'))
             ->assertOk()
             ->assertSee('Consultas')
-            ->assertSee('Historial general de consultas médicas.');
+            ->assertSee(
+                'Consulta y continúa la atención médica de tus pacientes.'
+            );
     }
 
     public function test_index_displays_consultations(): void
@@ -311,34 +314,37 @@ class ConsultationIndexTest extends TestCase
 
         $patient = $this->createPatient();
 
-        $completed = $this->createConsultation(
+        $this->createConsultation(
             $doctor,
             $patient,
             '2026-08-23 10:00:00',
             'Consulta completada'
         );
 
-        $cancelled = $this->createConsultation(
-            $doctor,
-            $patient,
-            '2026-08-23 11:00:00',
-            'Consulta cancelada'
-        );
-
-        $cancelled->update([
-            'status' => 'cancelled',
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-23 11:00:00',
+            'reason' => 'Consulta en progreso',
+            'status' => Consultation::STATUS_DRAFT,
         ]);
 
         Livewire::actingAs($user)
             ->test('pages::consultations.index')
-            ->set('status', 'completed')
+            ->set(
+                'status',
+                Consultation::STATUS_COMPLETED
+            )
             ->assertSee('Consulta completada')
-            ->assertDontSee('Consulta cancelada');
+            ->assertDontSee('Consulta en progreso');
 
         Livewire::actingAs($user)
             ->test('pages::consultations.index')
-            ->set('status', 'cancelled')
-            ->assertSee('Consulta cancelada')
+            ->set(
+                'status',
+                Consultation::STATUS_DRAFT
+            )
+            ->assertSee('Consulta en progreso')
             ->assertDontSee('Consulta completada');
     }
 
@@ -364,22 +370,19 @@ class ConsultationIndexTest extends TestCase
             'García'
         );
 
-        $matching = $this->createConsultation(
+        $this->createConsultation(
             $doctor,
             $alejandro,
             '2026-08-15 10:00:00',
             'Debe aparecer'
         );
 
-        $cancelled = $this->createConsultation(
-            $doctor,
-            $alejandro,
-            '2026-08-16 10:00:00',
-            'Estado incorrecto'
-        );
-
-        $cancelled->update([
-            'status' => 'cancelled',
+        Consultation::create([
+            'patient_id' => $alejandro->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-16 10:00:00',
+            'reason' => 'Estado incorrecto',
+            'status' => Consultation::STATUS_DRAFT,
         ]);
 
         $this->createConsultation(
@@ -401,7 +404,10 @@ class ConsultationIndexTest extends TestCase
             ->set('search', 'Alejandro')
             ->set('dateFrom', '2026-08-01')
             ->set('dateTo', '2026-08-31')
-            ->set('status', 'completed')
+            ->set(
+                'status',
+                Consultation::STATUS_COMPLETED
+            )
             ->assertSee('Debe aparecer')
             ->assertDontSee('Estado incorrecto')
             ->assertDontSee('Fecha incorrecta')
@@ -532,6 +538,216 @@ class ConsultationIndexTest extends TestCase
             ->test('pages::consultations.index')
             ->assertSee('Consulta Tenant A')
             ->assertDontSee('Consulta Tenant B');
+    }
+
+    public function test_index_displays_draft_consultation_as_in_progress(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = $this->createPatient();
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-25 09:00:00',
+            'reason' => 'Consulta pendiente',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.index')
+            ->assertSee('Consulta pendiente')
+            ->assertSee('En progreso')
+            ->assertSee('Continuar consulta')
+            ->assertDontSee('Draft');
+    }
+
+    public function test_index_direct_draft_has_link_to_continue_consultation(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = $this->createPatient();
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-25 09:00:00',
+            'reason' => 'Consulta directa pendiente',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $continueUrl = route(
+            'consultations.create',
+            [
+                'uuid' => $patient->uuid,
+            ]
+        );
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.index')
+            ->assertSee('Consulta directa pendiente')
+            ->assertSee('Consulta directa')
+            ->assertSee('Continuar consulta')
+            ->assertSee(
+                $continueUrl,
+                false
+            );
+    }
+
+    public function test_index_appointment_draft_has_link_to_continue_with_appointment_uuid(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = $this->createPatient();
+
+        $appointment = Appointment::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'starts_at' => '2026-08-25 10:00:00',
+            'ends_at' => '2026-08-25 10:30:00',
+            'status' => Appointment::STATUS_IN_PROGRESS,
+            'reason' => 'Consulta desde cita',
+            'started_at' => '2026-08-25 10:00:00',
+        ]);
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'appointment_id' => $appointment->id,
+            'consultation_at' => '2026-08-25 10:00:00',
+            'reason' => 'Consulta desde cita',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $continueUrl = route(
+            'consultations.create',
+            [
+                'uuid' => $patient->uuid,
+                'appointment' => $appointment->uuid,
+            ]
+        );
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.index')
+            ->assertSee('Consulta desde cita')
+            ->assertSee('Desde cita')
+            ->assertSee('Continuar consulta')
+            ->assertSee('Ver cita')
+            ->assertSee(
+                $continueUrl,
+                false
+            )
+            ->assertSee(
+                route(
+                    'appointments.show',
+                    [
+                        'uuid' => $appointment->uuid,
+                    ]
+                ),
+                false
+            );
+    }
+
+    public function test_status_filter_can_be_loaded_from_query_string(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = $this->createPatient();
+
+        $this->createConsultation(
+            $doctor,
+            $patient,
+            '2026-08-25 09:00:00',
+            'Consulta completada'
+        );
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-25 10:00:00',
+            'reason' => 'Consulta pendiente',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route(
+                    'consultations.index',
+                    [
+                        'status' =>
+                        Consultation::STATUS_DRAFT,
+                    ]
+                )
+            )
+            ->assertOk()
+            ->assertSee('Consulta pendiente')
+            ->assertDontSee('Consulta completada');
+    }
+
+    public function test_completed_status_filter_can_be_loaded_from_query_string(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = $this->createPatient();
+
+        $this->createConsultation(
+            $doctor,
+            $patient,
+            '2026-08-25 09:00:00',
+            'Consulta completada'
+        );
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => '2026-08-25 10:00:00',
+            'reason' => 'Consulta pendiente',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route(
+                    'consultations.index',
+                    [
+                        'status' =>
+                        Consultation::STATUS_COMPLETED,
+                    ]
+                )
+            )
+            ->assertOk()
+            ->assertSee('Consulta completada')
+            ->assertDontSee('Consulta pendiente');
     }
 
     private function createContext(

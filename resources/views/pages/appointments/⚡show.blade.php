@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Appointment;
+use App\Models\Consultation;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -52,6 +53,20 @@ new
         public function startAppointment(): void
         {
             $this->appointment->start();
+
+            $consultation = Consultation::query()
+                ->firstOrCreate(
+                    [
+                        'appointment_id' => $this->appointment->id,
+                    ],
+                    [
+                        'patient_id' => $this->appointment->patient_id,
+                        'doctor_profile_id' => $this->appointment->doctor_profile_id,
+                        'consultation_at' => now(),
+                        'reason' => $this->appointment->reason,
+                        'status' => Consultation::STATUS_DRAFT,
+                    ]
+                );
 
             $this->redirectRoute(
                 'consultations.create',
@@ -149,11 +164,24 @@ new
         {
             $this->appointment->loadMissing('consultation');
 
-            if ($this->appointment->consultation) {
+            $consultation = $this->appointment->consultation;
+
+            if (! $consultation) {
+                $consultation = Consultation::create([
+                    'patient_id' => $this->appointment->patient_id,
+                    'doctor_profile_id' => $this->appointment->doctor_profile_id,
+                    'appointment_id' => $this->appointment->id,
+                    'consultation_at' => now(),
+                    'reason' => $this->appointment->reason,
+                    'status' => Consultation::STATUS_DRAFT,
+                ]);
+            }
+
+            if ($consultation->isCompleted()) {
                 $this->redirectRoute(
                     'consultations.show',
                     [
-                        'uuid' => $this->appointment->consultation->uuid,
+                        'uuid' => $consultation->uuid,
                     ]
                 );
 

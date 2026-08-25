@@ -32,6 +32,10 @@ new
                 ->where('uuid', $uuid)
                 ->firstOrFail();
 
+            if (! $this->consultation->isCompleted()) {
+                abort(404);
+            }
+
             $this->prescribed_at = now()
                 ->format('Y-m-d\TH:i');
 

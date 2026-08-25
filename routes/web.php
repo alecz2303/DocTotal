@@ -92,14 +92,32 @@ Route::middleware('auth')->group(function () {
             |--------------------------------------------------------------------------
             */
 
-            $consultationsTodayCount = \App\Models\Consultation::query()
+            $completedConsultationsTodayCount =
+                \App\Models\Consultation::query()
                 ->whereDate(
                     'consultation_at',
                     $today->toDateString()
                 )
+                ->where(
+                    'status',
+                    \App\Models\Consultation::STATUS_COMPLETED
+                )
                 ->count();
 
-            $prescriptionsTodayCount = \App\Models\Prescription::query()
+            $draftConsultationsTodayCount =
+                \App\Models\Consultation::query()
+                ->whereDate(
+                    'consultation_at',
+                    $today->toDateString()
+                )
+                ->where(
+                    'status',
+                    \App\Models\Consultation::STATUS_DRAFT
+                )
+                ->count();
+
+            $prescriptionsTodayCount =
+                \App\Models\Prescription::query()
                 ->whereDate(
                     'prescribed_at',
                     $today->toDateString()
@@ -234,7 +252,8 @@ Route::middleware('auth')->group(function () {
                     'completedAppointmentsCount',
                     'patientsCount',
                     'nextAppointment',
-                    'consultationsTodayCount',
+                    'completedConsultationsTodayCount',
+                    'draftConsultationsTodayCount',
                     'prescriptionsTodayCount',
                     'appointmentStatusCounts',
                     'appointmentsNextDays',

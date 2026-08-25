@@ -500,6 +500,8 @@ class MedicationAutocompleteTest extends TestCase
             'patient_id' => $patient->id,
             'doctor_profile_id' => $doctor->id,
             'consultation_at' => now(),
+            'status' => Consultation::STATUS_COMPLETED,
+            'completed_at' => now(),
         ]);
 
         return [
