@@ -462,6 +462,127 @@ class ConsultationDiagnosisFlowTest extends TestCase
             ->assertNotFound();
     }
 
+
+    public function test_diagnosis_can_be_created_from_consultation_create_while_draft(): void
+    {
+        [$tenant, $user, $consultation] = $this->createConsultationContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.create', [
+                'uuid' => $consultation->patient->uuid,
+            ])
+            ->call('openDiagnosisModal')
+            ->set('diagnosis_code', 'R51.9')
+            ->set('diagnosis_description', 'Cefalea no especificada')
+            ->set('diagnosis_is_primary', true)
+            ->call('saveDiagnosis')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('consultation_diagnoses', [
+            'consultation_id' => $consultation->id,
+            'code' => 'R51.9',
+            'description' => 'Cefalea no especificada',
+            'is_primary' => true,
+        ]);
+
+        $consultation->refresh();
+
+        $this->assertSame(
+            Consultation::STATUS_DRAFT,
+            $consultation->status
+        );
+    }
+
+    public function test_completed_consultation_rejects_diagnosis_creation(): void
+    {
+        [$tenant, $user, $consultation] =
+            $this->createConsultationContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation->complete();
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.show', [
+                'uuid' => $consultation->uuid,
+            ])
+            ->call('openDiagnosisModal')
+            ->assertStatus(403);
+
+        $this->assertDatabaseCount(
+            'consultation_diagnoses',
+            0
+        );
+    }
+
+    public function test_completed_consultation_rejects_diagnosis_editing(): void
+    {
+        [$tenant, $user, $consultation] =
+            $this->createConsultationContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $diagnosis = ConsultationDiagnosis::create([
+            'consultation_id' => $consultation->id,
+            'code' => 'R42',
+            'description' => 'Mareo',
+            'is_primary' => true,
+        ]);
+
+        $consultation->complete();
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.show', [
+                'uuid' => $consultation->uuid,
+            ])
+            ->call(
+                'editDiagnosis',
+                $diagnosis->id
+            )
+            ->assertStatus(403);
+
+        $diagnosis->refresh();
+
+        $this->assertSame(
+            'Mareo',
+            $diagnosis->description
+        );
+    }
+
+    public function test_completed_consultation_rejects_diagnosis_deletion(): void
+    {
+        [$tenant, $user, $consultation] =
+            $this->createConsultationContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $diagnosis = ConsultationDiagnosis::create([
+            'consultation_id' => $consultation->id,
+            'description' => 'Diagnóstico protegido',
+        ]);
+
+        $consultation->complete();
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.show', [
+                'uuid' => $consultation->uuid,
+            ])
+            ->call(
+                'deleteDiagnosis',
+                $diagnosis->id
+            )
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas(
+            'consultation_diagnoses',
+            [
+                'id' => $diagnosis->id,
+            ]
+        );
+    }
+
     private function createConsultationContext(
         string $tenantName = 'Consultorio Test',
         string $tenantSlug = 'consultorio-test',

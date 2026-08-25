@@ -216,7 +216,7 @@ class AppointmentShowTest extends TestCase
             'appointment_id' => $appointment->id,
             'consultation_at' => now(),
             'reason' => 'Consulta asociada',
-            'status' => 'completed',
+            'status' => Consultation::STATUS_COMPLETED,
         ]);
 
         Livewire::actingAs($user)
@@ -237,7 +237,7 @@ class AppointmentShowTest extends TestCase
             );
     }
 
-    public function test_consultation_form_precloads_appointment_reason(): void
+    public function test_consultation_form_preloads_appointment_reason(): void
     {
         [
             $tenant,
@@ -275,7 +275,7 @@ class AppointmentShowTest extends TestCase
             );
     }
 
-    public function test_saving_consultation_links_it_to_appointment_and_completes_appointment(): void
+    public function test_completing_consultation_links_it_to_appointment_and_completes_appointment(): void
     {
         $this->travelTo(
             Carbon::parse('2026-08-24 10:10:00')
@@ -315,10 +315,14 @@ class AppointmentShowTest extends TestCase
                 'subjective',
                 'Dolor desde ayer'
             )
-            ->call('saveConsultation')
+            ->call('completeConsultation')
             ->assertHasNoErrors();
 
         $consultation = Consultation::query()
+            ->where(
+                'appointment_id',
+                $appointment->id
+            )
             ->firstOrFail();
 
         $appointment->refresh();
@@ -326,6 +330,15 @@ class AppointmentShowTest extends TestCase
         $this->assertSame(
             $appointment->id,
             $consultation->appointment_id
+        );
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
+        );
+
+        $this->assertNotNull(
+            $consultation->completed_at
         );
 
         $this->assertSame(

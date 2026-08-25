@@ -458,6 +458,58 @@ class PrescriptionFlowTest extends TestCase
         );
     }
 
+    public function test_user_cannot_create_prescription_from_draft_consultation(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $draftConsultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route('prescriptions.create', [
+                    'uuid' => $draftConsultation->uuid,
+                ])
+            )
+            ->assertNotFound();
+
+        $this->assertDatabaseCount(
+            'prescriptions',
+            0
+        );
+    }
+
+    public function test_user_can_open_prescription_form_from_completed_consultation(): void
+    {
+        [
+            $tenant,
+            $user,,,
+            $consultation,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $this->actingAs($user)
+            ->get(
+                route('prescriptions.create', [
+                    'uuid' => $consultation->uuid,
+                ])
+            )
+            ->assertOk()
+            ->assertSee('Nueva receta');
+    }
+
     private function createContext(
         string $tenantName = 'Consultorio Test',
         string $tenantSlug = 'consultorio-test',
@@ -486,6 +538,8 @@ class PrescriptionFlowTest extends TestCase
             'patient_id' => $patient->id,
             'doctor_profile_id' => $doctor->id,
             'consultation_at' => now(),
+            'status' => Consultation::STATUS_COMPLETED,
+            'completed_at' => now(),
         ]);
 
         return [

@@ -38,6 +38,10 @@ new
 
         public function openDiagnosisModal(): void
         {
+            if (! $this->consultation->canEdit()) {
+                abort(403);
+            }
+
             $this->editingDiagnosisId = null;
 
             $this->resetDiagnosisForm();
@@ -48,18 +52,32 @@ new
 
         public function editDiagnosis(int $diagnosisId): void
         {
+            if (! $this->consultation->canEdit()) {
+                abort(403);
+            }
+
             $diagnosis = ConsultationDiagnosis::query()
-                ->where('consultation_id', $this->consultation->id)
+                ->where(
+                    'consultation_id',
+                    $this->consultation->id
+                )
                 ->findOrFail($diagnosisId);
 
             $this->editingDiagnosisId = $diagnosis->id;
 
             $this->diagnosisSearch = '';
 
-            $this->diagnosis_code = $diagnosis->code ?? '';
-            $this->diagnosis_description = $diagnosis->description;
-            $this->diagnosis_is_primary = $diagnosis->is_primary;
-            $this->diagnosis_notes = $diagnosis->notes ?? '';
+            $this->diagnosis_code =
+                $diagnosis->code ?? '';
+
+            $this->diagnosis_description =
+                $diagnosis->description;
+
+            $this->diagnosis_is_primary =
+                $diagnosis->is_primary;
+
+            $this->diagnosis_notes =
+                $diagnosis->notes ?? '';
 
             $this->resetValidation();
 
@@ -118,11 +136,18 @@ new
 
         public function saveDiagnosis(): void
         {
+            if (! $this->consultation->canEdit()) {
+                abort(403);
+            }
+
             $validated = $this->validateDiagnosis();
 
             if ($validated['diagnosis_is_primary']) {
                 ConsultationDiagnosis::query()
-                    ->where('consultation_id', $this->consultation->id)
+                    ->where(
+                        'consultation_id',
+                        $this->consultation->id
+                    )
                     ->when(
                         $this->editingDiagnosisId,
                         fn($query) => $query->where(
@@ -138,55 +163,99 @@ new
 
             if ($this->editingDiagnosisId) {
                 $diagnosis = ConsultationDiagnosis::query()
-                    ->where('consultation_id', $this->consultation->id)
-                    ->findOrFail($this->editingDiagnosisId);
+                    ->where(
+                        'consultation_id',
+                        $this->consultation->id
+                    )
+                    ->findOrFail(
+                        $this->editingDiagnosisId
+                    );
 
                 $diagnosis->update([
-                    'code' => $validated['diagnosis_code'] ?: null,
-                    'description' => $validated['diagnosis_description'],
-                    'is_primary' => $validated['diagnosis_is_primary'],
-                    'notes' => $validated['diagnosis_notes'] ?: null,
+                    'code' =>
+                    $validated['diagnosis_code']
+                        ?: null,
+
+                    'description' =>
+                    $validated['diagnosis_description'],
+
+                    'is_primary' =>
+                    $validated['diagnosis_is_primary'],
+
+                    'notes' =>
+                    $validated['diagnosis_notes']
+                        ?: null,
                 ]);
 
-                $message = 'Diagnóstico actualizado correctamente.';
+                $message =
+                    'Diagnóstico actualizado correctamente.';
             } else {
                 ConsultationDiagnosis::create([
-                    'consultation_id' => $this->consultation->id,
-                    'code' => $validated['diagnosis_code'] ?: null,
-                    'description' => $validated['diagnosis_description'],
-                    'is_primary' => $validated['diagnosis_is_primary'],
-                    'notes' => $validated['diagnosis_notes'] ?: null,
+                    'consultation_id' =>
+                    $this->consultation->id,
+
+                    'code' =>
+                    $validated['diagnosis_code']
+                        ?: null,
+
+                    'description' =>
+                    $validated['diagnosis_description'],
+
+                    'is_primary' =>
+                    $validated['diagnosis_is_primary'],
+
+                    'notes' =>
+                    $validated['diagnosis_notes']
+                        ?: null,
                 ]);
 
-                $message = 'Diagnóstico registrado correctamente.';
+                $message =
+                    'Diagnóstico registrado correctamente.';
             }
 
-            $this->consultation->unsetRelation('diagnoses');
+            $this->consultation
+                ->unsetRelation('diagnoses');
 
             $this->showDiagnosisModal = false;
+
             $this->editingDiagnosisId = null;
 
             $this->resetDiagnosisForm();
 
-            session()->flash('success', $message);
+            session()->flash(
+                'success',
+                $message
+            );
 
             $this->redirectRoute(
                 'consultations.show',
-                ['uuid' => $this->consultation->uuid]
+                [
+                    'uuid' =>
+                    $this->consultation->uuid,
+                ]
             );
 
             $this->dispatch('diagnosis-saved');
         }
 
-        public function deleteDiagnosis(int $diagnosisId): void
-        {
+        public function deleteDiagnosis(
+            int $diagnosisId
+        ): void {
+            if (! $this->consultation->canEdit()) {
+                abort(403);
+            }
+
             $diagnosis = ConsultationDiagnosis::query()
-                ->where('consultation_id', $this->consultation->id)
+                ->where(
+                    'consultation_id',
+                    $this->consultation->id
+                )
                 ->findOrFail($diagnosisId);
 
             $diagnosis->delete();
 
-            $this->consultation->unsetRelation('diagnoses');
+            $this->consultation
+                ->unsetRelation('diagnoses');
 
             session()->flash(
                 'success',
@@ -195,7 +264,10 @@ new
 
             $this->redirectRoute(
                 'consultations.show',
-                ['uuid' => $this->consultation->uuid]
+                [
+                    'uuid' =>
+                    $this->consultation->uuid,
+                ]
             );
         }
 
@@ -311,26 +383,34 @@ new
                         Ver paciente
                     </a>
 
+                    @if ($consultation->canEdit())
+
                     <button
                         type="button"
                         wire:click="openDiagnosisModal"
                         class="inline-flex items-center rounded-lg
-                            border border-slate-300 px-4 py-2.5
-                            text-sm font-semibold text-slate-700
-                            hover:bg-slate-50">
+                                border border-slate-300 px-4 py-2.5
+                                text-sm font-semibold text-slate-700
+                                hover:bg-slate-50">
                         Crear diagnóstico
                     </button>
 
+                    @endif
+
+                    @if ($consultation->isCompleted())
+
                     <a
                         href="{{ route('prescriptions.create', [
-                            'uuid' => $consultation->uuid
-                        ]) }}"
+                                'uuid' => $consultation->uuid
+                            ]) }}"
                         class="inline-flex items-center rounded-lg
-                            bg-slate-900 px-4 py-2.5
-                            text-sm font-semibold text-white
-                            hover:bg-slate-800">
+                                bg-slate-900 px-4 py-2.5
+                                text-sm font-semibold text-white
+                                hover:bg-slate-800">
                         Crear receta
                     </a>
+
+                    @endif
 
                 </div>
 
@@ -551,12 +631,18 @@ new
                     </p>
                 </div>
 
+                @if ($consultation->canEdit())
+
                 <button
                     type="button"
                     wire:click="openDiagnosisModal"
-                    class="text-sm font-semibold text-slate-700 hover:text-slate-900">
+                    class="text-sm font-semibold
+                            text-slate-700
+                            hover:text-slate-900">
                     + Agregar diagnóstico
                 </button>
+
+                @endif
 
             </div>
 
@@ -596,12 +682,16 @@ new
 
                     </div>
 
+                    @if ($consultation->canEdit())
+
                     <div class="flex items-center gap-3">
 
                         <button
                             type="button"
                             wire:click="editDiagnosis({{ $diagnosis->id }})"
-                            class="text-xs font-semibold text-slate-600 hover:text-slate-900">
+                            class="text-xs font-semibold
+                                    text-slate-600
+                                    hover:text-slate-900">
                             Editar
                         </button>
 
@@ -622,11 +712,15 @@ new
                                         }
                                     })
                                 "
-                            class="text-xs font-semibold text-red-600 hover:text-red-700">
+                            class="text-xs font-semibold
+                                    text-red-600
+                                    hover:text-red-700">
                             Eliminar
                         </button>
 
                     </div>
+
+                    @endif
 
                 </div>
 
@@ -667,14 +761,18 @@ new
 
                 </div>
 
+                @if ($consultation->isCompleted())
+
                 <a
                     href="{{ route('prescriptions.create', [
-                        'uuid' => $consultation->uuid
-                    ]) }}"
+                            'uuid' => $consultation->uuid
+                        ]) }}"
                     class="text-sm font-semibold text-slate-700
-                        hover:text-slate-900">
+                            hover:text-slate-900">
                     + Crear receta
                 </a>
+
+                @endif
 
             </div>
 

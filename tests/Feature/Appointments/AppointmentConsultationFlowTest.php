@@ -85,6 +85,56 @@ class AppointmentConsultationFlowTest extends TestCase
             );
     }
 
+    public function test_starting_appointment_creates_draft_consultation(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $appointment = $this->createAppointment(
+            $doctor,
+            $patient
+        );
+
+        Livewire::actingAs($user)
+            ->test('pages::appointments.show', [
+                'uuid' => $appointment->uuid,
+            ])
+            ->call('startAppointment');
+
+        $consultation = Consultation::query()
+            ->where(
+                'appointment_id',
+                $appointment->id
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            Consultation::STATUS_DRAFT,
+            $consultation->status
+        );
+
+        $this->assertSame(
+            $patient->id,
+            $consultation->patient_id
+        );
+
+        $this->assertSame(
+            $doctor->id,
+            $consultation->doctor_profile_id
+        );
+
+        $this->assertSame(
+            $appointment->reason,
+            $consultation->reason
+        );
+    }
+
     public function test_consultation_form_loads_in_progress_appointment(): void
     {
         [
@@ -114,11 +164,13 @@ class AppointmentConsultationFlowTest extends TestCase
                 )
             )
             ->assertOk()
-            ->assertSee('Consulta iniciada desde una cita')
+            ->assertSee(
+                'Consulta iniciada desde una cita'
+            )
             ->assertSee('En atención');
     }
 
-    public function test_consultation_created_from_appointment_is_linked_to_appointment(): void
+    public function test_leaving_consultation_saves_draft_and_keeps_appointment_in_progress(): void
     {
         $this->travelTo(
             Carbon::parse('2026-08-24 10:05:00')
@@ -158,27 +210,114 @@ class AppointmentConsultationFlowTest extends TestCase
                 'reason',
                 'Consulta desde cita'
             )
-            ->call('saveConsultation');
+            ->set(
+                'subjective',
+                'Dolor abdominal desde ayer'
+            )
+            ->call('leaveConsultation')
+            ->assertRedirect(
+                route(
+                    'appointments.show',
+                    [
+                        'uuid' => $appointment->uuid,
+                    ]
+                )
+            );
 
         $consultation = Consultation::query()
+            ->where(
+                'appointment_id',
+                $appointment->id
+            )
             ->firstOrFail();
+
+        $appointment->refresh();
 
         $this->assertSame(
             $appointment->id,
             $consultation->appointment_id
         );
 
-        $this->assertTrue(
-            $consultation
-                ->appointment
-                ->is($appointment)
+        $this->assertSame(
+            Consultation::STATUS_DRAFT,
+            $consultation->status
+        );
+
+        $this->assertNull(
+            $consultation->completed_at
+        );
+
+        $this->assertSame(
+            'Dolor abdominal desde ayer',
+            $consultation->subjective
+        );
+
+        $this->assertSame(
+            Appointment::STATUS_IN_PROGRESS,
+            $appointment->status
+        );
+
+        $this->assertNull(
+            $appointment->completed_at
         );
     }
 
-    public function test_saving_consultation_completes_appointment_automatically(): void
+    public function test_continuing_consultation_loads_existing_draft_data(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $appointment = $this->createAppointment(
+            $doctor,
+            $patient
+        );
+
+        $appointment->start();
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'appointment_id' => $appointment->id,
+            'consultation_at' => now(),
+            'reason' => 'Consulta general',
+            'subjective' => 'Dolor abdominal desde ayer',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        Livewire::withQueryParams([
+            'appointment' => $appointment->uuid,
+        ])
+            ->actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->assertSet(
+                'consultation.id',
+                $consultation->id
+            )
+            ->assertSet(
+                'reason',
+                'Consulta general'
+            )
+            ->assertSet(
+                'subjective',
+                'Dolor abdominal desde ayer'
+            );
+    }
+
+    public function test_completing_consultation_completes_consultation_and_appointment(): void
     {
         $this->travelTo(
-            Carbon::parse('2026-08-24 10:05:00')
+            Carbon::parse('2026-08-24 10:20:00')
         );
 
         [
@@ -215,9 +354,49 @@ class AppointmentConsultationFlowTest extends TestCase
                 'reason',
                 'Consulta desde agenda'
             )
-            ->call('saveConsultation');
+            ->set(
+                'assessment',
+                'Cuadro clínico estable'
+            )
+            ->set(
+                'plan',
+                'Seguimiento en una semana'
+            )
+            ->call('completeConsultation');
+
+        $consultation = Consultation::query()
+            ->where(
+                'appointment_id',
+                $appointment->id
+            )
+            ->firstOrFail();
 
         $appointment->refresh();
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
+        );
+
+        $this->assertNotNull(
+            $consultation->completed_at
+        );
+
+        $this->assertTrue(
+            $consultation
+                ->completed_at
+                ->equalTo(now())
+        );
+
+        $this->assertSame(
+            'Cuadro clínico estable',
+            $consultation->assessment
+        );
+
+        $this->assertSame(
+            'Seguimiento en una semana',
+            $consultation->plan
+        );
 
         $this->assertSame(
             Appointment::STATUS_COMPLETED,
@@ -235,7 +414,7 @@ class AppointmentConsultationFlowTest extends TestCase
         );
     }
 
-    public function test_consultation_created_without_appointment_still_works(): void
+    public function test_consultation_created_without_appointment_can_be_left_as_draft(): void
     {
         [
             $tenant,
@@ -261,7 +440,19 @@ class AppointmentConsultationFlowTest extends TestCase
                 'reason',
                 'Consulta directa'
             )
-            ->call('saveConsultation');
+            ->set(
+                'subjective',
+                'Consulta sin cita previa'
+            )
+            ->call('leaveConsultation')
+            ->assertRedirect(
+                route(
+                    'patients.show',
+                    [
+                        'uuid' => $patient->uuid,
+                    ]
+                )
+            );
 
         $consultation = Consultation::query()
             ->firstOrFail();
@@ -271,8 +462,57 @@ class AppointmentConsultationFlowTest extends TestCase
         );
 
         $this->assertSame(
-            'completed',
+            Consultation::STATUS_DRAFT,
             $consultation->status
+        );
+
+        $this->assertNull(
+            $consultation->completed_at
+        );
+    }
+
+    public function test_consultation_created_without_appointment_can_be_completed(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'consultation_at',
+                '2026-08-24T10:00'
+            )
+            ->set(
+                'reason',
+                'Consulta directa'
+            )
+            ->call('completeConsultation');
+
+        $consultation = Consultation::query()
+            ->firstOrFail();
+
+        $this->assertNull(
+            $consultation->appointment_id
+        );
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
+        );
+
+        $this->assertNotNull(
+            $consultation->completed_at
         );
     }
 
@@ -365,7 +605,7 @@ class AppointmentConsultationFlowTest extends TestCase
             'doctor_profile_id' => $doctor->id,
             'appointment_id' => $appointment->id,
             'consultation_at' => now(),
-            'status' => 'completed',
+            'status' => Consultation::STATUS_DRAFT,
         ]);
 
         $this->assertTrue(
@@ -375,11 +615,51 @@ class AppointmentConsultationFlowTest extends TestCase
         );
     }
 
+    public function test_appointment_cannot_have_two_consultations(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $appointment = $this->createAppointment(
+            $doctor,
+            $patient
+        );
+
+        $appointment->start();
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'appointment_id' => $appointment->id,
+            'consultation_at' => now(),
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $this->expectException(
+            \Illuminate\Database\QueryException::class
+        );
+
+        Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'appointment_id' => $appointment->id,
+            'consultation_at' => now(),
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+    }
+
     private function createContext(): array
     {
         $tenant = Tenant::create([
             'name' => 'Consultorio Test',
-            'slug' => 'consultorio-' . str()->random(10),
+            'slug' =>
+            'consultorio-' . str()->random(10),
             'onboarding_completed_at' => now(),
         ]);
 
@@ -388,7 +668,8 @@ class AppointmentConsultationFlowTest extends TestCase
         $user = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Dr. Test',
-            'email' => str()->random(10) . '@example.com',
+            'email' =>
+            str()->random(10) . '@example.com',
             'password' => 'password123',
             'role' => 'owner',
         ]);
@@ -430,9 +711,12 @@ class AppointmentConsultationFlowTest extends TestCase
         return Appointment::create([
             'patient_id' => $patient->id,
             'doctor_profile_id' => $doctor->id,
-            'starts_at' => '2026-08-24 10:00:00',
-            'ends_at' => '2026-08-24 10:30:00',
-            'status' => Appointment::STATUS_SCHEDULED,
+            'starts_at' =>
+            '2026-08-24 10:00:00',
+            'ends_at' =>
+            '2026-08-24 10:30:00',
+            'status' =>
+            Appointment::STATUS_SCHEDULED,
             'reason' => 'Consulta general',
         ]);
     }

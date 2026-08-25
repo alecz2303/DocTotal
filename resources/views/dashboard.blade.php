@@ -732,33 +732,71 @@
                 <div class="space-y-5 p-6">
 
                     <a
-                        href="{{ route('consultations.index') }}"
+                        href="{{ route('consultations.index', [
+                            'status' => \App\Models\Consultation::STATUS_COMPLETED,
+                        ]) }}"
                         class="flex items-center
-                               justify-between
-                               rounded-lg
-                               border border-slate-200
-                               p-4
-                               hover:bg-slate-50">
+                            justify-between
+                            rounded-lg
+                            border border-slate-200
+                            p-4
+                            hover:bg-slate-50">
 
                         <div>
 
                             <p
                                 class="text-sm
-                                       font-medium
-                                       text-slate-500">
-                                Consultas
+                                    font-medium
+                                    text-slate-500">
+                                Consultas finalizadas
                             </p>
 
                             <p
                                 class="mt-1 text-2xl
-                                       font-bold
-                                       text-slate-900">
-                                {{ $consultationsTodayCount }}
+                                    font-bold
+                                    text-slate-900">
+                                {{ $completedConsultationsTodayCount }}
                             </p>
 
                         </div>
 
                         <span class="text-slate-400">
+                            →
+                        </span>
+
+                    </a>
+
+                    <a
+                        href="{{ route('consultations.index', [
+                            'status' => \App\Models\Consultation::STATUS_DRAFT,
+                        ]) }}"
+                        class="flex items-center
+                            justify-between
+                            rounded-lg
+                            border border-orange-200
+                            bg-orange-50/40
+                            p-4
+                            hover:bg-orange-50">
+
+                        <div>
+
+                            <p
+                                class="text-sm
+                                    font-medium
+                                    text-orange-700">
+                                En progreso
+                            </p>
+
+                            <p
+                                class="mt-1 text-2xl
+                                    font-bold
+                                    text-orange-900">
+                                {{ $draftConsultationsTodayCount }}
+                            </p>
+
+                        </div>
+
+                        <span class="text-orange-400">
                             →
                         </span>
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Consultations;
 
 use App\Models\Consultation;
+use App\Models\ConsultationDiagnosis;
 use App\Models\DoctorProfile;
 use App\Models\Patient;
 use App\Models\Tenant;
@@ -18,45 +19,124 @@ class ConsultationFlowTest extends TestCase
 
     public function test_user_can_create_consultation_for_patient(): void
     {
-        [$tenant, $user, $doctor, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
         $component = Livewire::actingAs($user)
-            ->test('pages::consultations.create', [
-                'uuid' => $patient->uuid,
-            ])
-            ->set('consultation_at', '2026-08-22T23:49')
-            ->set('reason', 'Dolor de cabeza y mareo')
-            ->set('subjective', 'Paciente refiere cefalea.')
-            ->set('objective', 'Paciente estable.')
-            ->set('assessment', 'Cefalea en estudio.')
-            ->set('plan', 'Vigilancia y seguimiento.')
-            ->set('weight_kg', '78.5')
-            ->set('height_cm', '175')
-            ->set('systolic_bp', '125')
-            ->set('diastolic_bp', '80')
-            ->set('heart_rate', '76')
-            ->set('respiratory_rate', '18')
-            ->set('temperature_c', '36.7')
-            ->set('oxygen_saturation', '98')
-            ->call('saveConsultation');
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'consultation_at',
+                '2026-08-22T23:49'
+            )
+            ->set(
+                'reason',
+                'Dolor de cabeza y mareo'
+            )
+            ->set(
+                'subjective',
+                'Paciente refiere cefalea.'
+            )
+            ->set(
+                'objective',
+                'Paciente estable.'
+            )
+            ->set(
+                'assessment',
+                'Cefalea en estudio.'
+            )
+            ->set(
+                'plan',
+                'Vigilancia y seguimiento.'
+            )
+            ->set(
+                'weight_kg',
+                '78.5'
+            )
+            ->set(
+                'height_cm',
+                '175'
+            )
+            ->set(
+                'systolic_bp',
+                '125'
+            )
+            ->set(
+                'diastolic_bp',
+                '80'
+            )
+            ->set(
+                'heart_rate',
+                '76'
+            )
+            ->set(
+                'respiratory_rate',
+                '18'
+            )
+            ->set(
+                'temperature_c',
+                '36.7'
+            )
+            ->set(
+                'oxygen_saturation',
+                '98'
+            )
+            ->call('completeConsultation')
+            ->assertHasNoErrors();
 
         $consultation = Consultation::query()
-            ->where('patient_id', $patient->id)
+            ->where(
+                'patient_id',
+                $patient->id
+            )
             ->latest('id')
             ->firstOrFail();
 
         $component->assertRedirect(
-            route('consultations.show', [
-                'uuid' => $consultation->uuid,
-            ])
+            route(
+                'consultations.show',
+                [
+                    'uuid' => $consultation->uuid,
+                ]
+            )
         );
 
-        $this->assertSame($tenant->id, $consultation->tenant_id);
-        $this->assertSame($patient->id, $consultation->patient_id);
-        $this->assertSame($doctor->id, $consultation->doctor_profile_id);
-        $this->assertNotNull($consultation->uuid);
+        $this->assertSame(
+            $tenant->id,
+            $consultation->tenant_id
+        );
+
+        $this->assertSame(
+            $patient->id,
+            $consultation->patient_id
+        );
+
+        $this->assertSame(
+            $doctor->id,
+            $consultation->doctor_profile_id
+        );
+
+        /*
+         * Las consultas creadas directamente desde
+         * el expediente no pertenecen a una cita.
+         */
+        $this->assertNull(
+            $consultation->appointment_id
+        );
+
+        $this->assertNotNull(
+            $consultation->uuid
+        );
 
         $this->assertSame(
             'Dolor de cabeza y mareo',
@@ -83,54 +163,134 @@ class ConsultationFlowTest extends TestCase
             $consultation->plan
         );
 
-        $this->assertSame('78.50', $consultation->weight_kg);
-        $this->assertSame('175.00', $consultation->height_cm);
-        $this->assertSame(125, $consultation->systolic_bp);
-        $this->assertSame(80, $consultation->diastolic_bp);
-        $this->assertSame(76, $consultation->heart_rate);
-        $this->assertSame(18, $consultation->respiratory_rate);
-        $this->assertSame('36.7', $consultation->temperature_c);
-        $this->assertSame(98, $consultation->oxygen_saturation);
-        $this->assertSame('completed', $consultation->status);
+        $this->assertSame(
+            '78.50',
+            $consultation->weight_kg
+        );
+
+        $this->assertSame(
+            '175.00',
+            $consultation->height_cm
+        );
+
+        $this->assertSame(
+            125,
+            $consultation->systolic_bp
+        );
+
+        $this->assertSame(
+            80,
+            $consultation->diastolic_bp
+        );
+
+        $this->assertSame(
+            76,
+            $consultation->heart_rate
+        );
+
+        $this->assertSame(
+            18,
+            $consultation->respiratory_rate
+        );
+
+        $this->assertSame(
+            '36.7',
+            $consultation->temperature_c
+        );
+
+        $this->assertSame(
+            98,
+            $consultation->oxygen_saturation
+        );
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
+        );
+
+        $this->assertNotNull(
+            $consultation->completed_at
+        );
     }
 
     public function test_consultation_requires_date(): void
     {
-        [$tenant, $user,, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
         Livewire::actingAs($user)
-            ->test('pages::consultations.create', [
-                'uuid' => $patient->uuid,
-            ])
-            ->set('consultation_at', '')
-            ->call('saveConsultation')
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'consultation_at',
+                ''
+            )
+            ->call('completeConsultation')
             ->assertHasErrors([
                 'consultation_at',
             ]);
 
-        $this->assertDatabaseCount('consultations', 0);
+        $this->assertDatabaseCount(
+            'consultations',
+            0
+        );
     }
 
     public function test_consultation_rejects_invalid_vital_signs(): void
     {
-        [$tenant, $user,, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
         Livewire::actingAs($user)
-            ->test('pages::consultations.create', [
-                'uuid' => $patient->uuid,
-            ])
-            ->set('consultation_at', now()->format('Y-m-d\TH:i'))
-            ->set('systolic_bp', 500)
-            ->set('diastolic_bp', 300)
-            ->set('heart_rate', 500)
-            ->set('respiratory_rate', 200)
-            ->set('temperature_c', 60)
-            ->set('oxygen_saturation', 150)
-            ->call('saveConsultation')
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'consultation_at',
+                now()->format('Y-m-d\TH:i')
+            )
+            ->set(
+                'systolic_bp',
+                500
+            )
+            ->set(
+                'diastolic_bp',
+                300
+            )
+            ->set(
+                'heart_rate',
+                500
+            )
+            ->set(
+                'respiratory_rate',
+                200
+            )
+            ->set(
+                'temperature_c',
+                60
+            )
+            ->set(
+                'oxygen_saturation',
+                150
+            )
+            ->call('completeConsultation')
             ->assertHasErrors([
                 'systolic_bp',
                 'diastolic_bp',
@@ -140,21 +300,36 @@ class ConsultationFlowTest extends TestCase
                 'oxygen_saturation',
             ]);
 
-        $this->assertDatabaseCount('consultations', 0);
+        $this->assertDatabaseCount(
+            'consultations',
+            0
+        );
     }
 
     public function test_consultation_is_associated_with_authenticated_doctor(): void
     {
-        [$tenant, $user, $doctor, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
         Livewire::actingAs($user)
-            ->test('pages::consultations.create', [
-                'uuid' => $patient->uuid,
-            ])
-            ->set('consultation_at', now()->format('Y-m-d\TH:i'))
-            ->call('saveConsultation');
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'consultation_at',
+                now()->format('Y-m-d\TH:i')
+            )
+            ->call('completeConsultation')
+            ->assertHasNoErrors();
 
         $consultation = Consultation::firstOrFail();
 
@@ -164,13 +339,29 @@ class ConsultationFlowTest extends TestCase
         );
 
         $this->assertTrue(
-            $consultation->doctorProfile->is($doctor)
+            $consultation
+                ->doctorProfile
+                ->is($doctor)
+        );
+
+        $this->assertNull(
+            $consultation->appointment_id
+        );
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
         );
     }
 
     public function test_patient_show_page_displays_consultation_history(): void
     {
-        [$tenant, $user, $doctor, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
@@ -181,25 +372,37 @@ class ConsultationFlowTest extends TestCase
             'reason' => 'Dolor abdominal',
             'heart_rate' => 72,
             'temperature_c' => 36.5,
-            'status' => 'completed',
+            'status' => Consultation::STATUS_COMPLETED,
         ]);
 
         $this->actingAs($user)
             ->get(
-                route('patients.show', [
-                    'uuid' => $patient->uuid,
-                ])
+                route(
+                    'patients.show',
+                    [
+                        'uuid' => $patient->uuid,
+                    ]
+                )
             )
             ->assertOk()
-            ->assertSee('Historial de consultas')
-            ->assertSee('Dolor abdominal')
+            ->assertSee(
+                'Historial de consultas'
+            )
+            ->assertSee(
+                'Dolor abdominal'
+            )
             ->assertSee('72')
             ->assertSee('36.5');
     }
 
     public function test_user_can_view_consultation_detail(): void
     {
-        [$tenant, $user, $doctor, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
@@ -218,14 +421,23 @@ class ConsultationFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get(
-                route('consultations.show', [
-                    'uuid' => $consultation->uuid,
-                ])
+                route(
+                    'consultations.show',
+                    [
+                        'uuid' => $consultation->uuid,
+                    ]
+                )
             )
             ->assertOk()
-            ->assertSee('Dolor de cabeza')
-            ->assertSee('Cefalea de dos días.')
-            ->assertSee('Paciente orientado.')
+            ->assertSee(
+                'Dolor de cabeza'
+            )
+            ->assertSee(
+                'Cefalea de dos días.'
+            )
+            ->assertSee(
+                'Paciente orientado.'
+            )
             ->assertSee('Cefalea.')
             ->assertSee('Seguimiento.')
             ->assertSee('120/80');
@@ -233,7 +445,12 @@ class ConsultationFlowTest extends TestCase
 
     public function test_consultation_detail_uses_uuid_route(): void
     {
-        [$tenant, $user, $doctor, $patient] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
@@ -253,25 +470,36 @@ class ConsultationFlowTest extends TestCase
             $consultation->getRouteKey()
         );
 
-        $url = route('consultations.show', [
-            'uuid' => $consultation->uuid,
-        ]);
+        $url = route(
+            'consultations.show',
+            [
+                'uuid' => $consultation->uuid,
+            ]
+        );
 
         $this->assertStringEndsWith(
-            '/consultations/' . $consultation->uuid,
+            '/consultations/' .
+                $consultation->uuid,
             $url
         );
     }
 
     public function test_user_cannot_create_consultation_for_patient_from_another_tenant(): void
     {
-        [$tenantA, $userA] = $this->createUser(
+        [
+            $tenantA,
+            $userA,
+        ] = $this->createUser(
             tenantName: 'Tenant A',
             tenantSlug: 'tenant-a',
             email: 'a@example.com'
         );
 
-        [$tenantB,, $doctorB, $patientB] = $this->createContext(
+        [
+            $tenantB,,
+            $doctorB,
+            $patientB,
+        ] = $this->createContext(
             tenantName: 'Tenant B',
             tenantSlug: 'tenant-b',
             email: 'b@example.com'
@@ -281,24 +509,37 @@ class ConsultationFlowTest extends TestCase
 
         $this->actingAs($userA)
             ->get(
-                route('consultations.create', [
-                    'uuid' => $patientB->uuid,
-                ])
+                route(
+                    'consultations.create',
+                    [
+                        'uuid' => $patientB->uuid,
+                    ]
+                )
             )
             ->assertNotFound();
 
-        $this->assertDatabaseCount('consultations', 0);
+        $this->assertDatabaseCount(
+            'consultations',
+            0
+        );
     }
 
     public function test_user_cannot_view_consultation_from_another_tenant(): void
     {
-        [$tenantA, $userA] = $this->createUser(
+        [
+            $tenantA,
+            $userA,
+        ] = $this->createUser(
             tenantName: 'Tenant A',
             tenantSlug: 'tenant-a',
             email: 'a@example.com'
         );
 
-        [$tenantB,, $doctorB, $patientB] = $this->createContext(
+        [
+            $tenantB,,
+            $doctorB,
+            $patientB,
+        ] = $this->createContext(
             tenantName: 'Tenant B',
             tenantSlug: 'tenant-b',
             email: 'b@example.com'
@@ -317,16 +558,24 @@ class ConsultationFlowTest extends TestCase
 
         $this->actingAs($userA)
             ->get(
-                route('consultations.show', [
-                    'uuid' => $consultationB->uuid,
-                ])
+                route(
+                    'consultations.show',
+                    [
+                        'uuid' => $consultationB->uuid,
+                    ]
+                )
             )
             ->assertNotFound();
     }
 
     public function test_patient_history_does_not_show_consultations_from_other_patients(): void
     {
-        [$tenant, $user, $doctor, $patientA] = $this->createContext();
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patientA,
+        ] = $this->createContext();
 
         app(TenantContext::class)->set($tenant);
 
@@ -351,13 +600,111 @@ class ConsultationFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get(
-                route('patients.show', [
-                    'uuid' => $patientA->uuid,
+                route(
+                    'patients.show',
+                    [
+                        'uuid' => $patientA->uuid,
+                    ]
+                )
+            )
+            ->assertOk()
+            ->assertSee(
+                'Consulta Paciente A'
+            )
+            ->assertDontSee(
+                'Consulta Paciente B'
+            );
+    }
+
+
+    public function test_finalizing_consultation_preserves_existing_diagnoses(): void
+    {
+        [$tenant, $user, $doctor, $patient] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'reason' => 'Consulta con diagnóstico',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $diagnosis = ConsultationDiagnosis::create([
+            'consultation_id' => $consultation->id,
+            'code' => 'K35',
+            'description' => 'APENDICITIS AGUDA',
+            'is_primary' => true,
+            'notes' => 'Diagnóstico confirmado.',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::consultations.create', [
+                'uuid' => $patient->uuid,
+            ])
+            ->assertSet('consultation.id', $consultation->id)
+            ->call('completeConsultation')
+            ->assertHasNoErrors()
+            ->assertRedirect(
+                route('consultations.show', [
+                    'uuid' => $consultation->uuid,
+                ])
+            );
+
+        $consultation->refresh();
+
+        $this->assertSame(
+            Consultation::STATUS_COMPLETED,
+            $consultation->status
+        );
+
+        $this->assertNotNull($consultation->completed_at);
+
+        $this->assertDatabaseHas('consultation_diagnoses', [
+            'id' => $diagnosis->id,
+            'consultation_id' => $consultation->id,
+            'code' => 'K35',
+            'description' => 'APENDICITIS AGUDA',
+            'is_primary' => true,
+            'notes' => 'Diagnóstico confirmado.',
+        ]);
+    }
+
+    public function test_completed_consultation_detail_hides_diagnosis_editing_controls(): void
+    {
+        [$tenant, $user, $doctor, $patient] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'reason' => 'Consulta finalizada',
+            'status' => Consultation::STATUS_COMPLETED,
+            'completed_at' => now(),
+        ]);
+
+        ConsultationDiagnosis::create([
+            'consultation_id' => $consultation->id,
+            'code' => 'K35',
+            'description' => 'APENDICITIS AGUDA',
+            'is_primary' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route('consultations.show', [
+                    'uuid' => $consultation->uuid,
                 ])
             )
             ->assertOk()
-            ->assertSee('Consulta Paciente A')
-            ->assertDontSee('Consulta Paciente B');
+            ->assertSee('APENDICITIS AGUDA')
+            ->assertDontSee('+ Agregar diagnóstico')
+            ->assertDontSee('Crear diagnóstico')
+            ->assertDontSee('Editar')
+            ->assertDontSee('Eliminar');
     }
 
     private function createContext(
@@ -365,7 +712,10 @@ class ConsultationFlowTest extends TestCase
         string $tenantSlug = 'consultorio-test',
         string $email = 'doctor@example.com',
     ): array {
-        [$tenant, $user] = $this->createUser(
+        [
+            $tenant,
+            $user,
+        ] = $this->createUser(
             tenantName: $tenantName,
             tenantSlug: $tenantSlug,
             email: $email
@@ -415,5 +765,125 @@ class ConsultationFlowTest extends TestCase
             $tenant,
             $user,
         ];
+    }
+
+    public function test_direct_draft_consultation_can_be_continued(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'reason' => 'Consulta directa pendiente',
+            'subjective' => 'Síntomas persistentes',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->assertSet(
+                'consultation.id',
+                $consultation->id
+            )
+            ->assertSet(
+                'reason',
+                'Consulta directa pendiente'
+            )
+            ->assertSet(
+                'subjective',
+                'Síntomas persistentes'
+            );
+    }
+
+    public function test_continuing_direct_draft_does_not_create_duplicate(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'reason' => 'Consulta pendiente',
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'subjective',
+                'Información actualizada'
+            )
+            ->call('leaveConsultation');
+
+        $this->assertDatabaseCount(
+            'consultations',
+            1
+        );
+
+        $consultation->refresh();
+
+        $this->assertSame(
+            'Información actualizada',
+            $consultation->subjective
+        );
+
+        $this->assertSame(
+            Consultation::STATUS_DRAFT,
+            $consultation->status
+        );
+    }
+
+    public function test_draft_consultation_detail_hides_create_prescription_actions(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $consultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now(),
+            'status' => Consultation::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route('consultations.show', [
+                    'uuid' => $consultation->uuid,
+                ])
+            )
+            ->assertOk()
+            ->assertDontSee('Crear receta')
+            ->assertDontSee('+ Crear receta');
     }
 }
