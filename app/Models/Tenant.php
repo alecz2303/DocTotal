@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\TenantScope;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -74,6 +75,11 @@ class Tenant extends Model
         return $this->hasMany(Patient::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
     public function isOnTrial(): bool
     {
         return $this->status === 'trial'
@@ -91,5 +97,65 @@ class Tenant extends Model
     public function hasCompletedOnboarding(): bool
     {
         return $this->onboarding_completed_at !== null;
+    }
+
+    public function currentSubscription(): ?Subscription
+    {
+        return Subscription::query()
+            ->withoutGlobalScope(
+                TenantScope::class
+            )
+            ->where(
+                'tenant_id',
+                $this->id
+            )
+            ->whereIn(
+                'status',
+                [
+                    Subscription::STATUS_ACTIVE,
+                    Subscription::STATUS_PAST_DUE,
+                ]
+            )
+            ->where(
+                'current_period_starts_at',
+                '<=',
+                now()
+            )
+            ->where(
+                'current_period_ends_at',
+                '>',
+                now()
+            )
+            ->latest(
+                'current_period_ends_at'
+            )
+            ->first();
+    }
+
+    public function hasCurrentSubscription(): bool
+    {
+        return $this->currentSubscription() !== null;
+    }
+
+    public function hasAccessToService(): bool
+    {
+        if (
+            in_array(
+                $this->status,
+                [
+                    'suspended',
+                    'cancelled',
+                ],
+                true
+            )
+        ) {
+            return false;
+        }
+
+        if ($this->isOnTrial()) {
+            return true;
+        }
+
+        return $this->hasCurrentSubscription();
     }
 }
