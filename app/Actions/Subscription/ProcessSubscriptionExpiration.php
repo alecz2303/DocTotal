@@ -42,6 +42,9 @@ class ProcessSubscriptionExpiration
 
                     'next_billing_at' =>
                     null,
+
+                    'pending_billing_cycle' =>
+                    null,
                 ]);
 
                 return $subscription->refresh();

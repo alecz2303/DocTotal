@@ -80,6 +80,58 @@ class Tenant extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(
+            PaymentMethod::class
+        );
+    }
+
+    public function billingCustomers(): HasMany
+    {
+        return $this->hasMany(
+            BillingCustomer::class
+        );
+    }
+
+    public function stripeBillingCustomer(): ?BillingCustomer
+    {
+        return BillingCustomer::query()
+            ->withoutGlobalScope(
+                TenantScope::class
+            )
+            ->where(
+                'tenant_id',
+                $this->id
+            )
+            ->where(
+                'provider',
+                BillingCustomer::PROVIDER_STRIPE
+            )
+            ->first();
+    }
+
+    public function defaultPaymentMethod(): ?PaymentMethod
+    {
+        return PaymentMethod::query()
+            ->withoutGlobalScope(
+                TenantScope::class
+            )
+            ->where(
+                'tenant_id',
+                $this->id
+            )
+            ->where(
+                'is_active',
+                true
+            )
+            ->where(
+                'is_default',
+                true
+            )
+            ->first();
+    }
+
     public function isOnTrial(): bool
     {
         return $this->status === 'trial'
@@ -109,23 +161,41 @@ class Tenant extends Model
                 'tenant_id',
                 $this->id
             )
-            ->whereIn(
-                'status',
-                [
-                    Subscription::STATUS_ACTIVE,
-                    Subscription::STATUS_PAST_DUE,
-                ]
-            )
-            ->where(
-                'current_period_starts_at',
-                '<=',
-                now()
-            )
-            ->where(
-                'current_period_ends_at',
-                '>',
-                now()
-            )
+            ->where(function ($query): void {
+                $query
+                    ->where(function ($query): void {
+                        $query
+                            ->where(
+                                'status',
+                                Subscription::STATUS_ACTIVE
+                            )
+                            ->where(
+                                'current_period_starts_at',
+                                '<=',
+                                now()
+                            )
+                            ->where(
+                                'current_period_ends_at',
+                                '>',
+                                now()
+                            );
+                    })
+                    ->orWhere(function ($query): void {
+                        $query
+                            ->where(
+                                'status',
+                                Subscription::STATUS_PAST_DUE
+                            )
+                            ->whereNotNull(
+                                'grace_ends_at'
+                            )
+                            ->where(
+                                'grace_ends_at',
+                                '>',
+                                now()
+                            );
+                    });
+            })
             ->latest(
                 'current_period_ends_at'
             )
@@ -157,5 +227,12 @@ class Tenant extends Model
         }
 
         return $this->hasCurrentSubscription();
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(
+            Payment::class
+        );
     }
 }

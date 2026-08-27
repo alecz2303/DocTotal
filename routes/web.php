@@ -383,6 +383,11 @@ Route::middleware('auth')->group(function () {
         )->name('settings.profile');
 
         Route::livewire(
+            '/settings/billing',
+            'pages::settings.billing'
+        )->name('settings.billing');
+
+        Route::livewire(
             '/appointments',
             'pages::appointments.index'
         )->name('appointments.index');

@@ -5,32 +5,54 @@ Este documento define los bloques principales de desarrollo de DocTotal y sirve 
 DocTotal tiene tres objetivos principales:
 
 1. **Operación clínica**
-   - Pacientes.
-   - Agenda.
-   - Citas.
-   - Consultas.
-   - Diagnósticos.
-   - Recetas.
-   - Expediente clínico longitudinal.
-   - Documentos y archivos clínicos.
+
+   - Pacientes.
+
+   - Agenda.
+
+   - Citas.
+
+   - Consultas.
+
+   - Diagnósticos.
+
+   - Recetas.
+
+   - Expediente clínico longitudinal.
+
+   - Documentos y archivos clínicos.
 
 2. **Autoadministración SaaS**
-   - Trial.
-   - Suscripciones.
-   - Pagos.
-   - Renovaciones.
-   - Recuperación de pagos.
-   - Suspensión.
-   - Reactivación.
-   - Cancelación.
-   - Referidos.
-   - Promociones.
-   - Créditos.
+
+   - Trial.
+
+   - Suscripciones.
+
+   - Pagos.
+
+   - Renovaciones.
+
+   - Recuperación de pagos.
+
+   - Suspensión.
+
+   - Reactivación.
+
+   - Cancelación.
+
+   - Referidos.
+
+   - Promociones.
+
+   - Créditos.
 
 3. **Experiencia de producto**
-   - Convertir la interfaz funcional actual en una experiencia moderna, profesional, consistente y agradable para médicos y consultorios.
-   - Reducir la apariencia genérica de Livewire.
-   - Construir una identidad visual propia de DocTotal.
+
+   - Convertir la interfaz funcional actual en una experiencia moderna, profesional, consistente y agradable para médicos y consultorios.
+
+   - Reducir la apariencia genérica de Livewire.
+
+   - Construir una identidad visual propia de DocTotal.
 
 ---
 
@@ -45,7 +67,9 @@ Construir la base de datos inicial con soporte multi-tenant.
 Incluye:
 
 - Estructura inicial multi-tenant.
+
 - Tenant como entidad principal de aislamiento.
+
 - Relaciones base necesarias para el resto del sistema.
 
 Commit principal:
@@ -65,7 +89,9 @@ Implementar los modelos Eloquent principales y sus relaciones.
 Incluye:
 
 - Modelos base del dominio.
+
 - Relaciones entre entidades.
+
 - Preparación para aislamiento por tenant.
 
 Commit principal:
@@ -85,8 +111,11 @@ Garantizar aislamiento entre tenants y resolver el tenant activo por request.
 Incluye:
 
 - TenantContext.
+
 - Resolución del tenant actual.
+
 - Protección contra acceso cruzado entre tenants.
+
 - Middleware de tenant.
 
 Commit principal:
@@ -106,9 +135,13 @@ Construir la base inicial del expediente clínico del paciente.
 Incluye:
 
 - Pacientes.
+
 - Contactos de emergencia.
+
 - Antecedentes médicos iniciales.
+
 - Base de consultas.
+
 - Fundamentos del expediente clínico.
 
 Nota:
@@ -134,11 +167,17 @@ Implementar autenticación, registro y flujo inicial del usuario.
 Incluye:
 
 - Registro.
+
 - Inicio de sesión.
+
 - Dashboard inicial.
+
 - Trial.
+
 - `trial_started_at`.
+
 - `trial_ends_at`.
+
 - Asociación del usuario con su tenant.
 
 Commit principal:
@@ -158,10 +197,15 @@ Construir el onboarding inicial del médico y consultorio.
 Incluye:
 
 - Wizard de onboarding.
+
 - Perfil del consultorio.
+
 - Perfil médico.
+
 - Especialidad.
+
 - Horarios de atención.
+
 - Autocompletado por código postal.
 
 Commit principal:
@@ -181,11 +225,17 @@ Construir el flujo principal de pacientes y expediente.
 Incluye:
 
 - Listado de pacientes.
+
 - Alta de pacientes.
+
 - Edición.
+
 - Detalle del paciente.
+
 - Antecedentes médicos.
+
 - Contactos de emergencia.
+
 - Integración con consultas.
 
 Commit principal:
@@ -205,38 +255,67 @@ Construir el sistema completo de agenda y citas.
 Incluye:
 
 - Creación de citas.
+
 - Creación rápida de pacientes desde una cita.
+
 - Disponibilidad basada en horarios del onboarding.
+
 - Excepciones de horario.
+
 - Bloqueos parciales y completos.
+
 - Horarios extraordinarios.
+
 - Prevención de solapamientos.
+
 - Eliminación de slots pasados.
+
 - Agenda por mes, semana y día.
+
 - Dashboard dinámico.
+
 - Estados de Appointment.
+
 - Confirmación.
+
 - Check-in.
+
 - Inicio de consulta.
+
 - Finalización automática de cita.
+
 - Cancelación.
+
 - No-show semiautomático.
+
 - Periodo de gracia de 15 minutos para no-show.
+
 - Reprogramación.
+
 - Edición de motivo y notas.
+
 - Integración Appointment → Consultation.
+
 - Continuar consulta cuando la cita queda en progreso.
+
 - Aislamiento multi-tenant.
+
 - Cobertura completa con tests.
 
 Estados de Appointment:
 
 - `scheduled`
+
 - `confirmed`
+
 - `checked_in`
+
 - `in_progress`
+
 - `completed`
+
 - `cancelled`
+
 - `no_show`
 
 Regla de no-show:
@@ -288,26 +367,47 @@ Appointment
 Incluye:
 
 - Estado `draft`.
+
 - Estado `completed`.
+
 - Crear Consultation al iniciar una cita.
+
 - Una sola Consultation por Appointment.
+
 - Consultas sin cita.
+
 - Continuar una Consultation existente.
+
 - Editar consulta mientras está en draft.
+
 - Finalización explícita de Consultation.
+
 - Completar Appointment al finalizar Consultation.
+
 - Diagnósticos durante la consulta.
+
 - Diagnóstico principal.
+
 - Catálogo de diagnósticos.
+
 - Autocomplete de diagnósticos.
+
 - Recetas asociadas.
+
 - Catálogo de medicamentos.
+
 - Autocomplete de medicamentos.
+
 - Edición de recetas.
+
 - Cancelación de recetas.
+
 - PDF de receta.
+
 - Historial de consultas.
+
 - Protección multi-tenant.
+
 - Tests del ciclo clínico.
 
 Baseline al cierre de DT-9:
@@ -329,19 +429,33 @@ DT-10 establece una visión completa del producto y permite decidir qué desarro
 Incluye:
 
 - Inventario funcional.
+
 - Inventario clínico.
+
 - Inventario SaaS.
+
 - Inventario visual.
+
 - Identificación de funcionalidades existentes.
+
 - Identificación de funcionalidades parciales.
+
 - Identificación de funcionalidades inexistentes.
+
 - Definición de los tres pilares principales de DocTotal.
+
 - Creación de ROADMAP.
+
 - Creación de TODO.
+
 - Identificación del expediente clínico longitudinal como bloque futuro.
+
 - Identificación de archivos clínicos como bloque independiente.
+
 - Identificación del billing como bloque crítico.
+
 - Definición inicial del sistema de referidos.
+
 - Identificación del rediseño visual como bloque estratégico.
 
 ---
@@ -357,29 +471,41 @@ Construir el dominio base de suscripciones necesario para que DocTotal pueda adm
 Incluye:
 
 - Modelo `Subscription`.
+
 - Relación Tenant → Subscriptions.
+
 - Protección multi-tenant.
+
 - UUID de Subscription.
+
 - Soft deletes.
 
 Ciclos de facturación:
 
 - `monthly`
+
 - `yearly`
 
 Estados de Subscription:
 
 - `active`
+
 - `past_due`
+
 - `cancelled`
 
 Información temporal:
 
 - `starts_at`
+
 - `current_period_starts_at`
+
 - `current_period_ends_at`
+
 - `next_billing_at`
+
 - `cancel_at_period_end`
+
 - `cancelled_at`
 
 ### Activación
@@ -399,13 +525,17 @@ La fecha y hora del primer pago se convierten en el billing anchor original.
 Se implementó renovación para:
 
 - Suscripciones mensuales.
+
 - Suscripciones anuales.
 
 La renovación conserva:
 
 - Día original cuando existe.
+
 - Hora.
+
 - Minuto.
+
 - Segundo.
 
 Se evita billing drift.
@@ -439,8 +569,11 @@ La suscripción no se cancela antes del final exacto del periodo.
 Al finalizar:
 
 - `status = cancelled`
+
 - `cancel_at_period_end = false`
+
 - `cancelled_at = now()`
+
 - `next_billing_at = null`
 
 ### Estados comerciales
@@ -460,6 +593,7 @@ Transiciones implementadas:
 Un tenant no puede recibir una nueva suscripción mientras exista una suscripción abierta en estado:
 
 - `active`
+
 - `past_due`
 
 Una suscripción `past_due` debe recuperarse/reactivarse.
@@ -473,14 +607,19 @@ Se separaron explícitamente dos conceptos.
 Subscription representa el estado comercial:
 
 - `active`
+
 - `past_due`
+
 - `cancelled`
 
 Tenant representa el estado operativo de la cuenta:
 
 - `trial`
+
 - `active`
+
 - `suspended`
+
 - `cancelled`
 
 Por tanto:
@@ -540,17 +679,29 @@ Una suscripción cuyo `current_period_ends_at` es exactamente igual a `now()` ya
 Se dejan expresamente para DT-12:
 
 - Pagos reales.
+
 - Payment.
+
 - Intentos de cobro.
+
 - Proveedor de pagos.
+
 - Webhooks.
+
 - Idempotencia.
+
 - Grace period.
+
 - Reintentos.
+
 - Suspensión automática.
+
 - Reactivación automática por pago.
+
 - Scheduler.
+
 - Jobs de billing.
+
 - Notificaciones comerciales.
 
 Baseline al cierre de DT-11:
@@ -565,73 +716,197 @@ Commit sugerido:
 
 ## DT-12 — Payments, billing recovery and automatic account lifecycle
 
-Estado: Pendiente
+Estado: Completado
 
 Objetivo:
 
-Conectar la foundation de suscripciones de DT-11 con pagos reales y permitir que DocTotal administre automáticamente el ciclo económico de cada tenant.
+Conectar la foundation de suscripciones de DT-11 con Stripe y convertirla en un sistema de billing SaaS capaz de cobrar, renovar, recuperar pagos fallidos, suspender y reactivar tenants con mínima intervención manual.
 
-Alcance previsto:
+Incluye:
 
-- Entidad Payment.
-- Registro de pagos.
-- Intentos de cobro.
-- Integración con proveedor de pagos.
-- Identificadores externos.
-- Webhooks.
-- Idempotencia.
-- Cobro mensual.
-- Cobro anual.
-- Renovación después de pago exitoso.
-- Manejo de pagos fallidos.
-- Cambio `active → past_due`.
-- Periodo de gracia.
-- Política de reintentos.
-- Suspensión automática.
-- Cambio de Tenant a `suspended`.
-- Recuperación de pagos.
-- Reactivación automática.
-- Scheduler.
-- Jobs.
-- Commands administrativos.
-- Auditoría de eventos de billing.
-- Protección contra cobros duplicados.
+Modelo Payment.
 
-Flujo objetivo:
+Estados pending, succeeded y failed.
 
-`next_billing_at`
+Registro de importe, moneda, ciclo, intento, pago, fallo y referencia del proveedor.
 
-→ Intento de cobro
+Stripe como proveedor de pagos.
+
+Stripe Customer por tenant.
+
+Alta y actualización de métodos de pago mediante SetupIntent.
+
+Eliminación de método de pago.
+
+Checkout manual para activar una suscripción.
+
+Plan mensual de $600 MXN.
+
+Plan anual de $6,000 MXN.
+
+Cambio mensual ↔ anual programado para el siguiente periodo.
+
+Renovación mensual y anual conservando el billing anchor.
+
+Protección contra billing drift.
+
+Cobros automáticos protegidos mediante BILLING_AUTOMATIC_CHARGING_ENABLED.
+
+Registro de pagos fallidos.
+
+Transición active → past_due.
+
+Periodo de gracia de 7 días.
+
+Política de reintentos programados.
+
+Idempotencia por renovación y por episodio de recuperación.
+
+Recuperación automática mediante tarjeta guardada.
+
+Recuperación manual mediante tarjeta guardada o tarjeta alternativa.
+
+Reactivación de Subscription y Tenant después de recuperar el pago.
+
+Suspensión automática del Tenant al vencer el grace period.
+
+Cancelación programada al final del periodo.
+
+Reanudación de una cancelación programada antes del vencimiento.
+
+Protección contra renovación/cobro cuando cancel_at_period_end = true.
+
+Historial de pagos visible en Billing.
+
+Estado de suscripción y recuperación visible en UI.
+
+Scheduler para renovaciones, reintentos, cancelaciones y grace periods vencidos.
+
+Commands administrativos de billing.
+
+Protección multi-tenant.
+
+Hardening de estados límite e idempotencia.
+
+Flujo implementado:
+
+next_billing_at
+
+→ intento de cobro
 
 Si el pago es exitoso:
 
-→ registrar Payment
+→ Payment = succeeded
 
 → renovar Subscription
 
-→ mantener `active`
+→ mantener Subscription = active
+
+→ mantener Tenant = active
 
 Si el pago falla:
 
-→ registrar intento
+→ Payment = failed
 
-→ Subscription = `past_due`
+→ Subscription = past_due
 
-→ iniciar periodo de gracia
+→ iniciar grace period
 
-→ realizar reintentos
+→ programar reintentos
 
 Si se recupera:
 
-→ Subscription = `active`
+→ Payment = succeeded
 
-→ Tenant = `active`
+→ Subscription = active
 
-Si se agota la recuperación:
+→ Tenant = active
 
-→ Tenant = `suspended`
+Si vence el grace period sin recuperación:
 
----
+→ Subscription = past_due
+
+→ Tenant = suspended
+
+Cancelación:
+
+active
+
+→ cancel_at_period_end = true
+
+→ conservar acceso hasta current_period_ends_at
+
+→ impedir nueva renovación
+
+→ cancelled al final exacto del periodo
+
+La cancelación programada puede revertirse antes del vencimiento.
+
+Validaciones manuales/end-to-end realizadas:
+
+Alta y pago manual con Stripe test mode.
+
+Plan mensual.
+
+Plan anual.
+
+Cambio anual → mensual.
+
+Cambio mensual → anual.
+
+Fallo de renovación.
+
+Recuperación automática.
+
+Tres reintentos fallidos y progresión de retry schedule.
+
+Idempotencia entre episodios de recuperación.
+
+Suspensión exactamente al vencer el grace period.
+
+Recuperación manual.
+
+Pago con tarjeta guardada.
+
+Pago con tarjeta alternativa.
+
+Tarjeta rechazada sin reemplazar el método guardado.
+
+Cancelación programada.
+
+Reanudación de la suscripción.
+
+Protección contra cobro en una suscripción programada para cancelar.
+
+Fuera de alcance / pendiente posterior:
+
+Webhooks Stripe.
+
+Idempotencia de webhooks.
+
+Recibos/comprobantes.
+
+Facturación fiscal.
+
+Auditoría formal de eventos de billing.
+
+Notificaciones comerciales.
+
+Eliminación programada del tenant.
+
+Nota operativa:
+
+Mantener BILLING_AUTOMATIC_CHARGING_ENABLED=false hasta realizar una activación controlada de cobros automáticos en el entorno objetivo.
+
+Baseline al cierre de DT-12:
+
+696 tests verdes
+
+0 failures
+
+Commit sugerido:
+
+feat: complete payments billing recovery and automatic account lifecycle DT-12
 
 ## DT-13 — Referral and promotional credit system
 
@@ -644,20 +919,35 @@ Implementar adquisición orgánica mediante códigos únicos de referido por ten
 Reglas definidas:
 
 - Cada tenant tendrá un código único.
+
 - El tenant podrá compartir su código.
+
 - El código solamente podrá utilizarse durante la primera inscripción de un nuevo tenant.
+
 - Cada nuevo tenant podrá utilizar un único código.
+
 - Un tenant nuevo no podrá utilizar más de un código.
+
 - Si el usuario no utiliza un código durante su inscripción inicial, pierde la oportunidad permanentemente.
+
 - El código no podrá agregarse posteriormente.
+
 - Existirá un límite configurable de beneficios válidos por código durante cada mes.
+
 - La regla inicial prevista es permitir únicamente los primeros 5 usos/recompensas válidos por mes.
+
 - El límite deberá poder modificarse posteriormente sin cambiar el dominio.
+
 - La recompensa será crédito/promoción dentro de DocTotal.
+
 - Debe existir trazabilidad del tenant referidor y tenant referido.
+
 - Deben prevenirse autorreferidos.
+
 - Debe prevenirse reutilización.
+
 - Debe prevenirse doble beneficio.
+
 - Los créditos deberán integrarse con el sistema de billing.
 
 ---
@@ -681,25 +971,41 @@ No debe crear estructuras duplicadas innecesariamente.
 Incluye por revisar y completar:
 
 - Antecedentes personales patológicos.
+
 - Antecedentes personales no patológicos.
+
 - Antecedentes heredofamiliares.
+
 - Antecedentes quirúrgicos.
+
 - Hospitalizaciones previas.
+
 - Alergias.
+
 - Medicamentos habituales.
+
 - Enfermedades y condiciones crónicas.
+
 - Grupo sanguíneo.
+
 - Notas clínicas relevantes.
+
 - Resumen clínico.
+
 - Línea de tiempo clínica.
 
 La línea de tiempo deberá poder combinar posteriormente:
 
 - Consultas.
+
 - Diagnósticos.
+
 - Recetas.
+
 - Documentos.
+
 - Estudios.
+
 - Otros eventos clínicos relevantes.
 
 ---
@@ -717,20 +1023,35 @@ Actualmente DocTotal no cuenta con almacenamiento de archivos clínicos, radiogr
 Incluye:
 
 - Archivos adjuntos.
+
 - PDFs.
+
 - Resultados de laboratorio.
+
 - Radiografías.
+
 - Imágenes médicas.
+
 - Documentos externos.
+
 - Clasificación por tipo.
+
 - Fecha del documento o estudio.
+
 - Descripción.
+
 - Asociación con Patient.
+
 - Asociación opcional con Consultation.
+
 - Descarga segura.
+
 - Eliminación controlada.
+
 - Protección multi-tenant.
+
 - Storage privado.
+
 - Límites de almacenamiento por tenant.
 
 ---
@@ -748,36 +1069,67 @@ La aplicación no debe conservar una apariencia genérica de Livewire.
 Incluye:
 
 - Identidad visual.
+
 - Design system.
+
 - Tipografía.
+
 - Escala de espaciado.
+
 - Paleta.
+
 - Botones.
+
 - Inputs.
+
 - Selects.
+
 - Autocomplete.
+
 - Cards.
+
 - Tablas.
+
 - Badges.
+
 - Modales.
+
 - Alerts.
+
 - Toasts.
+
 - Empty states.
+
 - Loading states.
+
 - Skeletons.
+
 - Navegación.
+
 - Dashboard.
+
 - Agenda.
+
 - Pacientes.
+
 - Expediente.
+
 - Consulta.
+
 - Recetas.
+
 - Onboarding.
+
 - Billing.
+
 - Login.
+
 - Registro.
+
 - Responsive.
+
 - Accesibilidad.
+
 - Consistencia visual global.
 
 El rediseño deberá realizarse sin romper los workflows funcionales ya cubiertos por tests.
@@ -789,21 +1141,45 @@ El rediseño deberá realizarse sin romper los workflows funcionales ya cubierto
 Bloques completados:
 
 - DT-1
+
 - DT-2
+
 - DT-3
+
 - DT-4
+
 - DT-5
+
 - DT-6
+
 - DT-7
+
 - DT-8
+
 - DT-9
+
 - DT-10
+
 - DT-11
+
+- DT-12
 
 Baseline actual:
 
-`445 tests verdes`
+`696 tests verdes`
 
-Próximo bloque recomendado:
+`0 failures`
 
-`DT-12 — Payments, billing recovery and automatic account lifecycle`
+Próximo bloque:
+
+Pendiente de selección después del cierre documental y commit final de DT-12.
+
+Candidatos ya definidos:
+
+- DT-13 — Referral and promotional credit system.
+
+- DT-14 — Expediente clínico longitudinal.
+
+- DT-15 — Clinical files and medical documents.
+
+- DT-16 — Visual redesign / DocTotal UI.

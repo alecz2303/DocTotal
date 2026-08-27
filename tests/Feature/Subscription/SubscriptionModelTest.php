@@ -215,6 +215,32 @@ class SubscriptionModelTest extends TestCase
         );
     }
 
+    public function test_scheduling_cancellation_clears_pending_plan_change(): void
+    {
+        $tenant = $this->createTenant();
+
+        app(TenantContext::class)->set($tenant);
+
+        $subscription = $this->createSubscription();
+
+        $subscription->update([
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+        ]);
+
+        $subscription->scheduleCancellation();
+
+        $subscription->refresh();
+
+        $this->assertTrue(
+            $subscription->cancel_at_period_end
+        );
+
+        $this->assertNull(
+            $subscription->pending_billing_cycle
+        );
+    }
+
     public function test_non_active_subscription_cannot_schedule_cancellation(): void
     {
         $tenant = $this->createTenant();
@@ -260,6 +286,33 @@ class SubscriptionModelTest extends TestCase
 
         $this->assertNull(
             $subscription->next_billing_at
+        );
+    }
+
+    public function test_cancelling_subscription_clears_pending_plan_change(): void
+    {
+        $tenant = $this->createTenant();
+
+        app(TenantContext::class)->set($tenant);
+
+        $subscription = $this->createSubscription();
+
+        $subscription->update([
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+        ]);
+
+        $subscription->cancel();
+
+        $subscription->refresh();
+
+        $this->assertSame(
+            Subscription::STATUS_CANCELLED,
+            $subscription->status
+        );
+
+        $this->assertNull(
+            $subscription->pending_billing_cycle
         );
     }
 
@@ -360,6 +413,8 @@ class SubscriptionModelTest extends TestCase
         mixed $nextBillingAt = null,
         bool $cancelAtPeriodEnd = false,
         mixed $cancelledAt = null,
+        ?int $billingAmount = null,
+        string $billingCurrency = 'MXN',
     ): Subscription {
         $startsAt ??= now();
 
@@ -381,6 +436,12 @@ class SubscriptionModelTest extends TestCase
         return Subscription::create([
             'billing_cycle' =>
             $billingCycle,
+
+            'billing_amount' =>
+            $billingAmount,
+
+            'billing_currency' =>
+            $billingCurrency,
 
             'status' =>
             $status,
@@ -427,5 +488,34 @@ class SubscriptionModelTest extends TestCase
         );
 
         Carbon::setTestNow();
+    }
+
+    public function test_subscription_can_store_billing_amount_in_minor_units(): void
+    {
+        $tenant = $this->createTenant();
+
+        app(TenantContext::class)->set(
+            $tenant
+        );
+
+        $subscription =
+            $this->createSubscription(
+                billingAmount: 129900,
+                billingCurrency: 'MXN',
+            );
+
+        $this->assertIsInt(
+            $subscription->billing_amount
+        );
+
+        $this->assertSame(
+            129900,
+            $subscription->billing_amount
+        );
+
+        $this->assertSame(
+            'MXN',
+            $subscription->billing_currency
+        );
     }
 }

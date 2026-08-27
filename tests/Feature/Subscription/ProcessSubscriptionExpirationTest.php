@@ -190,6 +190,41 @@ class ProcessSubscriptionExpirationTest extends TestCase
         );
     }
 
+    public function test_expiration_clears_pending_plan_change(): void
+    {
+        Carbon::setTestNow(
+            '2026-10-14 16:37:22'
+        );
+
+        $subscription =
+            $this->createSubscription(
+                periodEndsAt: Carbon::parse(
+                    '2026-10-14 16:37:22'
+                ),
+                cancelAtPeriodEnd: true,
+            );
+
+        $subscription->update([
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+        ]);
+
+        app(
+            ProcessSubscriptionExpiration::class
+        )->execute($subscription);
+
+        $subscription->refresh();
+
+        $this->assertSame(
+            Subscription::STATUS_CANCELLED,
+            $subscription->status
+        );
+
+        $this->assertNull(
+            $subscription->pending_billing_cycle
+        );
+    }
+
     private function createSubscription(
         string $status =
         Subscription::STATUS_ACTIVE,

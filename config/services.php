@@ -41,4 +41,9 @@ return [
             'https://sepomex.kurenn.dev/api/v1'
         ),
     ],
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
 ];
