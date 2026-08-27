@@ -17,6 +17,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@stripe/stripe-js": "^9.14.0",
         "sweetalert2": "^11.26.25"
     }
 }

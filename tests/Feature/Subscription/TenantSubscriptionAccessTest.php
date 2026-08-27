@@ -132,7 +132,12 @@ class TenantSubscriptionAccessTest extends TestCase
         $this->createSubscription(
             $tenant,
             status: Subscription::STATUS_PAST_DUE,
-            periodEndsAt: now()->addDays(5)
+            periodStartsAt: now()->subMonth(),
+            periodEndsAt: now()->subDay(),
+            pastDueSince: now()->subDay(),
+            graceEndsAt: now()->addDays(6),
+            nextRetryAt: now()->addDay(),
+            retryCount: 0,
         );
 
         $this->assertTrue(
@@ -156,12 +161,19 @@ class TenantSubscriptionAccessTest extends TestCase
             now()->subMonths(2),
             'trial_ends_at' =>
             now()->subMonth(),
+            'suspended_at' =>
+            now(),
         ]);
 
         $this->createSubscription(
             $tenant,
             status: Subscription::STATUS_PAST_DUE,
-            periodEndsAt: now()->addDays(5)
+            periodStartsAt: now()->subMonth(),
+            periodEndsAt: now()->subDay(),
+            pastDueSince: now()->subDay(),
+            graceEndsAt: now()->addDays(6),
+            nextRetryAt: now()->addDay(),
+            retryCount: 0,
         );
 
         $this->assertTrue(
@@ -214,6 +226,8 @@ class TenantSubscriptionAccessTest extends TestCase
             now()->subMonth(),
             'trial_ends_at' =>
             now()->subDays(10),
+            'suspended_at' =>
+            now(),
         ]);
 
         $this->createSubscription(
@@ -340,6 +354,10 @@ class TenantSubscriptionAccessTest extends TestCase
         Subscription::STATUS_ACTIVE,
         mixed $periodStartsAt = null,
         mixed $periodEndsAt = null,
+        mixed $pastDueSince = null,
+        mixed $graceEndsAt = null,
+        mixed $nextRetryAt = null,
+        int $retryCount = 0,
     ): Subscription {
         app(TenantContext::class)->set(
             $tenant
@@ -375,6 +393,21 @@ class TenantSubscriptionAccessTest extends TestCase
                 Subscription::STATUS_CANCELLED
                 ? null
                 : $periodEndsAt,
+
+            'past_due_since' =>
+            $pastDueSince,
+
+            'grace_ends_at' =>
+            $graceEndsAt,
+
+            'next_retry_at' =>
+            $nextRetryAt,
+
+            'retry_count' =>
+            $retryCount,
+
+            'cancel_at_period_end' =>
+            false,
 
             'cancelled_at' =>
             $status ===

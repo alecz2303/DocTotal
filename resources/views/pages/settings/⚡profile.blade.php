@@ -263,6 +263,25 @@ new
         </p>
     </div>
 
+    <div class="mb-6 border-b border-slate-200">
+        <nav class="-mb-px flex gap-6">
+            <a
+                href="{{ route('settings.profile') }}"
+                class="border-b-2 border-slate-900 px-1 pb-3
+                    text-sm font-semibold text-slate-900">
+                Perfil y consultorio
+            </a>
+
+            <a
+                href="{{ route('settings.billing') }}"
+                class="border-b-2 border-transparent px-1 pb-3
+                    text-sm font-medium text-slate-500
+                    hover:border-slate-300 hover:text-slate-700">
+                Facturación
+            </a>
+        </nav>
+    </div>
+
     <form wire:submit="save" class="space-y-6">
 
         {{-- PERFIL PROFESIONAL --}}

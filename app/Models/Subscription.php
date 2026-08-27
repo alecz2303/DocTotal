@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use LogicException;
@@ -24,6 +25,7 @@ class Subscription extends Model
         'tenant_id',
         'uuid',
         'billing_cycle',
+        'pending_billing_cycle',
         'status',
         'starts_at',
         'current_period_starts_at',
@@ -31,6 +33,12 @@ class Subscription extends Model
         'next_billing_at',
         'cancel_at_period_end',
         'cancelled_at',
+        'past_due_since',
+        'grace_ends_at',
+        'next_retry_at',
+        'retry_count',
+        'billing_amount',
+        'billing_currency',
     ];
 
     protected function casts(): array
@@ -42,6 +50,11 @@ class Subscription extends Model
             'next_billing_at' => 'datetime',
             'cancel_at_period_end' => 'boolean',
             'cancelled_at' => 'datetime',
+            'past_due_since' => 'datetime',
+            'grace_ends_at' => 'datetime',
+            'next_retry_at' => 'datetime',
+            'retry_count' => 'integer',
+            'billing_amount' => 'integer',
         ];
     }
 
@@ -59,9 +72,35 @@ class Subscription extends Model
         return 'uuid';
     }
 
+    public function isInGracePeriod(): bool
+    {
+        return $this->isPastDue()
+            && $this->grace_ends_at
+            && now()->lessThan($this->grace_ends_at);
+    }
+
+    public function gracePeriodHasExpired(): bool
+    {
+        return $this->isPastDue()
+            && $this->grace_ends_at
+            && now()->greaterThanOrEqualTo($this->grace_ends_at);
+    }
+
+    public function retryIsDue(): bool
+    {
+        return $this->isPastDue()
+            && $this->next_retry_at
+            && now()->greaterThanOrEqualTo($this->next_retry_at);
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function isActive(): bool
@@ -124,12 +163,8 @@ class Subscription extends Model
     public function isCurrent(): bool
     {
         return $this->isActive()
-            && now()->greaterThanOrEqualTo(
-                $this->current_period_starts_at
-            )
-            && now()->lessThan(
-                $this->current_period_ends_at
-            );
+            && now()->greaterThanOrEqualTo($this->current_period_starts_at)
+            && now()->lessThan($this->current_period_ends_at);
     }
 
     public function scheduleCancellation(): void
@@ -145,6 +180,7 @@ class Subscription extends Model
 
         $this->update([
             'cancel_at_period_end' => true,
+            'pending_billing_cycle' => null,
         ]);
     }
 
@@ -159,6 +195,7 @@ class Subscription extends Model
             'cancel_at_period_end' => false,
             'cancelled_at' => now(),
             'next_billing_at' => null,
+            'pending_billing_cycle' => null,
         ]);
     }
 }
