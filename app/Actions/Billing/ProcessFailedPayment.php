@@ -3,9 +3,9 @@
 namespace App\Actions\Billing;
 
 use App\Models\Payment;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use LogicException;
-use Carbon\CarbonInterface;
 
 class ProcessFailedPayment
 {
@@ -53,11 +53,28 @@ class ProcessFailedPayment
                     );
                 }
 
+                /*
+                 * Primero dejamos constancia histórica del fallo.
+                 */
                 $payment->fail(
                     $failedAt,
                     $failureCode,
                     $failureMessage,
                     $providerPaymentId
+                );
+
+                /*
+                 * Un crédito sólo estaba reservado para este intento.
+                 * Al fallar Stripe debe volver a quedar disponible.
+                 *
+                 * Payment conserva promotional_credit_amount y amount
+                 * como historial de lo que realmente se intentó cobrar.
+                 */
+                app(
+                    ReleaseReservedPromotionalCredits::class
+                )->execute(
+                    $payment,
+                    $failedAt
                 );
 
                 app(

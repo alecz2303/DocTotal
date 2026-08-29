@@ -48,6 +48,12 @@ Schedule::command(
     ->everyMinute()
     ->withoutOverlapping();
 
+Schedule::command(
+    'billing:cleanup-abandoned-checkouts'
+)
+    ->hourly()
+    ->withoutOverlapping();
+
 /*
  * Estos procesos SÍ realizan intentos de cobro.
  *

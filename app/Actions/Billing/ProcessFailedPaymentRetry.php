@@ -3,7 +3,6 @@
 namespace App\Actions\Billing;
 
 use App\Models\Payment;
-use App\Models\Subscription;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -96,11 +95,26 @@ class ProcessFailedPaymentRetry
                     );
                 }
 
+                /*
+                 * Registramos primero el resultado fallido.
+                 */
                 $payment->fail(
                     $failedAt,
                     $failureCode,
                     $failureMessage,
                     $providerPaymentId
+                );
+
+                /*
+                 * Los créditos reservados para este intento
+                 * vuelven a estar disponibles para el siguiente
+                 * Payment/retry.
+                 */
+                app(
+                    ReleaseReservedPromotionalCredits::class
+                )->execute(
+                    $payment,
+                    $failedAt
                 );
 
                 $nextRetryAt = null;

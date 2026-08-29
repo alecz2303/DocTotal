@@ -12,23 +12,23 @@ class FakeStripePaymentIntentApi implements StripePaymentIntentApi
 
     public ?array $receivedOptions = null;
 
-    public ?string $receivedPaymentIntentId =
-    null;
-
-    private ?PaymentIntent $createResult =
-    null;
-
-    private ?PaymentIntent $retrieveResult =
-    null;
-
-    private ?\Throwable $exception =
-    null;
+    public ?string $receivedPaymentIntentId = null;
 
     public ?string $receivedUpdatePaymentIntentId = null;
 
     public ?array $receivedUpdateParams = null;
 
+    public ?string $receivedCancelPaymentIntentId = null;
+
+    private ?PaymentIntent $createResult = null;
+
+    private ?PaymentIntent $retrieveResult = null;
+
     private ?PaymentIntent $updateResult = null;
+
+    private ?PaymentIntent $cancelResult = null;
+
+    private ?\Throwable $exception = null;
 
     public function returnPaymentIntent(
         PaymentIntent $paymentIntent
@@ -40,40 +40,30 @@ class FakeStripePaymentIntentApi implements StripePaymentIntentApi
             null;
     }
 
+    public function returnRetrievedPaymentIntent(
+        PaymentIntent $paymentIntent
+    ): void {
+        $this->retrieveResult =
+            $paymentIntent;
+
+        $this->exception =
+            null;
+    }
+
     public function returnUpdatedPaymentIntent(
         PaymentIntent $paymentIntent
     ): void {
         $this->updateResult =
             $paymentIntent;
+
+        $this->exception =
+            null;
     }
 
-    public function update(
-        string $paymentIntentId,
-        array $params,
-    ): PaymentIntent {
-        $this->receivedUpdatePaymentIntentId =
-            $paymentIntentId;
-
-        $this->receivedUpdateParams =
-            $params;
-
-        if ($this->exception) {
-            throw $this->exception;
-        }
-
-        if (! $this->updateResult) {
-            throw new LogicException(
-                'No se configuró un PaymentIntent actualizado fake.'
-            );
-        }
-
-        return $this->updateResult;
-    }
-
-    public function returnRetrievedPaymentIntent(
+    public function returnCanceledPaymentIntent(
         PaymentIntent $paymentIntent
     ): void {
-        $this->retrieveResult =
+        $this->cancelResult =
             $paymentIntent;
 
         $this->exception =
@@ -90,6 +80,12 @@ class FakeStripePaymentIntentApi implements StripePaymentIntentApi
             null;
 
         $this->retrieveResult =
+            null;
+
+        $this->updateResult =
+            null;
+
+        $this->cancelResult =
             null;
     }
 
@@ -133,5 +129,47 @@ class FakeStripePaymentIntentApi implements StripePaymentIntentApi
         }
 
         return $this->retrieveResult;
+    }
+
+    public function update(
+        string $paymentIntentId,
+        array $params,
+    ): PaymentIntent {
+        $this->receivedUpdatePaymentIntentId =
+            $paymentIntentId;
+
+        $this->receivedUpdateParams =
+            $params;
+
+        if ($this->exception) {
+            throw $this->exception;
+        }
+
+        if (! $this->updateResult) {
+            throw new LogicException(
+                'No se configuró un PaymentIntent actualizado fake.'
+            );
+        }
+
+        return $this->updateResult;
+    }
+
+    public function cancel(
+        string $paymentIntentId,
+    ): PaymentIntent {
+        $this->receivedCancelPaymentIntentId =
+            $paymentIntentId;
+
+        if ($this->exception) {
+            throw $this->exception;
+        }
+
+        if (! $this->cancelResult) {
+            throw new LogicException(
+                'No se configuró un PaymentIntent cancelado fake.'
+            );
+        }
+
+        return $this->cancelResult;
     }
 }

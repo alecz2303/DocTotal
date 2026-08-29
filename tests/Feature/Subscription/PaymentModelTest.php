@@ -438,4 +438,58 @@ class PaymentModelTest extends TestCase
             $payment->billing_cycle
         );
     }
+
+    public function test_payment_casts_promotional_amounts_as_integers(): void
+    {
+        $payment = $this->createPayment([
+            'gross_amount' => '60000',
+            'referral_discount_amount' => '5000',
+            'promotional_credit_amount' => '15000',
+            'amount' => 40000,
+        ]);
+
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $payment->referral_discount_amount
+        );
+
+        $this->assertSame(
+            15000,
+            $payment->promotional_credit_amount
+        );
+    }
+
+    public function test_payment_calculates_total_discount_amount(): void
+    {
+        $payment = $this->createPayment([
+            'gross_amount' => 60000,
+            'referral_discount_amount' => 5000,
+            'promotional_credit_amount' => 15000,
+            'amount' => 40000,
+        ]);
+
+        $this->assertSame(
+            20000,
+            $payment->totalDiscountAmount()
+        );
+    }
+
+    public function test_payment_returns_contractual_amount(): void
+    {
+        $payment = $this->createPayment([
+            'gross_amount' => 60000,
+            'referral_discount_amount' => 5000,
+            'amount' => 55000,
+        ]);
+
+        $this->assertSame(
+            60000,
+            $payment->contractualAmount()
+        );
+    }
 }

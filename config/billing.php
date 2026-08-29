@@ -21,24 +21,24 @@ return [
     'plans' => [
         'monthly' => [
             'name' =>
-                'DocTotal Mensual',
+            'DocTotal Mensual',
 
             'amount' =>
-                60000,
+            60000,
 
             'currency' =>
-                'MXN',
+            'MXN',
         ],
 
         'yearly' => [
             'name' =>
-                'DocTotal Anual',
+            'DocTotal Anual',
 
             'amount' =>
-                600000,
+            600000,
 
             'currency' =>
-                'MXN',
+            'MXN',
         ],
     ],
 
@@ -51,6 +51,24 @@ return [
     'automatic_charging_enabled' => env(
         'BILLING_AUTOMATIC_CHARGING_ENABLED',
         false
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Manual checkout expiration
+    |--------------------------------------------------------------------------
+    |
+    | Los checkouts manuales iniciales que permanezcan pendientes durante
+    | este tiempo podrán considerarse abandonados y cancelarse de forma
+    | automática.
+    |
+    | El valor se expresa en horas.
+    |
+    */
+
+    'manual_checkout_expiration_hours' => env(
+        'BILLING_MANUAL_CHECKOUT_EXPIRATION_HOURS',
+        24
     ),
 
     /*

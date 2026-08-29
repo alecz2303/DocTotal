@@ -19,4 +19,8 @@ interface StripePaymentIntentApi
         string $paymentIntentId,
         array $params,
     ): PaymentIntent;
+
+    public function cancel(
+        string $paymentIntentId,
+    ): PaymentIntent;
 }

@@ -6,6 +6,7 @@ use App\Actions\Billing\AttemptSubscriptionPayment;
 use App\Contracts\PaymentGateway;
 use App\Models\Payment;
 use App\Models\Subscription;
+use App\Models\PromotionalCredit;
 use App\Models\Tenant;
 use App\Services\Billing\FakePaymentGateway;
 use App\Support\TenantContext;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use LogicException;
 use Tests\TestCase;
+use App\Models\Referral;
 
 class AttemptSubscriptionPaymentTest extends TestCase
 {
@@ -284,6 +286,356 @@ class AttemptSubscriptionPaymentTest extends TestCase
             'invalid-retry',
             isRetry: true,
         );
+    }
+
+    public function test_successful_payment_consumes_reserved_promotional_credit(): void
+    {
+        $subscription =
+            $this->createSubscription(
+                billingAmount: 60000
+            );
+
+        $credit =
+            $this->createPromotionalCredit(
+                $subscription->tenant_id
+            );
+
+        $gateway =
+            $this->fakeGateway();
+
+        $gateway->succeedNextCharge(
+            'provider-credit-success'
+        );
+
+        $payment = app(
+            AttemptSubscriptionPayment::class
+        )->execute(
+            $subscription,
+            Carbon::parse(
+                '2026-09-26 16:37:22'
+            ),
+            'credit-success-1'
+        );
+
+        $credit->refresh();
+        $payment->refresh();
+
+        $this->assertSame(
+            Payment::STATUS_SUCCEEDED,
+            $payment->status
+        );
+
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $payment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $payment->amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_CONSUMED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $payment->id,
+            $credit->payment_id
+        );
+
+        $this->assertNotNull(
+            $credit->consumed_at
+        );
+    }
+
+    public function test_failed_payment_releases_reserved_promotional_credit(): void
+    {
+        $subscription =
+            $this->createSubscription(
+                billingAmount: 60000
+            );
+
+        $credit =
+            $this->createPromotionalCredit(
+                $subscription->tenant_id
+            );
+
+        $gateway =
+            $this->fakeGateway();
+
+        $gateway->failNextCharge(
+            'card_declined',
+            'Tarjeta rechazada.'
+        );
+
+        $failedAt =
+            Carbon::parse(
+                '2026-09-26 16:37:22'
+            );
+
+        $payment = app(
+            AttemptSubscriptionPayment::class
+        )->execute(
+            $subscription,
+            $failedAt,
+            'credit-failure-1'
+        );
+
+        $credit->refresh();
+        $payment->refresh();
+
+        $this->assertSame(
+            Payment::STATUS_FAILED,
+            $payment->status
+        );
+
+        /*
+        * Payment conserva el historial del intento:
+        * bruto 600, crédito 50, cobro neto 550.
+        */
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $payment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $payment->amount
+        );
+
+        /*
+        * Pero el crédito vuelve a estar disponible.
+        */
+        $this->assertSame(
+            PromotionalCredit::STATUS_AVAILABLE,
+            $credit->status
+        );
+
+        $this->assertNull(
+            $credit->payment_id
+        );
+
+        $this->assertNull(
+            $credit->consumed_at
+        );
+
+        $this->assertNotNull(
+            $payment->promotional_credits_released_at
+        );
+    }
+
+    public function test_failed_payment_credit_is_reused_and_consumed_by_successful_retry(): void
+    {
+        $subscription =
+            $this->createSubscription(
+                billingAmount: 60000
+            );
+
+        $credit =
+            $this->createPromotionalCredit(
+                $subscription->tenant_id
+            );
+
+        $gateway =
+            $this->fakeGateway();
+
+        /*
+        * Primer intento: falla.
+        */
+        $gateway->failNextCharge(
+            'card_declined',
+            'Tarjeta rechazada.'
+        );
+
+        $failedPayment = app(
+            AttemptSubscriptionPayment::class
+        )->execute(
+            $subscription,
+            Carbon::parse(
+                '2026-09-26 16:37:22'
+            ),
+            'credit-retry-failure-1'
+        );
+
+        $subscription->refresh();
+        $credit->refresh();
+        $failedPayment->refresh();
+
+        $this->assertSame(
+            Payment::STATUS_FAILED,
+            $failedPayment->status
+        );
+
+        $this->assertSame(
+            5000,
+            $failedPayment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $failedPayment->amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_AVAILABLE,
+            $credit->status
+        );
+
+        $this->assertNull(
+            $credit->payment_id
+        );
+
+        /*
+        * Retry: el mismo crédito disponible debe
+        * reservarse de nuevo y consumirse al tener éxito.
+        */
+        $gateway->succeedNextCharge(
+            'provider-credit-retry-success'
+        );
+
+        $retryPayment = app(
+            AttemptSubscriptionPayment::class
+        )->execute(
+            $subscription,
+            Carbon::parse(
+                '2026-09-27 16:37:22'
+            ),
+            'credit-retry-success-1',
+            isRetry: true,
+        );
+
+        $subscription->refresh();
+        $credit->refresh();
+        $retryPayment->refresh();
+
+        $this->assertSame(
+            Payment::STATUS_SUCCEEDED,
+            $retryPayment->status
+        );
+
+        $this->assertSame(
+            60000,
+            $retryPayment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $retryPayment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $retryPayment->amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_CONSUMED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $retryPayment->id,
+            $credit->payment_id
+        );
+
+        $this->assertNotNull(
+            $credit->consumed_at
+        );
+
+        $this->assertSame(
+            Subscription::STATUS_ACTIVE,
+            $subscription->status
+        );
+    }
+
+    private function createPromotionalCredit(
+        int $tenantId,
+        int $amount = 5000,
+    ): PromotionalCredit {
+        $referrer =
+            Tenant::query()
+            ->findOrFail(
+                $tenantId
+            );
+
+        $referred =
+            Tenant::create([
+                'name' =>
+                'Consultorio Referido',
+
+                'slug' =>
+                'consultorio-referido-' .
+                    uniqid(),
+
+                'status' =>
+                'active',
+
+                'onboarding_completed_at' =>
+                now(),
+            ]);
+
+        $referral =
+            Referral::create([
+                'referrer_tenant_id' =>
+                $referrer->id,
+
+                'referred_tenant_id' =>
+                $referred->id,
+
+                'referral_code' =>
+                $referrer->referral_code,
+
+                'status' =>
+                Referral::STATUS_QUALIFIED,
+
+                'qualified_at' =>
+                now(),
+
+                'reward_status' =>
+                Referral::REWARD_GRANTED,
+
+                'reward_month' =>
+                now()->startOfMonth(),
+            ]);
+
+        return PromotionalCredit::withoutGlobalScopes()
+            ->create([
+                'tenant_id' =>
+                $referrer->id,
+
+                'referral_id' =>
+                $referral->id,
+
+                'kind' =>
+                PromotionalCredit::KIND_REFERRER_REWARD,
+
+                'amount' =>
+                $amount,
+
+                'currency' =>
+                'MXN',
+
+                'status' =>
+                PromotionalCredit::STATUS_AVAILABLE,
+
+                'available_at' =>
+                now(),
+
+                'idempotency_key' =>
+                'test-credit-' . uniqid(),
+            ]);
     }
 
     private function fakeGateway(): FakePaymentGateway

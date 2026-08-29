@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**52% completado**
+**56% completado**
 
-`██████████░░░░░░░░░░` 52%
+`███████████░░░░░░░░░` 56%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -298,7 +298,11 @@ Relacionado principalmente con DT-6.
 
 - [ ] Mostrar claramente información del periodo de prueba.
 
-- [ ] Preparar onboarding/registro para promociones y referidos.
+- [x] Registro preparado para promociones y referidos.
+
+- [x] Captura opcional de código de referido durante el alta inicial.
+
+- [x] Aplicación automática de código mediante enlace de referido.
 
 - [!] Revisar qué información deberá ser obligatoria antes de
 
@@ -978,7 +982,7 @@ comenzar el día.
 
 - [x] Métodos de pago.
 
-- [ ] Referidos.
+- [x] Referidos.
 
 - [ ] Almacenamiento utilizado.
 
@@ -1039,7 +1043,9 @@ del Tenant.
 Relacionado principalmente con DT-11 y DT-12.
 
 La infraestructura de suscripciones ya define el periodo de servicio, ciclos
+
 de facturación, estados comerciales, derecho de acceso del tenant e integración
+
 con billing real mediante Stripe.
 
 ## Modelo comercial
@@ -1185,8 +1191,11 @@ con billing real mediante Stripe.
 Relacionado principalmente con DT-12.
 
 DT-12 implementó la foundation operativa de pagos y recuperación SaaS sobre
+
 la Subscription construida en DT-11. Stripe quedó integrado y validado en modo
+
 de prueba. Los cobros automáticos permanecen protegidos por feature flag hasta
+
 su activación controlada en el entorno objetivo.
 
 - [x] Modelo `Payment`.
@@ -1201,7 +1210,7 @@ su activación controlada en el entorno objetivo.
 
 - [x] Método de pago Stripe.
 
-- [x] Estados `pending`, `succeeded` y `failed`.
+- [x] Estados `pending`, `succeeded`, `failed` y `canceled`.
 
 - [x] Referencia del proveedor.
 
@@ -1235,7 +1244,23 @@ su activación controlada en el entorno objetivo.
 
 - [x] Idempotencia de intentos de renovación, recuperación y checkout manual.
 
-- [x] Scheduler para renovaciones, reintentos, cancelaciones y grace periods vencidos.
+- [x] Integración de descuentos y créditos promocionales con billing.
+
+- [x] Reserva idempotente de créditos promocionales.
+
+- [x] Consumo de créditos únicamente después de pago exitoso.
+
+- [x] Liberación de créditos después de pago fallido o checkout cancelado.
+
+- [x] Prevención de checkouts manuales pendientes duplicados.
+
+- [x] Cambio de plan con cancelación segura del checkout anterior.
+
+- [x] Limpieza automática de checkouts manuales abandonados.
+
+- [x] Reconciliación segura de checkouts cuyo PaymentIntent ya fue cobrado en Stripe.
+
+- [x] Scheduler para renovaciones, reintentos, cancelaciones, grace periods vencidos y limpieza de checkouts abandonados.
 
 - [x] Stripe test mode validado end-to-end.
 
@@ -1335,123 +1360,180 @@ active
 
 # 18. Referidos y promociones
 
-Actualmente NO existe infraestructura de referidos.
+Relacionado principalmente con DT-13.
 
-Cada tenant deberá recibir un código único que pueda compartir.
+DT-13 implementó el programa de referidos y la foundation de créditos
+promocionales integrada con el lifecycle de billing.
 
 ## Código de referido
 
-- [ ] Código único por tenant.
+- [x] Código único por tenant.
 
-- [ ] Generación automática.
+- [x] Generación automática.
 
-- [ ] Código permanente.
+- [x] Código permanente.
 
-- [ ] Índice UNIQUE en base de datos.
+- [x] Índice UNIQUE en base de datos.
 
-- [ ] Pantalla para consultar código.
+- [x] Backfill de códigos para tenants existentes.
 
-- [ ] Acción para copiar código.
+- [x] Pantalla para consultar código.
 
-- [ ] Validación del código.
+- [x] Enlace de referido.
 
-- [ ] Identificación del tenant referente.
+- [x] Acción para copiar/compartir referencia.
+
+- [x] Validación del código.
+
+- [x] Identificación del tenant referente.
 
 ## Uso durante registro
 
-Reglas definidas:
+- [x] Un tenant nuevo puede utilizar como máximo un código de referido.
 
-- [ ] Un tenant nuevo puede utilizar como máximo UN código de
+- [x] Captura del código durante la inscripción inicial.
 
-referido.
+- [x] Aplicación automática mediante parámetro `ref`.
 
-- [ ] El código solamente puede utilizarse durante su inscripción
+- [x] Validación de códigos ingresados manualmente.
 
-inicial.
+- [x] Asociación permanente entre referidor y referido.
 
-- [ ] La oportunidad existe únicamente durante el alta inicial.
+- [x] Referencia inicialmente en estado `pending`.
 
-- [ ] Si termina el registro sin utilizar código, pierde
+- [x] Un tenant no puede referirse a sí mismo.
 
-definitivamente
+- [x] Prevención de atribuciones duplicadas.
 
-      la posibilidad de aplicar uno.
+- [x] El registro por sí solo no genera recompensa.
 
-- [ ] No puede agregar un código posteriormente.
-
-- [ ] No puede cambiar el código utilizado.
-
-- [ ] No puede eliminarlo para utilizar otro.
-
-- [ ] No puede utilizar nuevamente otro código.
-
-- [ ] Un tenant no puede referirse a sí mismo.
-
-- [ ] El uso debe quedar registrado de forma permanente.
+- [x] La referencia califica únicamente con el primer pago exitoso.
 
 ## Límite promocional mensual
 
-El número máximo debe ser configurable.
+- [x] Máximo de 5 recompensas para el referidor por mes calendario.
 
-Ejemplo inicial:
+- [x] Máximo mensual actual de $250 MXN.
 
-Primeros 5 referidos válidos del mes → generan promoción.
+- [x] El periodo se determina por la fecha del primer pago exitoso del referido.
 
-Referidos posteriores → no generan promoción durante ese periodo.
+- [x] Conteo de referencias calificadas durante el periodo.
 
-Pendiente:
+- [x] Reinicio lógico al comenzar un nuevo mes.
 
-- [ ] Máximo configurable de usos premiados por código y por mes.
+- [x] Registro de referencias que generaron recompensa.
 
-- [ ] Periodo mensual.
+- [x] Registro de referencias que alcanzaron el límite mensual.
 
-- [ ] Contador de usos.
+- [x] El sexto referido y posteriores no generan crédito adicional para el referidor.
 
-- [ ] Reinicio lógico por nuevo periodo.
+- [x] El límite del referidor no elimina el beneficio propio del referido.
 
-- [ ] Registrar qué usos obtuvieron promoción.
+## Beneficio del referido
 
-- [ ] Evitar race conditions al consumir el último cupo.
+- [x] Descuento único de $50 MXN.
 
-- [ ] Definir comportamiento de referidos posteriores al límite.
+- [x] Aplicación sobre el primer pago elegible.
 
-## Beneficio
+- [x] Plan mensual: $600 MXN → $550 MXN.
 
-- [ ] Definir monto promocional.
+- [x] Plan anual: $6,000 MXN → $5,950 MXN.
 
-- [ ] Registrar beneficio del tenant nuevo.
+- [x] Beneficio independiente del límite mensual del referidor.
 
-- [ ] Registrar beneficio del tenant referente.
+- [x] Prevención de doble descuento.
 
-- [ ] Aplicar beneficio a suscripción.
+## Crédito del referidor
 
-- [ ] Saldo promocional.
+- [x] Crédito de $50 MXN por referido calificado.
 
-- [ ] Historial de promociones.
+- [x] Modelo `PromotionalCredit`.
 
-- [ ] Evitar doble beneficio.
+- [x] Estados `available`, `reserved` y `consumed`.
 
-- [ ] Auditoría de promociones.
+- [x] Crédito sin caducidad.
 
-## Decisiones pendientes
+- [x] Aplicación automática al siguiente pago elegible.
 
-- [!] Definir monto de promoción.
+- [x] Compatible con pago manual.
 
-- [!] Definir número inicial de referidos premiables por mes.
+- [x] Compatible con renovación automática.
 
-- [!] Definir si el beneficio del referente requiere primer pago del
+- [x] Reserva idempotente antes del intento de cobro.
 
-referido.
+- [x] Consumo únicamente después de pago exitoso.
 
-- [!] Definir vencimiento del saldo promocional.
+- [x] Liberación después de pago fallido.
 
-- [!] Definir si aplica a mensualidad.
+- [x] Liberación después de checkout cancelado.
 
-- [!] Definir si aplica a anualidad.
+- [x] Reutilización del crédito después de liberarlo.
 
-- [!] Definir comportamiento si el referido cancela o solicita
+- [x] Protección para evitar importes de cobro inválidos.
 
-reembolso.
+- [x] Trazabilidad entre crédito, referencia y pago.
+
+## Checkout y promociones
+
+- [x] Desglose de importe bruto, descuento de referido y crédito promocional.
+
+- [x] Prevención de múltiples checkouts manuales pendientes para el mismo tenant.
+
+- [x] Reutilización idempotente del checkout pendiente.
+
+- [x] Cambio mensual ↔ anual cancelando primero el checkout anterior.
+
+- [x] Cancelación del PaymentIntent de Stripe al abandonar un checkout.
+
+- [x] Estado `canceled` para pagos abandonados.
+
+- [x] Limpieza automática de checkouts expirados.
+
+- [x] Expiración configurable de checkout manual.
+
+- [x] Reconciliación de PaymentIntent `succeeded` cuando el Payment local continúa `pending`.
+
+- [x] Scheduler horario para limpieza de checkouts abandonados.
+
+## Calidad
+
+- [x] Tests de modelos y relaciones.
+
+- [x] Tests de generación y unicidad de códigos.
+
+- [x] Tests de atribución.
+
+- [x] Tests de auto-referido y atribución duplicada.
+
+- [x] Tests de calificación por primer pago exitoso.
+
+- [x] Tests de descuento mensual y anual.
+
+- [x] Tests de recompensa del referidor.
+
+- [x] Tests del límite mensual.
+
+- [x] Tests de idempotencia.
+
+- [x] Tests de reserva, consumo y liberación de créditos.
+
+- [x] Tests de integración con billing.
+
+- [x] Tests de checkout abandonado.
+
+- [x] Tests de reconciliación con Stripe.
+
+- [x] Tests del comando de limpieza.
+
+- [x] Suite completa sin regresiones.
+
+## Pendiente futuro
+
+- [ ] Auditoría administrativa/comercial avanzada de promociones.
+
+- [ ] Herramientas administrativas para consultar y gestionar referidos.
+
+- [!] Definir comportamiento comercial ante reembolsos futuros.
 
 # 19. Comunicaciones
 
@@ -1950,7 +2032,9 @@ accidentalmente
 # 24. Infraestructura y operación técnica
 
 Existe infraestructura base de Laravel para cache/jobs y DT-12 incorporó
+
 scheduler operativo para billing. Todavía falta definir la operación completa
+
 de producción.
 
 - [x] Tabla de jobs.
@@ -1970,6 +2054,10 @@ de producción.
 - [x] Procesamiento de cancelaciones programadas.
 
 - [x] Procesamiento de suspensiones por grace period vencido.
+
+- [x] Limpieza automática de checkouts manuales abandonados.
+
+- [x] Reconciliación segura de checkouts manuales ya cobrados en Stripe.
 
 - [ ] Procesamiento de eliminaciones.
 
@@ -2014,6 +2102,14 @@ Cierre DT-11:
 Cierre DT-12:
 
 696 tests verdes.
+
+0 failures.
+
+Cierre DT-13:
+
+797 tests verdes.
+
+2244 assertions.
 
 0 failures.
 
@@ -2087,17 +2183,23 @@ Cierre DT-12:
 
 - [x] Tests de comandos programados de billing.
 
+- [x] Tests de referidos.
+
+- [x] Tests de promociones.
+
+- [x] Tests de créditos promocionales.
+
+- [x] Tests de checkout manual y abandono.
+
+- [x] Tests de reconciliación de pagos manuales.
+
 ## Pendiente futuro
 
-- [x] Baseline actualizado al cierre de DT-12.
+- [x] Baseline actualizado al cierre de DT-13.
 
 - [ ] Tests de archivos.
 
 - [ ] Tests de almacenamiento.
-
-- [ ] Tests de referidos.
-
-- [ ] Tests de promociones.
 
 - [ ] Tests de webhooks.
 
@@ -2350,7 +2452,9 @@ Estado: Completado.
 Objetivo:
 
 Convertir la foundation de Subscription de DT-11 en un sistema de billing SaaS
+
 capaz de cobrar, renovar, recuperar pagos fallidos, suspender y reactivar tenants
+
 con mínima intervención manual.
 
 Incluye:
@@ -2416,6 +2520,7 @@ Pendiente fuera del alcance de DT-12:
 Nota operativa:
 
 Mantener `BILLING_AUTOMATIC_CHARGING_ENABLED=false` hasta realizar una
+
 activación controlada de cobros automáticos en el entorno correspondiente.
 
 Baseline al cierre:
@@ -2424,15 +2529,80 @@ Baseline al cierre:
 
 0 failures.
 
+## DT-13 --- Referral program and promotional credits
+
+Estado: Completado.
+
+Objetivo:
+
+Implementar el programa de referidos de DocTotal y los créditos promocionales,
+integrándolos de forma segura con el lifecycle comercial y de billing.
+
+Incluye:
+
+- [x] Código único y permanente por tenant.
+
+- [x] Enlace de referido.
+
+- [x] Captura y validación durante registro.
+
+- [x] Prevención de auto-referidos y atribuciones duplicadas.
+
+- [x] Modelo `Referral`.
+
+- [x] Calificación mediante primer pago exitoso.
+
+- [x] Descuento único de $50 MXN para el referido.
+
+- [x] Crédito de $50 MXN para el referidor.
+
+- [x] Máximo de 5 recompensas / $250 MXN por mes calendario.
+
+- [x] Modelo `PromotionalCredit`.
+
+- [x] Estados `available`, `reserved` y `consumed`.
+
+- [x] Reserva, consumo y liberación idempotentes.
+
+- [x] Integración con pagos manuales.
+
+- [x] Integración con renovaciones automáticas.
+
+- [x] Integración con recuperación de pagos.
+
+- [x] Desglose promocional visible en Billing.
+
+- [x] Prevención de checkouts manuales pendientes duplicados.
+
+- [x] Cambio de plan con cancelación segura del checkout anterior.
+
+- [x] Limpieza automática de checkouts abandonados.
+
+- [x] Reconciliación segura cuando Stripe ya reporta un PaymentIntent como `succeeded`.
+
+- [x] Scheduler horario para mantenimiento de checkouts.
+
+- [x] Cobertura automatizada completa.
+
+Baseline al cierre:
+
+797 tests verdes.
+
+2244 assertions.
+
+0 failures.
+
 # 27. Candidatos para siguientes DT
 
 Los números definitivos deben asignarse al momento de seleccionar el siguiente
+
 bloque.
 
-DT-12 quedó completado.
+DT-13 quedó completado.
 
 El siguiente bloque debe seleccionarse después del cierre documental y del
-commit final de DT-12.
+
+commit final de DT-13.
 
 ## Candidato A --- Archivos y expediente documental
 
@@ -2466,36 +2636,7 @@ Dependencias importantes:
 
 - Retención.
 
-## Candidato B --- Payments, billing recovery and automatic account lifecycle
-
-Estado: Completado en DT-12.
-
-## Candidato C --- Referral system
-
-Objetivo:
-
-Implementar el sistema de crecimiento por códigos de referido.
-
-Construir:
-
-Tenant
-
-→ Referral code
-
-→ Registration usage
-
-→ Monthly quota
-
-→ Reward
-
-→ Subscription credit
-
-Dependencia:
-
-Debe coordinarse estrechamente con billing para poder aplicar correctamente
-beneficios económicos.
-
-## Candidato D --- DocTotal Design System
+## Candidato B --- DocTotal Design System
 
 Objetivo:
 
@@ -2521,11 +2662,12 @@ Design tokens
 
 Después migrar progresivamente las pantallas existentes.
 
-## Candidato E --- Clinical workspace
+## Candidato C --- Clinical workspace
 
 Objetivo:
 
 Transformar el expediente y la consulta en una experiencia clínica realmente
+
 optimizada.
 
 Construir:
@@ -2549,6 +2691,7 @@ Patient
 # 28. Deuda y decisiones de producto
 
 Estas decisiones no necesariamente requieren un DT inmediato, pero deben
+
 resolverse antes de los módulos que dependan de ellas.
 
 ## Comercial
@@ -2569,15 +2712,23 @@ resolverse antes de los módulos que dependan de ellas.
 
 ## Referidos
 
-- [!] Beneficio para tenant nuevo.
+- [x] Beneficio para tenant nuevo: $50 MXN de descuento en el primer pago.
 
-- [!] Beneficio para referente.
+- [x] Beneficio para referente: $50 MXN de crédito.
 
-- [!] Número de promociones mensuales.
+- [x] Número de promociones mensuales: máximo 5 recompensas.
 
-- [!] Requisito de primer pago.
+- [x] Crédito máximo generado por mes: $250 MXN.
 
-- [!] Vencimiento de saldo promocional.
+- [x] Requisito de primer pago exitoso.
+
+- [x] Crédito promocional sin caducidad.
+
+- [x] Aplicación a mensualidad.
+
+- [x] Aplicación a anualidad.
+
+- [!] Definir comportamiento ante reembolsos futuros.
 
 ## Infraestructura
 
@@ -2673,7 +2824,7 @@ Antes de cerrarlo debe comprobarse:
 
 - [x] TODO actualizado.
 
-- [ ] ROADMAP actualizado.
+- [x] ROADMAP actualizado.
 
 - [x] Baseline registrado.
 
