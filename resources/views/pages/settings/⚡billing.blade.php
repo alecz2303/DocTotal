@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Billing\AbandonManualSubscriptionPayment;
 use App\Actions\Billing\ConfirmManualSubscriptionPayment;
 use App\Actions\Billing\ConfirmManualSubscriptionRecoveryPayment;
 use App\Actions\Billing\CreateManualSubscriptionPaymentIntent;
@@ -14,6 +15,8 @@ use App\Actions\Subscription\ResumeSubscription;
 use App\Actions\Subscription\ScheduleSubscriptionCancellation;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\PromotionalCredit;
+use App\Models\Referral;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use Illuminate\Support\Str;
@@ -44,6 +47,24 @@ new
 
         public ?string $manualPaymentUuid = null;
 
+        public ?int $manualPaymentAmount = null;
+
+        public ?int $manualPaymentGrossAmount = null;
+
+        public ?int $manualReferralDiscountAmount = null;
+
+        public ?int $manualPromotionalCreditAmount = null;
+
+        public string $manualPaymentCurrency = 'MXN';
+
+        public int $availablePromotionalCredit = 0;
+
+        public int $reservedPromotionalCredit = 0;
+
+        public int $qualifiedReferrals = 0;
+
+        public int $qualifiedReferralsThisMonth = 0;
+
         public bool $manualSaveForFuture = false;
 
         public bool $manualRecoveryPayment = false;
@@ -68,6 +89,8 @@ new
             $this->refreshSubscription();
 
             $this->refreshBillingHistory();
+
+            $this->refreshReferralSummary();
         }
 
         public function startCardSetup(): void
@@ -367,6 +390,26 @@ new
                 $this->manualPaymentUuid =
                     $result->payment->uuid;
 
+                $this->manualPaymentAmount =
+                    $result->payment->amount;
+
+                $this->manualPaymentGrossAmount =
+                    $result->payment->gross_amount
+                    ?? $result->payment->amount;
+
+                $this->manualReferralDiscountAmount =
+                    $result->payment->referral_discount_amount
+                    ?? 0;
+
+                $this->manualPromotionalCreditAmount =
+                    $result->payment->promotional_credit_amount
+                    ?? 0;
+
+                $this->manualPaymentCurrency =
+                    $result->payment->currency;
+
+                $this->refreshReferralSummary();
+
                 $this->manualPaymentFormVisible =
                     true;
 
@@ -384,6 +427,99 @@ new
                     'swal',
                     title: 'No fue posible iniciar el pago',
                     text: 'Intenta nuevamente en unos momentos.',
+                    icon: 'error'
+                );
+            }
+        }
+
+        public function abandonManualPayment(): void
+        {
+            if (
+                ! $this->manualPaymentFormVisible
+                || ! $this->manualPaymentUuid
+            ) {
+                return;
+            }
+
+            if ($this->manualRecoveryPayment) {
+                $this->dispatch(
+                    'swal',
+                    title: 'Este pago no puede cambiar de plan',
+                    text: 'Primero debes regularizar el periodo pendiente con su ciclo actual.',
+                    icon: 'info'
+                );
+
+                return;
+            }
+
+            try {
+                $payment =
+                    Payment::withoutGlobalScopes()
+                    ->where(
+                        'tenant_id',
+                        $this->tenant->id
+                    )
+                    ->where(
+                        'uuid',
+                        $this->manualPaymentUuid
+                    )
+                    ->firstOrFail();
+
+                app(
+                    AbandonManualSubscriptionPayment::class
+                )->execute(
+                    $this->tenant,
+                    $payment,
+                    now()
+                );
+
+                $this->manualPaymentFormVisible =
+                    false;
+
+                $this->manualPaymentUuid =
+                    null;
+
+                $this->manualPaymentAmount =
+                    null;
+
+                $this->manualPaymentGrossAmount =
+                    null;
+
+                $this->manualReferralDiscountAmount =
+                    null;
+
+                $this->manualPromotionalCreditAmount =
+                    null;
+
+                $this->manualPaymentCurrency =
+                    'MXN';
+
+                $this->manualSaveForFuture =
+                    false;
+
+                $this->manualRecoveryPayment =
+                    false;
+
+                $this->refreshBillingHistory();
+                $this->refreshReferralSummary();
+
+                $this->dispatch(
+                    'stripe-manual-payment-abandoned'
+                );
+
+                $this->dispatch(
+                    'swal',
+                    title: 'Puedes elegir otro plan',
+                    text: 'El checkout anterior fue cancelado. Selecciona Mensual o Anual y genera el nuevo pago.',
+                    icon: 'success'
+                );
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                $this->dispatch(
+                    'swal',
+                    title: 'No fue posible cambiar el plan',
+                    text: 'No pudimos cancelar el checkout actual. Intenta nuevamente.',
                     icon: 'error'
                 );
             }
@@ -463,6 +599,26 @@ new
 
                 $this->manualPaymentUuid =
                     $result->payment->uuid;
+
+                $this->manualPaymentAmount =
+                    $result->payment->amount;
+
+                $this->manualPaymentGrossAmount =
+                    $result->payment->gross_amount
+                    ?? $result->payment->amount;
+
+                $this->manualReferralDiscountAmount =
+                    $result->payment->referral_discount_amount
+                    ?? 0;
+
+                $this->manualPromotionalCreditAmount =
+                    $result->payment->promotional_credit_amount
+                    ?? 0;
+
+                $this->manualPaymentCurrency =
+                    $result->payment->currency;
+
+                $this->refreshReferralSummary();
 
                 $this->manualPaymentFormVisible = true;
 
@@ -617,11 +773,28 @@ new
 
                 $this->refreshBillingHistory();
 
+                $this->refreshReferralSummary();
+
                 $this->manualPaymentFormVisible =
                     false;
 
                 $this->manualPaymentUuid =
                     null;
+
+                $this->manualPaymentAmount =
+                    null;
+
+                $this->manualPaymentGrossAmount =
+                    null;
+
+                $this->manualReferralDiscountAmount =
+                    null;
+
+                $this->manualPromotionalCreditAmount =
+                    null;
+
+                $this->manualPaymentCurrency =
+                    'MXN';
 
                 $this->manualSaveForFuture =
                     false;
@@ -725,6 +898,76 @@ new
                 )
                 ->limit(8)
                 ->get();
+        }
+
+        private function refreshReferralSummary(): void
+        {
+            $this->tenant->refresh();
+
+            $this->availablePromotionalCredit =
+                PromotionalCredit::query()
+                ->withoutGlobalScopes()
+                ->where(
+                    'tenant_id',
+                    $this->tenant->id
+                )
+                ->where(
+                    'kind',
+                    PromotionalCredit::KIND_REFERRER_REWARD
+                )
+                ->where(
+                    'status',
+                    PromotionalCredit::STATUS_AVAILABLE
+                )
+                ->sum('amount');
+
+            $this->reservedPromotionalCredit =
+                PromotionalCredit::query()
+                ->withoutGlobalScopes()
+                ->where(
+                    'tenant_id',
+                    $this->tenant->id
+                )
+                ->where(
+                    'kind',
+                    PromotionalCredit::KIND_REFERRER_REWARD
+                )
+                ->where(
+                    'status',
+                    PromotionalCredit::STATUS_RESERVED
+                )
+                ->sum('amount');
+
+            $this->qualifiedReferrals =
+                Referral::query()
+                ->where(
+                    'referrer_tenant_id',
+                    $this->tenant->id
+                )
+                ->where(
+                    'status',
+                    Referral::STATUS_QUALIFIED
+                )
+                ->count();
+
+            $this->qualifiedReferralsThisMonth =
+                Referral::query()
+                ->where(
+                    'referrer_tenant_id',
+                    $this->tenant->id
+                )
+                ->where(
+                    'status',
+                    Referral::STATUS_QUALIFIED
+                )
+                ->whereBetween(
+                    'qualified_at',
+                    [
+                        now()->startOfMonth(),
+                        now()->endOfMonth(),
+                    ]
+                )
+                ->count();
         }
 
         public function scheduleCancellation(): void
@@ -1087,8 +1330,13 @@ new
                     <button
                         type="button"
                         wire:click="selectBillingCycle('monthly')"
+                        @if ($manualPaymentFormVisible)
+                        disabled
+                        @endif
                         class="rounded-lg px-4 py-2.5
                                    text-sm font-semibold transition
+                                   disabled:cursor-not-allowed
+                                   disabled:opacity-50
                                    {{ $billingCycle === Subscription::BILLING_CYCLE_MONTHLY
                                         ? 'bg-white text-slate-950 shadow-sm'
                                         : 'text-slate-500 hover:text-slate-900' }}">
@@ -1098,8 +1346,13 @@ new
                     <button
                         type="button"
                         wire:click="selectBillingCycle('yearly')"
+                        @if ($manualPaymentFormVisible)
+                        disabled
+                        @endif
                         class="relative rounded-lg px-4 py-2.5
                                    text-sm font-semibold transition
+                                   disabled:cursor-not-allowed
+                                   disabled:opacity-50
                                    {{ $billingCycle === Subscription::BILLING_CYCLE_YEARLY
                                         ? 'bg-white text-slate-950 shadow-sm'
                                         : 'text-slate-500 hover:text-slate-900' }}">
@@ -1198,7 +1451,7 @@ new
 
                 @endif
 
-                @if (! $subscription)
+                @if (! $subscription && ! $manualPaymentFormVisible)
 
                 <div class="mt-6">
 
@@ -1229,6 +1482,30 @@ new
                         </span>
 
                     </button>
+
+                </div>
+
+                @elseif (! $subscription && $manualPaymentFormVisible)
+
+                <div
+                    class="mt-6 inline-flex items-center gap-2
+                        rounded-lg bg-sky-50
+                        px-3 py-2 text-sm
+                        font-medium text-sky-700">
+
+                    <svg
+                        class="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="9" />
+
+                    </svg>
+
+                    Checkout preparado
 
                 </div>
 
@@ -2171,6 +2448,337 @@ new
     </div>
 
 
+
+    {{-- Referral program --}}
+    <section
+        class="mt-6 overflow-hidden rounded-2xl
+               border border-slate-200 bg-white shadow-sm">
+
+        <div
+            class="border-b border-slate-100
+                   bg-gradient-to-r from-slate-950 to-slate-800
+                   px-6 py-6 text-white">
+
+            <div
+                class="flex flex-col gap-4
+                       sm:flex-row sm:items-center
+                       sm:justify-between">
+
+                <div class="flex items-start gap-4">
+
+                    <div
+                        class="flex h-11 w-11 shrink-0
+                               items-center justify-center
+                               rounded-xl bg-white/10
+                               ring-1 ring-white/10">
+
+                        <svg
+                            class="h-5 w-5 text-white"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path d="M20 12v10H4V12" />
+                            <path d="M2 7h20v5H2z" />
+                            <path d="M12 22V7" />
+                            <path d="M12 7H7.5a2.5 2.5 0 1 1 2.45-3c.8 1.2 2.05 3 2.05 3Z" />
+                            <path d="M12 7h4.5a2.5 2.5 0 1 0-2.45-3C13.25 5.2 12 7 12 7Z" />
+
+                        </svg>
+
+                    </div>
+
+                    <div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+
+                            <h2 class="text-lg font-bold text-white">
+                                Invita y gana
+                            </h2>
+
+                            <span
+                                class="rounded-full bg-emerald-400/15
+                                       px-2.5 py-1 text-xs
+                                       font-semibold text-emerald-300
+                                       ring-1 ring-emerald-400/20">
+                                $50 MXN por referido
+                            </span>
+
+                        </div>
+
+                        <p
+                            class="mt-1 max-w-2xl text-sm
+                                   leading-6 text-slate-300">
+                            Comparte DocTotal con otros profesionales.
+                            Cuando uno de tus referidos realice su
+                            primer pago exitoso, recibirás
+                            $50 MXN de crédito para tus próximos pagos.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="p-6">
+
+            @if ($tenant->referral_code)
+
+            @php
+            $referralUrl = route(
+            'register',
+            [
+            'ref' => $tenant->referral_code,
+            ]
+            );
+            @endphp
+
+            <div class="grid gap-5 lg:grid-cols-2">
+
+                {{-- Referral code --}}
+                <div>
+
+                    <label
+                        for="referral-code"
+                        class="mb-2 block text-sm
+                               font-semibold text-slate-900">
+                        Tu código de referido
+                    </label>
+
+                    <div class="flex gap-2">
+
+                        <input
+                            id="referral-code"
+                            type="text"
+                            readonly
+                            value="{{ $tenant->referral_code }}"
+                            class="min-w-0 flex-1 rounded-lg
+                                   border border-slate-300
+                                   bg-slate-50 px-3 py-2.5
+                                   font-mono text-sm font-semibold
+                                   uppercase tracking-wider
+                                   text-slate-900 outline-none">
+
+                        <button
+                            type="button"
+                            data-copy-value="{{ $tenant->referral_code }}"
+                            data-copy-label="Código copiado"
+                            class="copy-referral-value
+                                   inline-flex shrink-0
+                                   items-center justify-center gap-2
+                                   rounded-lg border
+                                   border-slate-300 bg-white
+                                   px-4 py-2.5 text-sm
+                                   font-semibold text-slate-700
+                                   shadow-sm transition
+                                   hover:bg-slate-50">
+
+                            <svg
+                                class="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+
+                            </svg>
+
+                            Copiar
+
+                        </button>
+
+                    </div>
+
+                    <p class="mt-2 text-xs leading-5 text-slate-500">
+                        También pueden escribir este código
+                        manualmente durante su registro.
+                    </p>
+
+                </div>
+
+
+                {{-- Referral link --}}
+                <div>
+
+                    <label
+                        for="referral-link"
+                        class="mb-2 block text-sm
+                               font-semibold text-slate-900">
+                        Tu enlace de invitación
+                    </label>
+
+                    <div class="flex gap-2">
+
+                        <input
+                            id="referral-link"
+                            type="text"
+                            readonly
+                            value="{{ $referralUrl }}"
+                            class="min-w-0 flex-1 rounded-lg
+                                   border border-slate-300
+                                   bg-slate-50 px-3 py-2.5
+                                   text-sm text-slate-700
+                                   outline-none">
+
+                        <button
+                            type="button"
+                            data-copy-value="{{ $referralUrl }}"
+                            data-copy-label="Enlace copiado"
+                            class="copy-referral-value
+                                   inline-flex shrink-0
+                                   items-center justify-center gap-2
+                                   rounded-lg bg-slate-950
+                                   px-4 py-2.5 text-sm
+                                   font-semibold text-white
+                                   shadow-sm transition
+                                   hover:bg-slate-800">
+
+                            <svg
+                                class="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+
+                            </svg>
+
+                            Copiar enlace
+
+                        </button>
+
+                    </div>
+
+                    <p class="mt-2 text-xs leading-5 text-slate-500">
+                        Quien abra este enlace tendrá tu código
+                        aplicado automáticamente al registrarse.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {{-- Referral stats --}}
+            <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Crédito disponible
+                    </p>
+                    <p class="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                        ${{ number_format($availablePromotionalCredit / 100, 2) }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        MXN para próximos pagos
+                    </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Crédito reservado
+                    </p>
+                    <p class="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                        ${{ number_format($reservedPromotionalCredit / 100, 2) }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        MXN aplicado a un pago pendiente
+                    </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Referidos exitosos
+                    </p>
+                    <p class="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                        {{ $qualifiedReferrals }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Total histórico
+                    </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Este mes
+                    </p>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span class="text-2xl font-bold tracking-tight text-slate-950">
+                            {{ $qualifiedReferralsThisMonth }}
+                        </span>
+                        <span class="text-sm font-medium text-slate-400">
+                            / {{ Referral::MONTHLY_REWARD_LIMIT }}
+                        </span>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Recompensas mensuales
+                    </p>
+                </div>
+
+            </div>
+
+
+            {{-- Program conditions --}}
+            <div
+                class="mt-5 flex items-start gap-3
+                       rounded-xl border border-sky-100
+                       bg-sky-50 p-4">
+
+                <svg
+                    class="mt-0.5 h-5 w-5 shrink-0 text-sky-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 11v5" />
+                    <path d="M12 8h.01" />
+                </svg>
+
+                <div>
+                    <p class="text-sm font-semibold text-sky-900">
+                        ¿Cómo funciona?
+                    </p>
+                    <p class="mt-1 text-sm leading-6 text-sky-700">
+                        Tu referido recibe $50 MXN de descuento
+                        en su primer pago y tú recibes $50 MXN
+                        de crédito cuando ese pago se completa
+                        correctamente. Puedes recibir hasta
+                        {{ Referral::MONTHLY_REWARD_LIMIT }}
+                        recompensas por mes.
+                    </p>
+                </div>
+
+            </div>
+
+            @else
+
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p class="text-sm font-semibold text-amber-900">
+                    Código de referido no disponible
+                </p>
+                <p class="mt-1 text-sm leading-6 text-amber-700">
+                    No encontramos un código de referido
+                    asociado a tu cuenta.
+                </p>
+            </div>
+
+            @endif
+
+        </div>
+
+    </section>
+
+
     {{-- Billing history --}}
     @if ($recentPayments?->isNotEmpty())
 
@@ -2321,6 +2929,16 @@ new
                                 Fallido
                             </span>
 
+                            @elseif ($payment->status === Payment::STATUS_CANCELED)
+
+                            <span
+                                class="inline-flex rounded-full
+                                       bg-slate-100 px-2.5 py-1
+                                       text-xs font-semibold
+                                       text-slate-600">
+                                Cancelado
+                            </span>
+
                             @else
 
                             <span
@@ -2360,14 +2978,32 @@ new
     );
 
     $checkoutAmount =
+    $manualPaymentAmount
+    ?? (
     $manualRecoveryPayment && $subscription
     ? $subscription->billing_amount
-    : ($checkoutPlan['amount'] ?? 0);
+    : ($checkoutPlan['amount'] ?? 0)
+    );
+
+    $checkoutGrossAmount =
+    $manualPaymentGrossAmount
+    ?? $checkoutAmount;
+
+    $checkoutReferralDiscount =
+    $manualReferralDiscountAmount
+    ?? 0;
+
+    $checkoutPromotionalCredit =
+    $manualPromotionalCreditAmount
+    ?? 0;
 
     $checkoutCurrency =
+    $manualPaymentCurrency
+    ?: (
     $manualRecoveryPayment && $subscription
     ? $subscription->billing_currency
-    : ($checkoutPlan['currency'] ?? 'MXN');
+    : ($checkoutPlan['currency'] ?? 'MXN')
+    );
     @endphp
 
     <section
@@ -2430,18 +3066,6 @@ new
                     <p
                         class="mt-1 text-sm
                                    text-slate-500">
-                        Realiza un pago de
-
-                        <strong class="text-slate-900">
-                            ${{
-                                number_format(
-                                    $checkoutAmount / 100,
-                                    2
-                                )
-                            }}
-                            {{ $checkoutCurrency }}
-                        </strong>.
-
                         @if ($manualRecoveryPayment)
                         Este pago regulariza el periodo vencido y
                         reactiva la suscripción conservando su ciclo actual.
@@ -2464,6 +3088,119 @@ new
             </div>
 
         </div>
+
+
+        <div class="border-b border-slate-100 px-6 py-5">
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                <div class="flex items-center justify-between gap-4 text-sm">
+                    <span class="text-slate-600">
+                        Plan DocTotal
+                    </span>
+
+                    <span class="font-medium text-slate-900">
+                        ${{ number_format($checkoutGrossAmount / 100, 2) }}
+                        {{ $checkoutCurrency }}
+                    </span>
+                </div>
+
+                @if ($checkoutReferralDiscount > 0)
+                <div class="mt-2 flex items-center justify-between gap-4 text-sm">
+                    <span class="text-emerald-700">
+                        Descuento por invitación
+                    </span>
+
+                    <span class="font-semibold text-emerald-700">
+                        -${{ number_format($checkoutReferralDiscount / 100, 2) }}
+                        {{ $checkoutCurrency }}
+                    </span>
+                </div>
+                @endif
+
+                @if ($checkoutPromotionalCredit > 0)
+                <div class="mt-2 flex items-center justify-between gap-4 text-sm">
+                    <span class="text-emerald-700">
+                        Crédito promocional
+                    </span>
+
+                    <span class="font-semibold text-emerald-700">
+                        -${{ number_format($checkoutPromotionalCredit / 100, 2) }}
+                        {{ $checkoutCurrency }}
+                    </span>
+                </div>
+                @endif
+
+                <div class="my-3 border-t border-slate-200"></div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-sm font-semibold text-slate-900">
+                        Total a pagar
+                    </span>
+
+                    <span class="text-lg font-bold text-slate-950">
+                        ${{ number_format($checkoutAmount / 100, 2) }}
+                        {{ $checkoutCurrency }}
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @if (! $manualRecoveryPayment)
+
+        <div
+            class="flex flex-col gap-3
+                   border-b border-slate-100
+                   bg-slate-50/50 px-6 py-4
+                   sm:flex-row sm:items-center
+                   sm:justify-between">
+
+            <div>
+                <p class="text-sm font-semibold text-slate-900">
+                    ¿Prefieres otro plan?
+                </p>
+
+                <p class="mt-1 text-xs leading-5 text-slate-500">
+                    Puedes cancelar este checkout y elegir
+                    Mensual o Anual sin perder tus descuentos
+                    o créditos disponibles.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                wire:click="abandonManualPayment"
+                wire:loading.attr="disabled"
+                wire:target="abandonManualPayment"
+                class="inline-flex shrink-0 items-center
+                       justify-center rounded-lg
+                       border border-slate-300 bg-white
+                       px-4 py-2.5 text-sm font-semibold
+                       text-slate-700 shadow-sm transition
+                       hover:bg-slate-50
+                       disabled:cursor-not-allowed
+                       disabled:opacity-50">
+
+                <span
+                    wire:loading.remove
+                    wire:target="abandonManualPayment">
+                    Cambiar plan
+                </span>
+
+                <span
+                    wire:loading
+                    wire:target="abandonManualPayment">
+                    Cancelando checkout...
+                </span>
+
+            </button>
+
+        </div>
+
+        @endif
 
 
         <div class="p-6">
@@ -3982,6 +4719,59 @@ new
                     button.disabled =
                         false;
                 }
+            }
+        }
+    );
+
+
+
+    /*
+     |--------------------------------------------------------------------------
+     | Referral clipboard
+     |--------------------------------------------------------------------------
+     */
+
+    document.addEventListener(
+        'click',
+        async (event) => {
+            const button =
+                event.target.closest(
+                    '.copy-referral-value'
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const value =
+                button.dataset.copyValue;
+
+            const label =
+                button.dataset.copyLabel ??
+                'Copiado';
+
+            if (!value) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard
+                    .writeText(value);
+
+                Swal.fire({
+                    title: label,
+                    text: 'Ya está listo para compartir.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                Swal.fire({
+                    title: 'No fue posible copiar',
+                    text: 'Selecciona el contenido y cópialo manualmente.',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
             }
         }
     );

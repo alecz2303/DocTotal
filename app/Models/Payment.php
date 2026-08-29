@@ -18,6 +18,7 @@ class Payment extends Model
     public const STATUS_PENDING = 'pending';
     public const STATUS_SUCCEEDED = 'succeeded';
     public const STATUS_FAILED = 'failed';
+    public const STATUS_CANCELED = 'canceled';
 
     protected $fillable = [
         'tenant_id',
@@ -35,6 +36,11 @@ class Payment extends Model
         'provider_payment_id',
         'idempotency_key',
         'billing_cycle',
+        'gross_amount',
+        'referral_discount_amount',
+        'promotional_credit_amount',
+        'promotional_credits_released_at',
+        'canceled_at',
     ];
 
     protected function casts(): array
@@ -44,6 +50,11 @@ class Payment extends Model
             'attempted_at' => 'datetime',
             'paid_at' => 'datetime',
             'failed_at' => 'datetime',
+            'gross_amount' => 'integer',
+            'referral_discount_amount' => 'integer',
+            'promotional_credit_amount' => 'integer',
+            'promotional_credits_released_at' => 'datetime',
+            'canceled_at' => 'datetime',
         ];
     }
 
@@ -119,6 +130,50 @@ class Payment extends Model
         ]);
     }
 
+    public function cancel(
+        CarbonInterface $canceledAt,
+        ?string $providerPaymentId = null,
+    ): void {
+        if (! $this->isPending()) {
+            throw new LogicException(
+                sprintf(
+                    'El pago no puede cancelarse desde el estado "%s".',
+                    $this->status
+                )
+            );
+        }
+
+        $this->update([
+            'status' =>
+            self::STATUS_CANCELED,
+
+            'paid_at' =>
+            null,
+
+            'failed_at' =>
+            null,
+
+            'canceled_at' =>
+            $canceledAt,
+
+            'failure_code' =>
+            null,
+
+            'failure_message' =>
+            null,
+
+            'provider_payment_id' =>
+            $providerPaymentId
+                ?? $this->provider_payment_id,
+        ]);
+    }
+
+    public function isCanceled(): bool
+    {
+        return $this->status ===
+            self::STATUS_CANCELED;
+    }
+
     protected static function booted(): void
     {
         static::creating(function (Payment $payment): void {
@@ -169,5 +224,18 @@ class Payment extends Model
     {
         return $this->status ===
             self::STATUS_FAILED;
+    }
+
+    public function totalDiscountAmount(): int
+    {
+        return
+            $this->referral_discount_amount
+            + $this->promotional_credit_amount;
+    }
+
+    public function contractualAmount(): int
+    {
+        return $this->gross_amount
+            ?? $this->amount;
     }
 }

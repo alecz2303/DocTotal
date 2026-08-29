@@ -6,6 +6,8 @@ use App\Actions\Billing\ConfirmManualSubscriptionRecoveryPayment;
 use App\Contracts\StripePaymentIntentApi;
 use App\Models\BillingCustomer;
 use App\Models\Payment;
+use App\Models\PromotionalCredit;
+use App\Models\Referral;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Support\TenantContext;
@@ -102,9 +104,9 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
 
         $tenant->update([
             'suspended_at' =>
-                Carbon::parse(
-                    '2026-08-28 12:00:00'
-                ),
+            Carbon::parse(
+                '2026-08-28 12:00:00'
+            ),
         ]);
 
         $this->stripe
@@ -193,7 +195,7 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
 
         $payment->update([
             'status' =>
-                Payment::STATUS_FAILED,
+            Payment::STATUS_FAILED,
 
             'failed_at' => now(),
         ]);
@@ -216,7 +218,7 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
 
         $subscription->update([
             'status' =>
-                Subscription::STATUS_ACTIVE,
+            Subscription::STATUS_ACTIVE,
         ]);
 
         $this->expectException(
@@ -303,16 +305,16 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         $intent->metadata =
             [
                 'doctotal_payment_uuid' =>
-                    $payment->uuid,
+                $payment->uuid,
 
                 'doctotal_tenant_id' =>
-                    (string) $tenant->id,
+                (string) $tenant->id,
 
                 'subscription_id' =>
-                    '999999',
+                '999999',
 
                 'payment_mode' =>
-                    'manual_recovery',
+                'manual_recovery',
             ];
 
         $this->stripe
@@ -345,16 +347,16 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         $intent->metadata =
             [
                 'doctotal_payment_uuid' =>
-                    $payment->uuid,
+                $payment->uuid,
 
                 'doctotal_tenant_id' =>
-                    (string) $tenant->id,
+                (string) $tenant->id,
 
                 'subscription_id' =>
-                    (string) $subscription->id,
+                (string) $subscription->id,
 
                 'payment_mode' =>
-                    'manual',
+                'manual',
             ];
 
         $this->stripe
@@ -456,6 +458,87 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         );
     }
 
+    public function test_successful_manual_recovery_consumes_reserved_promotional_credit(): void
+    {
+        [$tenant, $subscription, $payment] =
+            $this->scenario();
+
+        $payment->update([
+            'gross_amount' =>
+            60000,
+
+            'referral_discount_amount' =>
+            0,
+
+            'promotional_credit_amount' =>
+            5000,
+
+            'amount' =>
+            55000,
+        ]);
+
+        $credit =
+            $this->createReservedPromotionalCredit(
+                $tenant,
+                $payment,
+                5000
+            );
+
+        $this->stripe
+            ->returnRetrievedPaymentIntent(
+                $this->successfulIntent(
+                    $tenant,
+                    $subscription,
+                    $payment->refresh()
+                )
+            );
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                $payment,
+                Carbon::parse(
+                    '2026-08-29 00:45:00'
+                )
+            );
+
+        $credit->refresh();
+
+        $this->assertTrue(
+            $result->isSucceeded()
+        );
+
+        $this->assertSame(
+            55000,
+            $result->amount
+        );
+
+        $this->assertSame(
+            5000,
+            $result->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_CONSUMED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $result->id,
+            $credit->payment_id
+        );
+
+        $this->assertNotNull(
+            $credit->consumed_at
+        );
+
+        $this->assertTrue(
+            $subscription
+                ->refresh()
+                ->isActive()
+        );
+    }
+
     private function action(): ConfirmManualSubscriptionRecoveryPayment
     {
         return app(
@@ -469,7 +552,7 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         $tenant = Tenant::create([
             'name' => 'Consultorio Confirm Recovery',
             'slug' =>
-                'confirm-recovery-' . uniqid(),
+            'confirm-recovery-' . uniqid(),
             'status' => $tenantStatus,
             'onboarding_completed_at' => now(),
         ]);
@@ -483,10 +566,10 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
                 'tenant_id' => $tenant->id,
 
                 'provider' =>
-                    BillingCustomer::PROVIDER_STRIPE,
+                BillingCustomer::PROVIDER_STRIPE,
 
                 'provider_customer_id' =>
-                    'cus_manual_recovery_123',
+                'cus_manual_recovery_123',
             ]);
 
         $startsAt =
@@ -502,78 +585,148 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         $subscription =
             Subscription::create([
                 'billing_cycle' =>
-                    Subscription::BILLING_CYCLE_MONTHLY,
+                Subscription::BILLING_CYCLE_MONTHLY,
 
                 'status' =>
-                    Subscription::STATUS_PAST_DUE,
+                Subscription::STATUS_PAST_DUE,
 
                 'starts_at' => $startsAt,
 
                 'current_period_starts_at' =>
-                    $startsAt,
+                $startsAt,
 
                 'current_period_ends_at' =>
-                    $endsAt,
+                $endsAt,
 
                 'next_billing_at' =>
-                    $endsAt,
+                $endsAt,
 
                 'billing_amount' => 60000,
 
                 'billing_currency' => 'MXN',
 
                 'past_due_since' =>
-                    $endsAt,
+                $endsAt,
 
                 'grace_ends_at' =>
-                    $endsAt
-                        ->copy()
-                        ->addDays(7),
+                $endsAt
+                    ->copy()
+                    ->addDays(7),
 
                 'next_retry_at' =>
-                    $endsAt
-                        ->copy()
-                        ->addDay(),
+                $endsAt
+                    ->copy()
+                    ->addDay(),
 
                 'retry_count' => 1,
             ]);
 
         $payment =
             Payment::withoutGlobalScopes()
-                ->create([
-                    'tenant_id' =>
-                        $tenant->id,
+            ->create([
+                'tenant_id' =>
+                $tenant->id,
 
-                    'subscription_id' =>
-                        $subscription->id,
+                'subscription_id' =>
+                $subscription->id,
 
-                    'billing_cycle' =>
-                        $subscription->billing_cycle,
+                'billing_cycle' =>
+                $subscription->billing_cycle,
 
-                    'amount' => 60000,
+                'amount' => 60000,
 
-                    'currency' => 'MXN',
+                'currency' => 'MXN',
 
-                    'status' =>
-                        Payment::STATUS_PENDING,
+                'status' =>
+                Payment::STATUS_PENDING,
 
-                    'attempted_at' => now(),
+                'attempted_at' => now(),
 
-                    'provider' => 'stripe',
+                'provider' => 'stripe',
 
-                    'provider_payment_id' =>
-                        'pi_manual_recovery_success',
+                'provider_payment_id' =>
+                'pi_manual_recovery_success',
 
-                    'idempotency_key' =>
-                        'confirm-manual-recovery-' .
-                        uniqid(),
-                ]);
+                'idempotency_key' =>
+                'confirm-manual-recovery-' .
+                    uniqid(),
+            ]);
 
         return [
             $tenant,
             $subscription,
             $payment,
         ];
+    }
+
+    private function createReservedPromotionalCredit(
+        Tenant $tenant,
+        Payment $payment,
+        int $amount = 5000,
+    ): PromotionalCredit {
+        $referred =
+            Tenant::create([
+                'name' =>
+                'Consultorio Recovery Referido',
+
+                'slug' =>
+                'confirm-recovery-referred-' .
+                    uniqid(),
+
+                'status' =>
+                'active',
+
+                'currency' =>
+                'MXN',
+
+                'onboarding_completed_at' =>
+                now(),
+            ]);
+
+        $referral =
+            Referral::create([
+                'referrer_tenant_id' =>
+                $tenant->id,
+
+                'referred_tenant_id' =>
+                $referred->id,
+
+                'referral_code' =>
+                $tenant->referral_code,
+            ]);
+
+        return PromotionalCredit::create([
+            'tenant_id' =>
+            $tenant->id,
+
+            'referral_id' =>
+            $referral->id,
+
+            'payment_id' =>
+            $payment->id,
+
+            'kind' =>
+            PromotionalCredit::KIND_REFERRER_REWARD,
+
+            'amount' =>
+            $amount,
+
+            'currency' =>
+            'MXN',
+
+            'status' =>
+            PromotionalCredit::STATUS_RESERVED,
+
+            'available_at' =>
+            now()->subMinute(),
+
+            'reserved_at' =>
+            now(),
+
+            'idempotency_key' =>
+            'confirm-recovery-credit-' .
+                uniqid(),
+        ]);
     }
 
     private function successfulIntent(
@@ -583,37 +736,37 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
     ): PaymentIntent {
         return PaymentIntent::constructFrom([
             'id' =>
-                'pi_manual_recovery_success',
+            'pi_manual_recovery_success',
 
             'amount' =>
-                $payment->amount,
+            $payment->amount,
 
             'currency' =>
-                strtolower(
-                    $payment->currency
-                ),
+            strtolower(
+                $payment->currency
+            ),
 
             'customer' =>
-                'cus_manual_recovery_123',
+            'cus_manual_recovery_123',
 
             'status' =>
-                'succeeded',
+            'succeeded',
 
             'metadata' => [
                 'doctotal_payment_uuid' =>
-                    $payment->uuid,
+                $payment->uuid,
 
                 'doctotal_tenant_id' =>
-                    (string) $tenant->id,
+                (string) $tenant->id,
 
                 'subscription_id' =>
-                    (string) $subscription->id,
+                (string) $subscription->id,
 
                 'billing_cycle' =>
-                    $payment->billing_cycle,
+                $payment->billing_cycle,
 
                 'payment_mode' =>
-                    'manual_recovery',
+                'manual_recovery',
             ],
         ]);
     }

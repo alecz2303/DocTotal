@@ -6,6 +6,8 @@ use App\Actions\Billing\CreateManualSubscriptionRecoveryPaymentIntent;
 use App\Contracts\StripeCustomerApi;
 use App\Contracts\StripePaymentIntentApi;
 use App\Models\Payment;
+use App\Models\PromotionalCredit;
+use App\Models\Referral;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Support\TenantContext;
@@ -129,30 +131,22 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
 
         $this->assertSame(
             $result->payment->uuid,
-            $params['metadata'][
-                'doctotal_payment_uuid'
-            ]
+            $params['metadata']['doctotal_payment_uuid']
         );
 
         $this->assertSame(
             (string) $tenant->id,
-            $params['metadata'][
-                'doctotal_tenant_id'
-            ]
+            $params['metadata']['doctotal_tenant_id']
         );
 
         $this->assertSame(
             (string) $subscription->id,
-            $params['metadata'][
-                'subscription_id'
-            ]
+            $params['metadata']['subscription_id']
         );
 
         $this->assertSame(
             'manual_recovery',
-            $params['metadata'][
-                'payment_mode'
-            ]
+            $params['metadata']['payment_mode']
         );
     }
 
@@ -181,9 +175,7 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
 
         $this->assertSame(
             '1',
-            $params['metadata'][
-                'save_for_future'
-            ]
+            $params['metadata']['save_for_future']
         );
     }
 
@@ -211,9 +203,7 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
 
         $this->assertSame(
             '0',
-            $params['metadata'][
-                'save_for_future'
-            ]
+            $params['metadata']['save_for_future']
         );
     }
 
@@ -223,10 +213,8 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
             $this->scenario();
 
         $this->prepareStripe(
-            paymentIntentId:
-                'pi_recovery_existing',
-            clientSecret:
-                'pi_recovery_existing_secret',
+            paymentIntentId: 'pi_recovery_existing',
+            clientSecret: 'pi_recovery_existing_secret',
         );
 
         $first = $this->action()->execute(
@@ -240,13 +228,13 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
             ->returnRetrievedPaymentIntent(
                 PaymentIntent::constructFrom([
                     'id' =>
-                        'pi_recovery_existing',
+                    'pi_recovery_existing',
 
                     'status' =>
-                        'requires_payment_method',
+                    'requires_payment_method',
 
                     'client_secret' =>
-                        'pi_recovery_existing_secret',
+                    'pi_recovery_existing_secret',
                 ])
             );
 
@@ -310,7 +298,7 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
 
         $subscription->update([
             'status' =>
-                Subscription::STATUS_ACTIVE,
+            Subscription::STATUS_ACTIVE,
         ]);
 
         $this->expectException(
@@ -340,26 +328,26 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
         Payment::withoutGlobalScopes()
             ->create([
                 'tenant_id' =>
-                    $otherTenant->id,
+                $otherTenant->id,
 
                 'subscription_id' => null,
 
                 'billing_cycle' =>
-                    Subscription::BILLING_CYCLE_MONTHLY,
+                Subscription::BILLING_CYCLE_MONTHLY,
 
                 'amount' => 60000,
 
                 'currency' => 'MXN',
 
                 'status' =>
-                    Payment::STATUS_PENDING,
+                Payment::STATUS_PENDING,
 
                 'attempted_at' => now(),
 
                 'provider' => 'stripe',
 
                 'idempotency_key' =>
-                    'manual-recovery-collision',
+                'manual-recovery-collision',
             ]);
 
         $this->prepareStripe();
@@ -373,6 +361,90 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
             $subscription,
             now(),
             'manual-recovery-collision',
+        );
+    }
+
+    public function test_available_promotional_credit_is_reserved_for_manual_recovery(): void
+    {
+        [$tenant, $subscription] =
+            $this->scenario();
+
+        $credit =
+            $this->createPromotionalCredit(
+                $tenant,
+                5000
+            );
+
+        $this->prepareStripe();
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                $subscription,
+                now(),
+                'manual-recovery-promo-reserve',
+            );
+
+        $payment =
+            $result->payment->refresh();
+
+        $credit->refresh();
+
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $payment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $payment->amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_RESERVED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $payment->id,
+            $credit->payment_id
+        );
+    }
+
+    public function test_manual_recovery_sends_net_amount_to_stripe_after_promotional_credit(): void
+    {
+        [$tenant, $subscription] =
+            $this->scenario();
+
+        $this->createPromotionalCredit(
+            $tenant,
+            5000
+        );
+
+        $this->prepareStripe();
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                $subscription,
+                now(),
+                'manual-recovery-promo-net',
+            );
+
+        $this->assertSame(
+            55000,
+            $result->payment->amount
+        );
+
+        $this->assertSame(
+            55000,
+            $this->paymentIntents
+                ->receivedParams['amount']
         );
     }
 
@@ -409,35 +481,35 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
         $subscription =
             Subscription::create([
                 'billing_cycle' =>
-                    Subscription::BILLING_CYCLE_MONTHLY,
+                Subscription::BILLING_CYCLE_MONTHLY,
 
                 'status' =>
-                    Subscription::STATUS_PAST_DUE,
+                Subscription::STATUS_PAST_DUE,
 
                 'starts_at' => $startsAt,
 
                 'current_period_starts_at' =>
-                    $startsAt,
+                $startsAt,
 
                 'current_period_ends_at' =>
-                    $endsAt,
+                $endsAt,
 
                 'next_billing_at' =>
-                    $endsAt,
+                $endsAt,
 
                 'billing_amount' =>
-                    60000,
+                60000,
 
                 'billing_currency' =>
-                    'MXN',
+                'MXN',
 
                 'past_due_since' =>
-                    $endsAt,
+                $endsAt,
 
                 'grace_ends_at' =>
-                    $endsAt
-                        ->copy()
-                        ->addDays(7),
+                $endsAt
+                    ->copy()
+                    ->addDays(7),
 
                 'retry_count' => 0,
             ]);
@@ -448,13 +520,76 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
         ];
     }
 
+    private function createPromotionalCredit(
+        Tenant $tenant,
+        int $amount = 5000,
+    ): PromotionalCredit {
+        $referred =
+            Tenant::create([
+                'name' =>
+                'Consultorio Recovery Referido',
+
+                'slug' =>
+                'recovery-referred-' .
+                    uniqid(),
+
+                'status' =>
+                'active',
+
+                'currency' =>
+                'MXN',
+
+                'onboarding_completed_at' =>
+                now(),
+            ]);
+
+        $referral =
+            Referral::create([
+                'referrer_tenant_id' =>
+                $tenant->id,
+
+                'referred_tenant_id' =>
+                $referred->id,
+
+                'referral_code' =>
+                $tenant->referral_code,
+            ]);
+
+        return PromotionalCredit::create([
+            'tenant_id' =>
+            $tenant->id,
+
+            'referral_id' =>
+            $referral->id,
+
+            'kind' =>
+            PromotionalCredit::KIND_REFERRER_REWARD,
+
+            'amount' =>
+            $amount,
+
+            'currency' =>
+            'MXN',
+
+            'status' =>
+            PromotionalCredit::STATUS_AVAILABLE,
+
+            'available_at' =>
+            now(),
+
+            'idempotency_key' =>
+            'manual-recovery-credit-' .
+                uniqid(),
+        ]);
+    }
+
     private function prepareStripe(
         string $customerId =
-            'cus_recovery_test',
+        'cus_recovery_test',
         string $paymentIntentId =
-            'pi_recovery_test',
+        'pi_recovery_test',
         string $clientSecret =
-            'pi_recovery_test_secret',
+        'pi_recovery_test_secret',
     ): void {
         $this->customers->returnCustomer(
             $customerId
@@ -464,13 +599,13 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
             ->returnPaymentIntent(
                 PaymentIntent::constructFrom([
                     'id' =>
-                        $paymentIntentId,
+                    $paymentIntentId,
 
                     'status' =>
-                        'requires_payment_method',
+                    'requires_payment_method',
 
                     'client_secret' =>
-                        $clientSecret,
+                    $clientSecret,
                 ])
             );
     }

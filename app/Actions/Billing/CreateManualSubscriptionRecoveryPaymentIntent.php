@@ -15,6 +15,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
     public function __construct(
         private readonly EnsureStripeBillingCustomer $ensureCustomer,
         private readonly StripePaymentIntentApi $paymentIntents,
+        private readonly ReservePromotionalCredits $reservePromotionalCredits,
     ) {}
 
     public function execute(
@@ -26,7 +27,10 @@ class CreateManualSubscriptionRecoveryPaymentIntent
     ): ManualSubscriptionPaymentIntent {
         $subscription->refresh();
 
-        if ($subscription->tenant_id !== $tenant->id) {
+        if (
+            $subscription->tenant_id !==
+            $tenant->id
+        ) {
             throw new LogicException(
                 'La suscripción no pertenece al tenant.'
             );
@@ -54,31 +58,84 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         }
 
         $billingCustomer =
-            $this->ensureCustomer->execute($tenant);
+            $this->ensureCustomer->execute(
+                $tenant
+            );
 
         $payment =
             Payment::withoutGlobalScopes()
-                ->where('idempotency_key', $idempotencyKey)
-                ->first();
+            ->where(
+                'idempotency_key',
+                $idempotencyKey
+            )
+            ->first();
 
         if (! $payment) {
+            $amountBreakdown =
+                app(
+                    CalculatePaymentAmount::class
+                )->execute(
+                    $tenant,
+                    $subscription->billing_amount
+                );
+
             $payment =
-                Payment::withoutGlobalScopes()->create([
-                    'tenant_id' => $tenant->id,
-                    'subscription_id' => $subscription->id,
-                    'billing_cycle' => $subscription->billing_cycle,
-                    'amount' => $subscription->billing_amount,
-                    'currency' => $subscription->billing_currency,
-                    'status' => Payment::STATUS_PENDING,
-                    'attempted_at' => $attemptedAt,
-                    'provider' => 'stripe',
-                    'idempotency_key' => $idempotencyKey,
+                Payment::withoutGlobalScopes()
+                ->create([
+                    'tenant_id' =>
+                    $tenant->id,
+
+                    'subscription_id' =>
+                    $subscription->id,
+
+                    'billing_cycle' =>
+                    $subscription->billing_cycle,
+
+                    'gross_amount' =>
+                    $amountBreakdown['gross_amount'],
+
+                    'referral_discount_amount' =>
+                    $amountBreakdown['referral_discount_amount'],
+
+                    'promotional_credit_amount' =>
+                    $amountBreakdown['promotional_credit_amount'],
+
+                    'amount' =>
+                    $amountBreakdown['amount'],
+
+                    'currency' =>
+                    $subscription->billing_currency,
+
+                    'status' =>
+                    Payment::STATUS_PENDING,
+
+                    'attempted_at' =>
+                    $attemptedAt,
+
+                    'provider' =>
+                    'stripe',
+
+                    'idempotency_key' =>
+                    $idempotencyKey,
                 ]);
+
+            /*
+             * Reservamos los créditos antes de crear el
+             * PaymentIntent para que Stripe reciba el
+             * importe neto definitivo.
+             */
+            $payment =
+                $this->reservePromotionalCredits
+                ->execute(
+                    $payment
+                );
         }
 
         if (
-            $payment->tenant_id !== $tenant->id
-            || $payment->subscription_id !== $subscription->id
+            $payment->tenant_id !==
+            $tenant->id
+            || $payment->subscription_id !==
+            $subscription->id
         ) {
             throw new LogicException(
                 'La llave de idempotencia pertenece a otra operación de facturación.'
@@ -92,9 +149,14 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         }
 
         if (
-            $payment->amount !== $subscription->billing_amount
-            || strtoupper($payment->currency)
-                !== strtoupper($subscription->billing_currency)
+            $payment->contractualAmount() !==
+            $subscription->billing_amount
+            || strtoupper(
+                $payment->currency
+            ) !==
+            strtoupper(
+                $subscription->billing_currency
+            )
         ) {
             throw new LogicException(
                 'El pago pendiente ya no coincide con el importe contractual de la suscripción.'
@@ -103,8 +165,9 @@ class CreateManualSubscriptionRecoveryPaymentIntent
 
         /*
          * Reutilizamos el PaymentIntent si este checkout ya había
-         * sido abierto. Esto evita crear varios Payment pendientes
-         * cuando el usuario pulsa "Pagar ahora" más de una vez.
+         * sido abierto. No recalculamos ni reservamos créditos:
+         * el Payment conserva exactamente el importe con el que
+         * se creó originalmente el PaymentIntent.
          */
         if ($payment->provider_payment_id) {
             $paymentIntent =
@@ -127,7 +190,10 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                 );
             }
 
-            if ($paymentIntent->status === 'canceled') {
+            if (
+                $paymentIntent->status ===
+                'canceled'
+            ) {
                 throw new LogicException(
                     'El PaymentIntent pendiente fue cancelado en Stripe.'
                 );
@@ -140,22 +206,48 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         }
 
         $params = [
-            'amount' => $payment->amount,
-            'currency' => strtolower($payment->currency),
-            'customer' => $billingCustomer->provider_customer_id,
-            'payment_method_types' => ['card'],
+            'amount' =>
+            $payment->amount,
+
+            'currency' =>
+            strtolower(
+                $payment->currency
+            ),
+
+            'customer' =>
+            $billingCustomer
+                ->provider_customer_id,
+
+            'payment_method_types' => [
+                'card',
+            ],
+
             'metadata' => [
-                'doctotal_payment_uuid' => $payment->uuid,
-                'doctotal_tenant_id' => (string) $tenant->id,
-                'subscription_id' => (string) $subscription->id,
-                'billing_cycle' => $subscription->billing_cycle,
-                'payment_mode' => 'manual_recovery',
-                'save_for_future' => $saveForFuture ? '1' : '0',
+                'doctotal_payment_uuid' =>
+                $payment->uuid,
+
+                'doctotal_tenant_id' =>
+                (string) $tenant->id,
+
+                'subscription_id' =>
+                (string) $subscription->id,
+
+                'billing_cycle' =>
+                $subscription->billing_cycle,
+
+                'payment_mode' =>
+                'manual_recovery',
+
+                'save_for_future' =>
+                $saveForFuture
+                    ? '1'
+                    : '0',
             ],
         ];
 
         if ($saveForFuture) {
-            $params['setup_future_usage'] = 'off_session';
+            $params['setup_future_usage'] =
+                'off_session';
         }
 
         $paymentIntent =
@@ -163,7 +255,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                 $params,
                 [
                     'idempotency_key' =>
-                        $payment->idempotency_key,
+                    $payment->idempotency_key,
                 ]
             );
 
@@ -177,7 +269,8 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         }
 
         $payment->update([
-            'provider_payment_id' => $paymentIntent->id,
+            'provider_payment_id' =>
+            $paymentIntent->id,
         ]);
 
         return new ManualSubscriptionPaymentIntent(

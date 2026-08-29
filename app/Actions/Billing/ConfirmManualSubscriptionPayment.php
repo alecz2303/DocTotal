@@ -80,10 +80,10 @@ class ConfirmManualSubscriptionPayment
 
                 $paymentIntent =
                     $this->paymentIntents
-                        ->retrieve(
-                            $payment
-                                ->provider_payment_id
-                        );
+                    ->retrieve(
+                        $payment
+                            ->provider_payment_id
+                    );
 
                 if (
                     $paymentIntent->id !==
@@ -119,7 +119,7 @@ class ConfirmManualSubscriptionPayment
                 if (
                     $paymentIntent->customer !==
                     $billingCustomer
-                        ->provider_customer_id
+                    ->provider_customer_id
                 ) {
                     throw new LogicException(
                         'El PaymentIntent no pertenece al cliente Stripe del tenant.'
@@ -132,7 +132,7 @@ class ConfirmManualSubscriptionPayment
                 if (
                     (string) (
                         $metadata
-                            ?->doctotal_payment_uuid
+                        ?->doctotal_payment_uuid
                         ?? ''
                     ) !==
                     $payment->uuid
@@ -145,7 +145,7 @@ class ConfirmManualSubscriptionPayment
                 if (
                     (string) (
                         $metadata
-                            ?->doctotal_tenant_id
+                        ?->doctotal_tenant_id
                         ?? ''
                     ) !==
                     (string) $tenant->id
@@ -158,7 +158,7 @@ class ConfirmManualSubscriptionPayment
                 if (
                     (string) (
                         $metadata
-                            ?->payment_mode
+                        ?->payment_mode
                         ?? ''
                     ) !==
                     'manual'
@@ -191,10 +191,10 @@ class ConfirmManualSubscriptionPayment
 
                 $subscription->update([
                     'billing_amount' =>
-                        $payment->amount,
+                    $payment->contractualAmount(),
 
                     'billing_currency' =>
-                        $payment->currency,
+                    $payment->currency,
                 ]);
 
                 $payment->succeed(
@@ -202,9 +202,16 @@ class ConfirmManualSubscriptionPayment
                     $paymentIntent->id
                 );
 
+                app(
+                    ProcessSuccessfulPaymentPromotions::class
+                )->execute(
+                    $payment,
+                    $payment->paid_at
+                );
+
                 $payment->update([
                     'subscription_id' =>
-                        $subscription->id,
+                    $subscription->id,
                 ]);
 
                 return $payment->refresh();

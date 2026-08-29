@@ -6,11 +6,14 @@ use App\Actions\Billing\CreateManualSubscriptionPaymentIntent;
 use App\Contracts\StripeCustomerApi;
 use App\Contracts\StripePaymentIntentApi;
 use App\Models\Payment;
+use App\Models\PromotionalCredit;
+use App\Models\Referral;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
+use LogicException;
 use Stripe\PaymentIntent;
 use Tests\Fakes\FakeStripeCustomerApi;
 use Tests\Fakes\FakeStripePaymentIntentApi;
@@ -31,18 +34,18 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
         config([
             'billing.plans.monthly' => [
                 'amount' =>
-                    60000,
+                60000,
 
                 'currency' =>
-                    'MXN',
+                'MXN',
             ],
 
             'billing.plans.yearly' => [
                 'amount' =>
-                    600000,
+                600000,
 
                 'currency' =>
-                    'MXN',
+                'MXN',
             ],
         ]);
 
@@ -126,7 +129,7 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
 
         $params =
             $this->paymentIntents
-                ->receivedParams;
+            ->receivedParams;
 
         $this->assertSame(
             60000,
@@ -333,7 +336,7 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
 
         $params =
             $this->paymentIntents
-                ->receivedParams;
+            ->receivedParams;
 
         $this->assertArrayNotHasKey(
             'setup_future_usage',
@@ -363,7 +366,7 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
 
         $params =
             $this->paymentIntents
-                ->receivedParams;
+            ->receivedParams;
 
         $this->assertSame(
             'off_session',
@@ -459,11 +462,182 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
         $this->assertSame(
             Subscription::BILLING_CYCLE_YEARLY,
             $this->paymentIntents
-                ->receivedParams[
-                    'metadata'
-                ][
-                    'billing_cycle'
-                ]
+                ->receivedParams['metadata']['billing_cycle']
+        );
+    }
+
+    public function test_available_promotional_credit_is_reserved_for_manual_checkout(): void
+    {
+        $tenant =
+            $this->createTenant();
+
+        $credit =
+            $this->createPromotionalCredit(
+                $tenant,
+                5000
+            );
+
+        $this->prepareStripe();
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now(),
+                'manual-checkout-promo-reserve',
+            );
+
+        $payment =
+            $result->payment->refresh();
+
+        $credit->refresh();
+
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            5000,
+            $payment->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            55000,
+            $payment->amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_RESERVED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $payment->id,
+            $credit->payment_id
+        );
+    }
+
+    public function test_manual_checkout_sends_net_amount_to_stripe_after_promotional_credit(): void
+    {
+        $tenant =
+            $this->createTenant();
+
+        $this->createPromotionalCredit(
+            $tenant,
+            5000
+        );
+
+        $this->prepareStripe();
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now(),
+                'manual-checkout-promo-net',
+            );
+
+        $this->assertSame(
+            55000,
+            $result->payment->amount
+        );
+
+        $this->assertSame(
+            55000,
+            $this->paymentIntents
+                ->receivedParams['amount']
+        );
+    }
+
+    public function test_reopening_manual_checkout_does_not_duplicate_promotional_credit_reservation(): void
+    {
+        $tenant =
+            $this->createTenant();
+
+        $credit =
+            $this->createPromotionalCredit(
+                $tenant,
+                5000
+            );
+
+        $this->prepareStripe(
+            paymentIntentId: 'pi_manual_promo_same',
+            clientSecret: 'pi_manual_promo_same_secret'
+        );
+
+        $first =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now(),
+                'manual-checkout-promo-same',
+            );
+
+        /*
+        * Al reabrir el checkout ya existe un
+        * PaymentIntent asociado al Payment.
+        */
+        $this->paymentIntents
+            ->returnRetrievedPaymentIntent(
+                PaymentIntent::constructFrom([
+                    'id' =>
+                    'pi_manual_promo_same',
+
+                    'status' =>
+                    'requires_payment_method',
+
+                    'client_secret' =>
+                    'pi_manual_promo_same_secret',
+                ])
+            );
+
+        $second =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now()->addSecond(),
+                'manual-checkout-promo-same',
+            );
+
+        $this->assertTrue(
+            $first->payment->is(
+                $second->payment
+            )
+        );
+
+        $this->assertSame(
+            55000,
+            $second->payment
+                ->refresh()
+                ->amount
+        );
+
+        $this->assertSame(
+            5000,
+            $second->payment
+                ->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            1,
+            PromotionalCredit::withoutGlobalScopes()
+                ->where(
+                    'payment_id',
+                    $first->payment->id
+                )
+                ->where(
+                    'status',
+                    PromotionalCredit::STATUS_RESERVED
+                )
+                ->count()
+        );
+
+        $credit->refresh();
+
+        $this->assertSame(
+            $first->payment->id,
+            $credit->payment_id
         );
     }
 
@@ -478,27 +652,249 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
     {
         return Tenant::create([
             'name' =>
-                'Consultorio Checkout Manual',
+            'Consultorio Checkout Manual',
 
             'slug' =>
-                'manual-checkout-' .
+            'manual-checkout-' .
                 uniqid(),
 
             'status' =>
-                'trial',
+            'trial',
+
+            'currency' =>
+            'MXN',
 
             'onboarding_completed_at' =>
-                now(),
+            now(),
         ]);
+    }
+
+    public function test_reuses_pending_manual_payment_even_with_different_idempotency_key(): void
+    {
+        $tenant =
+            $this->createTenant();
+
+        $this->prepareStripe(
+            paymentIntentId: 'pi_pending_reuse',
+            clientSecret: 'pi_pending_reuse_secret'
+        );
+
+        $first =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now(),
+                'manual:first-key'
+            );
+
+        /*
+        * Al reutilizar el checkout existente ya hay
+        * un PaymentIntent asociado al Payment.
+        */
+        $this->paymentIntents
+            ->returnRetrievedPaymentIntent(
+                PaymentIntent::constructFrom([
+                    'id' =>
+                    'pi_pending_reuse',
+
+                    'status' =>
+                    'requires_payment_method',
+
+                    'client_secret' =>
+                    'pi_pending_reuse_secret',
+                ])
+            );
+
+        $second =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now()->addMinute(),
+                'manual:second-key'
+            );
+
+        $this->assertTrue(
+            $first->payment->is(
+                $second->payment
+            )
+        );
+
+        $this->assertSame(
+            $first->payment->uuid,
+            $second->payment->uuid
+        );
+
+        $this->assertSame(
+            'manual:first-key',
+            $second->payment->idempotency_key
+        );
+
+        $this->assertSame(
+            1,
+            Payment::withoutGlobalScopes()
+                ->where(
+                    'tenant_id',
+                    $tenant->id
+                )
+                ->where(
+                    'status',
+                    Payment::STATUS_PENDING
+                )
+                ->count()
+        );
+    }
+
+    public function test_rejects_different_billing_cycle_when_manual_checkout_is_pending(): void
+    {
+        $tenant =
+            $this->createTenant();
+
+        $this->prepareStripe(
+            paymentIntentId: 'pi_pending_cycle',
+            clientSecret: 'pi_pending_cycle_secret'
+        );
+
+        $first =
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_MONTHLY,
+                now(),
+                'manual:monthly-key'
+            );
+
+        try {
+            $this->action()->execute(
+                $tenant,
+                Subscription::BILLING_CYCLE_YEARLY,
+                now()->addMinute(),
+                'manual:yearly-key'
+            );
+
+            $this->fail(
+                'Se esperaba una LogicException.'
+            );
+        } catch (LogicException $exception) {
+            $this->assertSame(
+                'Ya existe un checkout pendiente para otro plan. Cancélalo antes de cambiar de plan.',
+                $exception->getMessage()
+            );
+        }
+
+        $this->assertSame(
+            1,
+            Payment::withoutGlobalScopes()
+                ->where(
+                    'tenant_id',
+                    $tenant->id
+                )
+                ->where(
+                    'status',
+                    Payment::STATUS_PENDING
+                )
+                ->count()
+        );
+
+        $this->assertDatabaseHas(
+            'payments',
+            [
+                'id' =>
+                $first->payment->id,
+
+                'billing_cycle' =>
+                Subscription::BILLING_CYCLE_MONTHLY,
+
+                'status' =>
+                Payment::STATUS_PENDING,
+            ]
+        );
+
+        $this->assertDatabaseMissing(
+            'payments',
+            [
+                'tenant_id' =>
+                $tenant->id,
+
+                'billing_cycle' =>
+                Subscription::BILLING_CYCLE_YEARLY,
+
+                'status' =>
+                Payment::STATUS_PENDING,
+            ]
+        );
+    }
+
+    private function createPromotionalCredit(
+        Tenant $tenant,
+        int $amount = 5000,
+    ): PromotionalCredit {
+        $referred =
+            Tenant::create([
+                'name' =>
+                'Consultorio Referido',
+
+                'slug' =>
+                'manual-referred-' .
+                    uniqid(),
+
+                'status' =>
+                'active',
+
+                'currency' =>
+                'MXN',
+
+                'onboarding_completed_at' =>
+                now(),
+            ]);
+
+        $referral =
+            Referral::withoutGlobalScopes()
+            ->create([
+                'referrer_tenant_id' =>
+                $tenant->id,
+
+                'referred_tenant_id' =>
+                $referred->id,
+
+                'referral_code' =>
+                $tenant->referral_code,
+            ]);
+
+        return PromotionalCredit::withoutGlobalScopes()
+            ->create([
+                'tenant_id' =>
+                $tenant->id,
+
+                'referral_id' =>
+                $referral->id,
+
+                'kind' =>
+                PromotionalCredit::KIND_REFERRER_REWARD,
+
+                'amount' =>
+                $amount,
+
+                'currency' =>
+                'MXN',
+
+                'status' =>
+                PromotionalCredit::STATUS_AVAILABLE,
+
+                'available_at' =>
+                now(),
+
+                'idempotency_key' =>
+                'manual-checkout-credit-' .
+                    uniqid(),
+            ]);
     }
 
     private function prepareStripe(
         string $customerId =
-            'cus_manual_test',
+        'cus_manual_test',
         string $paymentIntentId =
-            'pi_manual_test',
+        'pi_manual_test',
         string $clientSecret =
-            'pi_manual_test_secret_123',
+        'pi_manual_test_secret_123',
     ): void {
         $this->customers->returnCustomer(
             $customerId
@@ -508,13 +904,13 @@ class CreateManualSubscriptionPaymentIntentTest extends TestCase
             ->returnPaymentIntent(
                 PaymentIntent::constructFrom([
                     'id' =>
-                        $paymentIntentId,
+                    $paymentIntentId,
 
                     'status' =>
-                        'requires_payment_method',
+                    'requires_payment_method',
 
                     'client_secret' =>
-                        $clientSecret,
+                    $clientSecret,
                 ])
             );
     }

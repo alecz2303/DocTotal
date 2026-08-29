@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Models\Referral;
 
 class RegistrationTest extends TestCase
 {
@@ -187,5 +188,233 @@ class RegistrationTest extends TestCase
 
         $this->assertDatabaseCount('tenants', 1);
         $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_registration_with_valid_referral_code_creates_pending_referral(): void
+    {
+        $referrer = Tenant::create([
+            'name' => 'Consultorio Referidor',
+            'slug' => 'consultorio-referidor',
+        ]);
+
+        $response = $this->post('/register', [
+            'practice_name' =>
+            'Consultorio Referido',
+
+            'first_name' =>
+            'Ana',
+
+            'last_name' =>
+            'López',
+
+            'email' =>
+            'ana@example.com',
+
+            'password' =>
+            'password123',
+
+            'password_confirmation' =>
+            'password123',
+
+            'referral_code' =>
+            $referrer->referral_code,
+        ]);
+
+        $response->assertRedirect('/dashboard');
+
+        $referred = Tenant::query()
+            ->where(
+                'slug',
+                'consultorio-referido'
+            )
+            ->firstOrFail();
+
+        $referral = Referral::query()
+            ->where(
+                'referred_tenant_id',
+                $referred->id
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            $referrer->id,
+            $referral->referrer_tenant_id
+        );
+
+        $this->assertSame(
+            $referred->id,
+            $referral->referred_tenant_id
+        );
+
+        $this->assertSame(
+            $referrer->referral_code,
+            $referral->referral_code
+        );
+
+        $this->assertSame(
+            Referral::STATUS_PENDING,
+            $referral->status
+        );
+
+        $this->assertNull(
+            $referral->qualified_at
+        );
+
+        $this->assertNull(
+            $referral->qualifying_payment_id
+        );
+    }
+
+    public function test_registration_without_referral_code_creates_no_referral(): void
+    {
+        $response = $this->post('/register', [
+            'practice_name' =>
+            'Consultorio Independiente',
+
+            'first_name' =>
+            'Ana',
+
+            'last_name' =>
+            'López',
+
+            'email' =>
+            'ana@example.com',
+
+            'password' =>
+            'password123',
+
+            'password_confirmation' =>
+            'password123',
+        ]);
+
+        $response->assertRedirect('/dashboard');
+
+        $this->assertDatabaseCount(
+            'referrals',
+            0
+        );
+    }
+
+    public function test_registration_rejects_invalid_referral_code(): void
+    {
+        $response = $this->from('/register')
+            ->post('/register', [
+                'practice_name' =>
+                'Consultorio Referido',
+
+                'first_name' =>
+                'Ana',
+
+                'last_name' =>
+                'López',
+
+                'email' =>
+                'ana@example.com',
+
+                'password' =>
+                'password123',
+
+                'password_confirmation' =>
+                'password123',
+
+                'referral_code' =>
+                'INVALIDO',
+            ]);
+
+        $response
+            ->assertRedirect('/register')
+            ->assertSessionHasErrors(
+                'referral_code'
+            );
+
+        $this->assertDatabaseCount(
+            'tenants',
+            0
+        );
+
+        $this->assertDatabaseCount(
+            'users',
+            0
+        );
+
+        $this->assertDatabaseCount(
+            'referrals',
+            0
+        );
+    }
+
+    public function test_registration_normalizes_lowercase_referral_code(): void
+    {
+        $referrer = Tenant::create([
+            'name' => 'Consultorio Referidor',
+            'slug' => 'consultorio-referidor',
+        ]);
+
+        $response = $this->post('/register', [
+            'practice_name' =>
+            'Consultorio Referido',
+
+            'first_name' =>
+            'Ana',
+
+            'last_name' =>
+            'López',
+
+            'email' =>
+            'ana@example.com',
+
+            'password' =>
+            'password123',
+
+            'password_confirmation' =>
+            'password123',
+
+            'referral_code' =>
+            strtolower(
+                $referrer->referral_code
+            ),
+        ]);
+
+        $response->assertRedirect(
+            '/dashboard'
+        );
+
+        $this->assertDatabaseHas(
+            'referrals',
+            [
+                'referrer_tenant_id' =>
+                $referrer->id,
+
+                'referral_code' =>
+                $referrer->referral_code,
+
+                'status' =>
+                Referral::STATUS_PENDING,
+            ]
+        );
+    }
+
+    public function test_registration_page_preserves_referral_code_from_link(): void
+    {
+        $referrer = Tenant::create([
+            'name' => 'Consultorio Referidor',
+            'slug' => 'consultorio-referidor',
+        ]);
+
+        $this->get(
+            '/register?ref='
+                . $referrer->referral_code
+        )
+            ->assertOk()
+            ->assertSee(
+                'name="referral_code"',
+                false
+            )
+            ->assertSee(
+                'value="'
+                    . $referrer->referral_code
+                    . '"',
+                false
+            );
     }
 }

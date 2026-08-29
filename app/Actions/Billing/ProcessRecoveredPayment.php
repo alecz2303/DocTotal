@@ -55,6 +55,13 @@ class ProcessRecoveredPayment
                 );
 
                 app(
+                    ProcessSuccessfulPaymentPromotions::class
+                )->execute(
+                    $payment,
+                    $paidAt
+                );
+
+                app(
                     RecoverSubscription::class
                 )->execute(
                     $subscription,

@@ -45,4 +45,14 @@ class StripePaymentIntentApi implements StripePaymentIntentApiContract
                 $params
             );
     }
+
+    public function cancel(
+        string $paymentIntentId,
+    ): PaymentIntent {
+        return $this->stripe
+            ->paymentIntents
+            ->cancel(
+                $paymentIntentId
+            );
+    }
 }

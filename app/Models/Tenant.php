@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Tenant extends Model
 {
@@ -16,6 +17,7 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'slug',
+        'referral_code',
         'status',
         'timezone',
         'locale',
@@ -43,6 +45,30 @@ class Tenant extends Model
             'trial_ends_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
         ];
+    }
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant): void {
+            if (! $tenant->referral_code) {
+                $tenant->referral_code =
+                    self::generateUniqueReferralCode();
+            }
+        });
+    }
+
+    private static function generateUniqueReferralCode(): string
+    {
+        do {
+            $code = Str::upper(
+                Str::random(8)
+            );
+        } while (
+            self::query()
+            ->where('referral_code', $code)
+            ->exists()
+        );
+
+        return $code;
     }
 
     public function users(): HasMany
@@ -91,6 +117,29 @@ class Tenant extends Model
     {
         return $this->hasMany(
             BillingCustomer::class
+        );
+    }
+
+    public function referralsGiven(): HasMany
+    {
+        return $this->hasMany(
+            Referral::class,
+            'referrer_tenant_id'
+        );
+    }
+
+    public function referralReceived(): HasOne
+    {
+        return $this->hasOne(
+            Referral::class,
+            'referred_tenant_id'
+        );
+    }
+
+    public function promotionalCredits(): HasMany
+    {
+        return $this->hasMany(
+            PromotionalCredit::class
         );
     }
 

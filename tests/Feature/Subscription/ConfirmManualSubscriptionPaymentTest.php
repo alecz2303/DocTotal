@@ -6,6 +6,8 @@ use App\Actions\Billing\ConfirmManualSubscriptionPayment;
 use App\Contracts\StripePaymentIntentApi;
 use App\Models\BillingCustomer;
 use App\Models\Payment;
+use App\Models\PromotionalCredit;
+use App\Models\Referral;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -129,11 +131,9 @@ class ConfirmManualSubscriptionPaymentTest extends TestCase
     {
         [$tenant, $payment] =
             $this->scenario(
-                billingCycle:
-                    Subscription::BILLING_CYCLE_YEARLY,
+                billingCycle: Subscription::BILLING_CYCLE_YEARLY,
 
-                amount:
-                    600000,
+                amount: 600000,
             );
 
         $confirmedAt =
@@ -310,13 +310,13 @@ class ConfirmManualSubscriptionPaymentTest extends TestCase
         $intent->metadata =
             [
                 'doctotal_payment_uuid' =>
-                    'wrong-payment',
+                'wrong-payment',
 
                 'doctotal_tenant_id' =>
-                    (string) $tenant->id,
+                (string) $tenant->id,
 
                 'payment_mode' =>
-                    'manual',
+                'manual',
             ];
 
         $this->stripe
@@ -427,6 +427,79 @@ class ConfirmManualSubscriptionPaymentTest extends TestCase
         );
     }
 
+    public function test_successful_manual_payment_consumes_reserved_promotional_credit(): void
+    {
+        [$tenant, $payment] =
+            $this->scenario(
+                amount: 55000
+            );
+
+        $payment->update([
+            'gross_amount' =>
+            60000,
+
+            'referral_discount_amount' =>
+            0,
+
+            'promotional_credit_amount' =>
+            5000,
+        ]);
+
+        $credit =
+            $this->createReservedPromotionalCredit(
+                $tenant,
+                $payment,
+                5000
+            );
+
+        $this->stripe
+            ->returnRetrievedPaymentIntent(
+                $this->successfulIntent(
+                    $tenant,
+                    $payment->refresh()
+                )
+            );
+
+        $result =
+            $this->action()->execute(
+                $tenant,
+                $payment,
+                Carbon::parse(
+                    '2026-08-29 00:30:00'
+                )
+            );
+
+        $credit->refresh();
+
+        $this->assertTrue(
+            $result->isSucceeded()
+        );
+
+        $this->assertSame(
+            55000,
+            $result->amount
+        );
+
+        $this->assertSame(
+            5000,
+            $result->promotional_credit_amount
+        );
+
+        $this->assertSame(
+            PromotionalCredit::STATUS_CONSUMED,
+            $credit->status
+        );
+
+        $this->assertSame(
+            $result->id,
+            $credit->payment_id
+        );
+
+        $this->assertNotNull(
+            $credit->consumed_at
+        );
+    }
+
     private function action(): ConfirmManualSubscriptionPayment
     {
         return app(
@@ -436,77 +509,149 @@ class ConfirmManualSubscriptionPaymentTest extends TestCase
 
     private function scenario(
         string $billingCycle =
-            Subscription::BILLING_CYCLE_MONTHLY,
+        Subscription::BILLING_CYCLE_MONTHLY,
         int $amount =
-            60000,
+        60000,
     ): array {
         $tenant =
             Tenant::create([
                 'name' =>
-                    'Consultorio Pago Manual',
+                'Consultorio Pago Manual',
 
                 'slug' =>
-                    'pago-manual-' .
+                'pago-manual-' .
                     uniqid(),
 
                 'status' =>
-                    'trial',
+                'trial',
 
                 'onboarding_completed_at' =>
-                    now(),
+                now(),
             ]);
 
         BillingCustomer::withoutGlobalScopes()
             ->create([
                 'tenant_id' =>
-                    $tenant->id,
+                $tenant->id,
 
                 'provider' =>
-                    BillingCustomer::PROVIDER_STRIPE,
+                BillingCustomer::PROVIDER_STRIPE,
 
                 'provider_customer_id' =>
-                    'cus_manual_123',
+                'cus_manual_123',
             ]);
 
         $payment =
             Payment::withoutGlobalScopes()
-                ->create([
-                    'tenant_id' =>
-                        $tenant->id,
+            ->create([
+                'tenant_id' =>
+                $tenant->id,
 
-                    'subscription_id' =>
-                        null,
+                'subscription_id' =>
+                null,
 
-                    'billing_cycle' =>
-                        $billingCycle,
+                'billing_cycle' =>
+                $billingCycle,
 
-                    'amount' =>
-                        $amount,
+                'amount' =>
+                $amount,
 
-                    'currency' =>
-                        'MXN',
+                'currency' =>
+                'MXN',
 
-                    'status' =>
-                        Payment::STATUS_PENDING,
+                'status' =>
+                Payment::STATUS_PENDING,
 
-                    'attempted_at' =>
-                        now(),
+                'attempted_at' =>
+                now(),
 
-                    'provider' =>
-                        'stripe',
+                'provider' =>
+                'stripe',
 
-                    'provider_payment_id' =>
-                        'pi_manual_success',
+                'provider_payment_id' =>
+                'pi_manual_success',
 
-                    'idempotency_key' =>
-                        'manual-confirm-' .
-                        uniqid(),
-                ]);
+                'idempotency_key' =>
+                'manual-confirm-' .
+                    uniqid(),
+            ]);
 
         return [
             $tenant,
             $payment,
         ];
+    }
+
+    private function createReservedPromotionalCredit(
+        Tenant $tenant,
+        Payment $payment,
+        int $amount = 5000,
+    ): PromotionalCredit {
+        $referred =
+            Tenant::create([
+                'name' =>
+                'Consultorio Referido',
+
+                'slug' =>
+                'manual-confirm-referred-' .
+                    uniqid(),
+
+                'status' =>
+                'active',
+
+                'currency' =>
+                'MXN',
+
+                'onboarding_completed_at' =>
+                now(),
+            ]);
+
+        $referral =
+            Referral::withoutGlobalScopes()
+            ->create([
+                'referrer_tenant_id' =>
+                $tenant->id,
+
+                'referred_tenant_id' =>
+                $referred->id,
+
+                'referral_code' =>
+                $tenant->referral_code,
+            ]);
+
+        return PromotionalCredit::withoutGlobalScopes()
+            ->create([
+                'tenant_id' =>
+                $tenant->id,
+
+                'referral_id' =>
+                $referral->id,
+
+                'payment_id' =>
+                $payment->id,
+
+                'kind' =>
+                PromotionalCredit::KIND_REFERRER_REWARD,
+
+                'amount' =>
+                $amount,
+
+                'currency' =>
+                'MXN',
+
+                'status' =>
+                PromotionalCredit::STATUS_RESERVED,
+
+                'available_at' =>
+                now()->subMinute(),
+
+                'reserved_at' =>
+                now(),
+
+                'idempotency_key' =>
+                'manual-confirm-credit-' .
+                    uniqid(),
+            ]);
     }
 
     private function successfulIntent(
@@ -515,34 +660,34 @@ class ConfirmManualSubscriptionPaymentTest extends TestCase
     ): PaymentIntent {
         return PaymentIntent::constructFrom([
             'id' =>
-                'pi_manual_success',
+            'pi_manual_success',
 
             'amount' =>
-                $payment->amount,
+            $payment->amount,
 
             'currency' =>
-                strtolower(
-                    $payment->currency
-                ),
+            strtolower(
+                $payment->currency
+            ),
 
             'customer' =>
-                'cus_manual_123',
+            'cus_manual_123',
 
             'status' =>
-                'succeeded',
+            'succeeded',
 
             'metadata' => [
                 'doctotal_payment_uuid' =>
-                    $payment->uuid,
+                $payment->uuid,
 
                 'doctotal_tenant_id' =>
-                    (string) $tenant->id,
+                (string) $tenant->id,
 
                 'billing_cycle' =>
-                    $payment->billing_cycle,
+                $payment->billing_cycle,
 
                 'payment_mode' =>
-                    'manual',
+                'manual',
             ],
         ]);
     }

@@ -908,49 +908,149 @@ Commit sugerido:
 
 feat: complete payments billing recovery and automatic account lifecycle DT-12
 
-## DT-13 — Referral and promotional credit system
+## DT-13 — Referral program and promotional credits
 
-Estado: Pendiente
+Estado: Completado
 
 Objetivo:
 
-Implementar adquisición orgánica mediante códigos únicos de referido por tenant.
+Implementar el programa de referidos de DocTotal y la foundation de créditos promocionales integrada con el lifecycle comercial y de billing.
 
-Reglas definidas:
+Incluye:
 
-- Cada tenant tendrá un código único.
+Código único y permanente de referido por tenant.
 
-- El tenant podrá compartir su código.
+Generación automática y backfill para tenants existentes.
 
-- El código solamente podrá utilizarse durante la primera inscripción de un nuevo tenant.
+Enlace de referido.
 
-- Cada nuevo tenant podrá utilizar un único código.
+Captura opcional del código durante registro.
 
-- Un tenant nuevo no podrá utilizar más de un código.
+Aplicación automática mediante parámetro ref.
 
-- Si el usuario no utiliza un código durante su inscripción inicial, pierde la oportunidad permanentemente.
+Validación del código.
 
-- El código no podrá agregarse posteriormente.
+Prevención de auto-referidos.
 
-- Existirá un límite configurable de beneficios válidos por código durante cada mes.
+Prevención de atribuciones duplicadas.
 
-- La regla inicial prevista es permitir únicamente los primeros 5 usos/recompensas válidos por mes.
+Modelo Referral.
 
-- El límite deberá poder modificarse posteriormente sin cambiar el dominio.
+Estado pendiente hasta el primer pago exitoso.
 
-- La recompensa será crédito/promoción dentro de DocTotal.
+Calificación idempotente de referencias.
 
-- Debe existir trazabilidad del tenant referidor y tenant referido.
+Descuento único de $50 MXN para el referido.
 
-- Deben prevenirse autorreferidos.
+Plan mensual: $600 MXN → $550 MXN.
 
-- Debe prevenirse reutilización.
+Plan anual: $6,000 MXN → $5,950 MXN.
 
-- Debe prevenirse doble beneficio.
+Crédito de $50 MXN para el referidor.
 
-- Los créditos deberán integrarse con el sistema de billing.
+Máximo de 5 recompensas / $250 MXN por mes calendario.
 
----
+Beneficio del referido independiente del límite mensual del referidor.
+
+Modelo PromotionalCredit.
+
+Estados available, reserved y consumed.
+
+Créditos promocionales sin caducidad.
+
+Reserva idempotente antes del cobro.
+
+Consumo después de pago exitoso.
+
+Liberación después de pago fallido o checkout cancelado.
+
+Aplicación automática de créditos en pagos manuales.
+
+Aplicación automática de créditos en renovaciones.
+
+Integración con recuperación de pagos.
+
+Desglose de promociones visible en Billing.
+
+Prevención de checkouts manuales pendientes duplicados.
+
+Reutilización idempotente del checkout pendiente.
+
+Cambio mensual ↔ anual mediante cancelación segura del checkout anterior.
+
+Estado canceled para pagos abandonados.
+
+Cancelación del PaymentIntent asociado.
+
+Limpieza automática de checkouts manuales abandonados.
+
+Reconciliación segura cuando Stripe reporta succeeded y el Payment local continúa pending.
+
+Scheduler horario para limpieza de checkouts.
+
+Protección multi-tenant.
+
+Hardening de idempotencia y estados límite.
+
+Cobertura automatizada completa.
+
+Flujo de referido:
+
+Tenant referidor
+
+→ comparte código
+
+→ nuevo tenant se registra
+
+→ Referral = pending
+
+→ primer pago exitoso del referido
+
+→ Referral = qualified
+
+→ referido obtiene $50 MXN de descuento
+
+→ referidor obtiene $50 MXN de crédito si no alcanzó su límite mensual
+
+→ crédito = available
+
+→ siguiente pago elegible
+
+→ crédito = reserved
+
+→ pago exitoso
+
+→ crédito = consumed
+
+Si el pago falla o el checkout se cancela:
+
+→ crédito vuelve a available
+
+Límite mensual del referidor:
+
+Primeros 5 referidos calificados del mes
+
+→ generan $50 MXN cada uno
+
+→ máximo $250 MXN
+
+Sexto referido y posteriores:
+
+→ no generan crédito adicional para el referidor
+
+→ conservan su propio descuento de $50 MXN
+
+Baseline al cierre de DT-13:
+
+797 tests verdes
+
+2244 assertions
+
+0 failures
+
+Commit sugerido:
+
+feat: complete referral program and promotional credits DT-13
 
 ## DT-14 — Expediente clínico longitudinal
 
@@ -1140,46 +1240,48 @@ El rediseño deberá realizarse sin romper los workflows funcionales ya cubierto
 
 Bloques completados:
 
-- DT-1
+DT-1
 
-- DT-2
+DT-2
 
-- DT-3
+DT-3
 
-- DT-4
+DT-4
 
-- DT-5
+DT-5
 
-- DT-6
+DT-6
 
-- DT-7
+DT-7
 
-- DT-8
+DT-8
 
-- DT-9
+DT-9
 
-- DT-10
+DT-10
 
-- DT-11
+DT-11
 
-- DT-12
+DT-12
+
+DT-13
 
 Baseline actual:
 
-`696 tests verdes`
+797 tests verdes
 
-`0 failures`
+2244 assertions
+
+0 failures
 
 Próximo bloque:
 
-Pendiente de selección después del cierre documental y commit final de DT-12.
+Pendiente de selección después del cierre documental y commit final de DT-13.
 
 Candidatos ya definidos:
 
-- DT-13 — Referral and promotional credit system.
+DT-14 — Expediente clínico longitudinal.
 
-- DT-14 — Expediente clínico longitudinal.
+DT-15 — Clinical files and medical documents.
 
-- DT-15 — Clinical files and medical documents.
-
-- DT-16 — Visual redesign / DocTotal UI.
+DT-16 — Visual redesign / DocTotal UI.

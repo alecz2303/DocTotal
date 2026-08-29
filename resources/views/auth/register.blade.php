@@ -36,7 +36,10 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('register') }}" class="space-y-5">
+            <form
+                method="POST"
+                action="{{ route('register') }}"
+                class="space-y-5">
                 @csrf
 
                 <div>
@@ -158,9 +161,85 @@
                                focus:ring-slate-200">
                 </div>
 
+                @php
+                $referralCode = old(
+                'referral_code',
+                request('ref')
+                );
+                @endphp
+
+                @if ($referralCode)
+
+                <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+
+                    <input
+                        type="hidden"
+                        name="referral_code"
+                        value="{{ $referralCode }}">
+
+                    <p class="text-sm text-emerald-800">
+                        Código de referido aplicado:
+                        <strong class="font-semibold">
+                            {{ strtoupper($referralCode) }}
+                        </strong>
+                    </p>
+
+                    <p class="mt-1 text-xs text-emerald-700">
+                        Tu invitación será asociada automáticamente al crear tu cuenta.
+                    </p>
+
+                </div>
+
+                @else
+
+                <div>
+                    <label
+                        for="referral_code"
+                        class="mb-1.5 block text-sm font-medium text-slate-700">
+                        Código de referido
+
+                        <span class="font-normal text-slate-400">
+                            (opcional)
+                        </span>
+                    </label>
+
+                    <input
+                        id="referral_code"
+                        name="referral_code"
+                        type="text"
+                        value="{{ old('referral_code') }}"
+                        autocomplete="off"
+                        placeholder="Ej. ABC12345"
+                        class="w-full rounded-lg border
+                                   @error('referral_code')
+                                       border-red-300
+                                   @else
+                                       border-slate-300
+                                   @enderror
+                                   px-3 py-2.5 text-sm uppercase
+                                   outline-none transition
+                                   focus:border-slate-500
+                                   focus:ring-2 focus:ring-slate-200">
+
+                    <p class="mt-1.5 text-xs text-slate-500">
+                        ¿Alguien te invitó a DocTotal?
+                        Escribe aquí su código de referido.
+                    </p>
+
+                    @error('referral_code')
+                    <p class="mt-1.5 text-xs text-red-600">
+                        {{ $message }}
+                    </p>
+                    @enderror
+                </div>
+
+                @endif
+
                 <div class="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
                     Obtendrás
-                    <strong>{{ config('doctotal.trial_days') }} días gratis</strong>
+                    <strong>
+                        {{ config('doctotal.trial_days') }} días gratis
+                    </strong>
                     para probar DocTotal.
                 </div>
 

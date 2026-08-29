@@ -6,6 +6,7 @@ use App\Actions\Subscription\RenewSubscription;
 use App\Contracts\PaymentGateway;
 use App\Models\Payment;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -13,7 +14,8 @@ use LogicException;
 class AttemptSubscriptionPayment
 {
     public function __construct(
-        private readonly PaymentGateway $gateway
+        private readonly PaymentGateway $gateway,
+        private readonly ReservePromotionalCredits $reservePromotionalCredits,
     ) {}
 
     public function execute(
@@ -68,40 +70,108 @@ class AttemptSubscriptionPayment
                     );
                 }
 
-                $existingPayment = Payment::query()
+                $existingPayment =
+                    Payment::query()
                     ->withoutGlobalScopes()
-                    ->where('idempotency_key', $idempotencyKey)
+                    ->where(
+                        'idempotency_key',
+                        $idempotencyKey
+                    )
                     ->first();
 
                 if ($existingPayment) {
                     return $existingPayment;
                 }
 
-                if ($isRetry && ! $subscription->isPastDue()) {
+                if (
+                    $isRetry
+                    && ! $subscription->isPastDue()
+                ) {
                     throw new LogicException(
                         'Un reintento requiere una suscripción past_due.'
                     );
                 }
 
-                if (! $isRetry && ! $subscription->isActive()) {
+                if (
+                    ! $isRetry
+                    && ! $subscription->isActive()
+                ) {
                     throw new LogicException(
                         'El cobro inicial requiere una suscripción activa.'
                     );
                 }
 
-                $payment = Payment::withoutGlobalScopes()->create([
-                    'tenant_id' => $subscription->tenant_id,
-                    'subscription_id' => $subscription->id,
-                    'billing_cycle' => $subscription->billing_cycle,
-                    'amount' => $subscription->billing_amount,
-                    'currency' => $subscription->billing_currency,
-                    'status' => Payment::STATUS_PENDING,
-                    'attempted_at' => $attemptedAt,
-                    'provider' => $this->gateway->name(),
-                    'idempotency_key' => $idempotencyKey,
-                ]);
+                $tenant =
+                    Tenant::query()
+                    ->findOrFail(
+                        $subscription->tenant_id
+                    );
 
-                $result = $this->gateway->charge($payment);
+                $amountBreakdown = app(
+                    CalculatePaymentAmount::class
+                )->execute(
+                    $tenant,
+                    $subscription->billing_amount
+                );
+
+                $payment =
+                    Payment::withoutGlobalScopes()
+                    ->create([
+                        'tenant_id' =>
+                        $subscription->tenant_id,
+
+                        'subscription_id' =>
+                        $subscription->id,
+
+                        'billing_cycle' =>
+                        $subscription->billing_cycle,
+
+                        'gross_amount' =>
+                        $amountBreakdown['gross_amount'],
+
+                        'referral_discount_amount' =>
+                        $amountBreakdown['referral_discount_amount'],
+
+                        'promotional_credit_amount' =>
+                        $amountBreakdown['promotional_credit_amount'],
+
+                        'amount' =>
+                        $amountBreakdown['amount'],
+
+                        'currency' =>
+                        $subscription->billing_currency,
+
+                        'status' =>
+                        Payment::STATUS_PENDING,
+
+                        'attempted_at' =>
+                        $attemptedAt,
+
+                        'provider' =>
+                        $this->gateway->name(),
+
+                        'idempotency_key' =>
+                        $idempotencyKey,
+                    ]);
+
+                /*
+                 * Reservamos créditos antes de llamar
+                 * al gateway para que Payment.amount
+                 * sea el importe neto definitivo.
+                 */
+                $payment =
+                    $this->reservePromotionalCredits
+                    ->execute(
+                        $payment
+                    );
+
+                /*
+                 * El gateway debe ejecutarse una sola vez.
+                 */
+                $result =
+                    $this->gateway->charge(
+                        $payment
+                    );
 
                 if ($result->isSucceeded()) {
                     if ($isRetry) {
@@ -119,7 +189,16 @@ class AttemptSubscriptionPayment
                         $result->providerPaymentId
                     );
 
-                    app(RenewSubscription::class)->execute(
+                    app(
+                        ProcessSuccessfulPaymentPromotions::class
+                    )->execute(
+                        $payment,
+                        $attemptedAt
+                    );
+
+                    app(
+                        RenewSubscription::class
+                    )->execute(
                         $subscription
                     );
 
@@ -138,7 +217,9 @@ class AttemptSubscriptionPayment
                     );
                 }
 
-                return app(ProcessFailedPayment::class)->execute(
+                return app(
+                    ProcessFailedPayment::class
+                )->execute(
                     $payment,
                     $attemptedAt,
                     $result->failureCode,
