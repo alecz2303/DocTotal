@@ -1054,61 +1054,75 @@ feat: complete referral program and promotional credits DT-13
 
 ## DT-14 — Expediente clínico longitudinal
 
-Estado: Pendiente
+Estado: Completado
 
 Objetivo:
 
-Convertir la información clínica existente del paciente en un expediente clínico longitudinal completo.
+Convertir la información clínica existente del paciente en un expediente clínico longitudinal coherente, reutilizando las entidades clínicas existentes y evitando duplicar datos o introducir una nueva fuente de verdad clínica.
 
-Importante:
+Incluye:
 
-DocTotal ya cuenta con una base mediante `PatientMedicalHistory`.
+Auditoría de modelos, migraciones, vistas y tests clínicos existentes.
 
-Este bloque debe auditar y ampliar la información existente.
+Evolución de la vista existente de paciente como expediente longitudinal.
 
-No debe crear estructuras duplicadas innecesariamente.
+Resumen clínico basado en PatientMedicalHistory.
 
-Incluye por revisar y completar:
+Línea de tiempo clínica unificada.
 
-- Antecedentes personales patológicos.
+Inclusión de consultas finalizadas (completed) dentro del historial clínico.
 
-- Antecedentes personales no patológicos.
+Exclusión de consultas en borrador (draft) del historial oficial.
 
-- Antecedentes heredofamiliares.
+Diagnósticos mostrados dentro del contexto de la consulta que los originó.
 
-- Antecedentes quirúrgicos.
+Diagnósticos históricos consolidados.
 
-- Hospitalizaciones previas.
+Recetas asociadas a una consulta mostradas dentro de ese evento clínico.
 
-- Alergias.
+Recetas independientes (consultation_id = null) mostradas como eventos propios.
 
-- Medicamentos habituales.
+Prevención de duplicar como evento independiente una receta ya vinculada a consulta.
 
-- Enfermedades y condiciones crónicas.
+Tratamientos históricos consolidados.
 
-- Grupo sanguíneo.
+Consolidación por medicamento + dosis + frecuencia + duración.
 
-- Notas clínicas relevantes.
+Fecha de última prescripción por esquema consolidado.
 
-- Resumen clínico.
+Enlace a la consulta original.
 
-- Línea de tiempo clínica.
+Enlace a la última receta correspondiente.
 
-La línea de tiempo deberá poder combinar posteriormente:
+Orden cronológico descendente.
 
-- Consultas.
+Protección multi-tenant.
 
-- Diagnósticos.
+Cobertura automatizada de acción, vista e integración.
 
-- Recetas.
+Decisiones de arquitectura:
 
-- Documentos.
+No se creó una tabla adicional de eventos clínicos.
 
-- Estudios.
+La línea de tiempo se construye como una proyección de lectura sobre Consultation, ConsultationDiagnosis, Prescription y PrescriptionItem.
 
-- Otros eventos clínicos relevantes.
+PatientMedicalHistory continúa siendo la fuente de antecedentes del paciente.
 
----
+Los medicamentos actuales reportados en antecedentes permanecen separados de los tratamientos históricos prescritos.
+
+La consolidación se utiliza solamente para los resúmenes; la línea de tiempo conserva las ocurrencias clínicas originales.
+
+Baseline al cierre de DT-14:
+
+814 tests verdes
+
+2339 assertions
+
+0 failures
+
+Commit principal:
+
+Pendiente del commit final de cierre de DT-14.
 
 ## DT-15 — Clinical files and medical documents
 
@@ -1266,22 +1280,24 @@ DT-12
 
 DT-13
 
+DT-14
+
 Baseline actual:
 
-797 tests verdes
+814 tests verdes
 
-2244 assertions
+2339 assertions
 
 0 failures
 
 Próximo bloque:
 
-Pendiente de selección después del cierre documental y commit final de DT-13.
+Pendiente de selección después del cierre documental y commit final de DT-14.
 
 Candidatos ya definidos:
-
-DT-14 — Expediente clínico longitudinal.
 
 DT-15 — Clinical files and medical documents.
 
 DT-16 — Visual redesign / DocTotal UI.
+
+El workspace clínico avanzado continúa como bloque futuro sobre la foundation longitudinal terminada en DT-14.

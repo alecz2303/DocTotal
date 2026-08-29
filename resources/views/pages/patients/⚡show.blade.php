@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\Patients\BuildPatientClinicalTimeline;
+use Illuminate\Support\Collection;
 use App\Models\Consultation;
 use App\Models\Patient;
 use App\Models\PatientEmergencyContact;
@@ -35,13 +37,34 @@ new
         public string $habits_text = '';
         public string $other_notes = '';
 
+        public Collection $clinicalTimeline;
+        public Collection $historicalDiagnoses;
+        public Collection $historicalTreatments;
+
         public ?int $editingEmergencyContactId = null;
 
-        public function mount(string $uuid): void
-        {
+        public function mount(
+            string $uuid,
+            BuildPatientClinicalTimeline $buildPatientClinicalTimeline
+        ): void {
             $this->patient = Patient::query()
                 ->where('uuid', $uuid)
                 ->firstOrFail();
+
+            $this->clinicalTimeline =
+                $buildPatientClinicalTimeline->handle(
+                    $this->patient
+                );
+
+            $this->historicalDiagnoses =
+                $buildPatientClinicalTimeline->diagnoses(
+                    $this->patient
+                );
+
+            $this->historicalTreatments =
+                $buildPatientClinicalTimeline->treatments(
+                    $this->patient
+                );
         }
 
         public function createEmergencyContact(): void
@@ -830,9 +853,15 @@ new
                            border-slate-200
                            px-6 py-4">
 
-                    <h2 class="font-semibold text-slate-900">
-                        Antecedentes médicos
-                    </h2>
+                    <div>
+                        <h2 class="font-semibold text-slate-900">
+                            Resumen clínico
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Antecedentes médicos relevantes del paciente.
+                        </p>
+                    </div>
 
                     <button
                         type="button"
@@ -952,35 +981,209 @@ new
 
                 </div>
 
+                @if ($historicalDiagnoses->isNotEmpty())
+
+                <div
+                    class="border-t border-slate-200
+                           px-6 py-5">
+
+                    <p
+                        class="text-xs font-semibold
+                               uppercase tracking-wide
+                               text-slate-400">
+                        Diagnósticos históricos
+                    </p>
+
+                    <div class="mt-3 space-y-3">
+
+                        @foreach ($historicalDiagnoses as $entry)
+
+                        <div
+                            class="flex flex-col gap-1
+                                   sm:flex-row
+                                   sm:items-center
+                                   sm:justify-between">
+
+                            <div>
+
+                                <p class="text-sm text-slate-700">
+
+                                    @if ($entry['code'])
+                                    <span class="font-semibold">
+                                        {{ $entry['code'] }}
+                                    </span>
+                                    ·
+                                    @endif
+
+                                    {{ $entry['description'] }}
+
+                                </p>
+
+                                <p
+                                    class="mt-0.5 text-xs
+                                           text-slate-400">
+
+                                    {{ $entry['count'] }}
+                                    {{ $entry['count'] === 1
+                                        ? 'registro'
+                                        : 'registros'
+                                    }}
+
+                                    · Último:
+
+                                    {{ $entry['last_occurred_at']
+                                        ->format('d/m/Y') }}
+
+                                </p>
+
+                            </div>
+
+                            <a
+                                href="{{ route(
+                                    'consultations.show',
+                                    [
+                                        'uuid' =>
+                                            $entry[
+                                                'latest_consultation'
+                                            ]->uuid,
+                                    ]
+                                ) }}"
+                                class="text-xs font-semibold
+                                       text-slate-600
+                                       hover:text-slate-900">
+                                Ver última consulta
+                            </a>
+
+                        </div>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+                @endif
+
+
+                @if ($historicalTreatments->isNotEmpty())
+
+                <div
+                    class="border-t border-slate-200
+                           px-6 py-5">
+
+                    <p
+                        class="text-xs font-semibold
+                               uppercase tracking-wide
+                               text-slate-400">
+                        Tratamientos históricos
+                    </p>
+
+                    <div class="mt-3 space-y-3">
+
+                        @foreach ($historicalTreatments as $entry)
+
+                        <div
+                            class="flex flex-col gap-1
+                                    sm:flex-row
+                                    sm:items-center
+                                    sm:justify-between">
+
+                            <div>
+
+                                <p class="text-sm text-slate-700">
+
+                                    <span class="font-semibold">
+                                        {{ $entry['medication_name'] }}
+                                    </span>
+
+                                    @if ($entry['dose'])
+                                    · {{ $entry['dose'] }}
+                                    @endif
+
+                                    @if ($entry['frequency'])
+                                    · {{ $entry['frequency'] }}
+                                    @endif
+
+                                    @if ($entry['duration'])
+                                    · {{ $entry['duration'] }}
+                                    @endif
+
+                                </p>
+
+                                <p
+                                    class="mt-0.5 text-xs
+                                            text-slate-400">
+
+                                    {{ $entry['count'] }}
+
+                                    {{ $entry['count'] === 1
+                                            ? 'registro'
+                                            : 'registros'
+                                        }}
+
+                                    · Último:
+
+                                    {{ $entry['last_prescribed_at']
+                                            ->format('d/m/Y') }}
+
+                                </p>
+
+                            </div>
+
+                            <a
+                                href="{{ route(
+                                        'prescriptions.show',
+                                        [
+                                            'uuid' =>
+                                                $entry[
+                                                    'latest_prescription'
+                                                ]->uuid,
+                                        ]
+                                    ) }}"
+                                class="text-xs font-semibold
+                                        text-slate-600
+                                        hover:text-slate-900">
+                                Ver última receta
+                            </a>
+
+                        </div>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+                @endif
+
             </div>
 
 
-            {{-- HISTORIAL CLÍNICO --}}
+            {{-- HISTORIA CLÍNICA --}}
             <div
                 class="rounded-xl
-                       border border-slate-200
-                       bg-white shadow-sm">
+                    border border-slate-200
+                    bg-white shadow-sm">
 
                 <div
                     class="flex items-center
-                           justify-between
-                           border-b
-                           border-slate-200
-                           px-6 py-4">
+                        justify-between
+                        border-b
+                        border-slate-200
+                        px-6 py-4">
 
                     <div>
 
                         <h2
                             class="font-semibold
-                                   text-slate-900">
-                            Historial de consultas
+                                text-slate-900">
+                            Historia clínica
                         </h2>
 
                         <p
                             class="mt-1 text-sm
-                                   text-slate-500">
-                            Consultas finalizadas
-                            para este paciente.
+                                text-slate-500">
+                            Línea de tiempo clínica del paciente.
                         </p>
 
                     </div>
@@ -996,8 +1199,8 @@ new
                                 ]
                             ) }}"
                         class="text-sm font-semibold
-                                   text-slate-700
-                                   hover:text-slate-900">
+                            text-slate-700
+                            hover:text-slate-900">
                         + Nueva consulta
                     </a>
 
@@ -1007,169 +1210,409 @@ new
 
                 <div>
 
-                    @forelse (
-                    $patient->consultations()
-                    ->where(
-                    'status',
-                    Consultation::STATUS_COMPLETED
-                    )
-                    ->latest('consultation_at')
-                    ->get()
-                    as $consultation
-                    )
+                    @forelse ($clinicalTimeline as $event)
+
+                    @if ($event['type'] === 'consultation')
+
+                    @php
+                    $consultation =
+                    $event['consultation'];
+                    @endphp
 
                     <div
-                        class="flex flex-col gap-3
-                                   border-b
-                                   border-slate-100
-                                   px-6 py-5
-                                   last:border-0
-                                   sm:flex-row
-                                   sm:items-center
-                                   sm:justify-between">
+                        class="border-b
+                                    border-slate-100
+                                    px-6 py-5
+                                    last:border-0">
 
-                        <div>
+                        <div
+                            class="flex flex-col gap-4
+                                        sm:flex-row
+                                        sm:items-start
+                                        sm:justify-between">
 
-                            <div
-                                class="flex flex-wrap
-                                           items-center
-                                           gap-2">
+                            <div class="min-w-0">
+
+                                <div
+                                    class="flex flex-wrap
+                                                items-center
+                                                gap-2">
+
+                                    <p
+                                        class="font-medium
+                                                    text-slate-900">
+                                        {{ $event['occurred_at']
+                                                    ->format('d/m/Y H:i') }}
+                                    </p>
+
+                                    <span
+                                        class="rounded-full
+                                                    bg-emerald-50
+                                                    px-2 py-0.5
+                                                    text-xs font-medium
+                                                    text-emerald-700">
+                                        Consulta
+                                    </span>
+
+                                </div>
 
                                 <p
-                                    class="font-medium
-                                               text-slate-900">
-                                    {{ $consultation
-                                            ->consultation_at
-                                            ->format(
-                                                'd/m/Y H:i'
-                                            )
-                                        }}
+                                    class="mt-1 text-sm
+                                                text-slate-600">
+                                    {{ $consultation->reason
+                                                ?: 'Sin motivo registrado'
+                                            }}
                                 </p>
 
-                                <span
-                                    class="rounded-full
-                                               bg-emerald-50
-                                               px-2 py-0.5
-                                               text-xs
-                                               font-medium
-                                               text-emerald-700">
-                                    Finalizada
-                                </span>
+
+                                {{-- DIAGNÓSTICOS --}}
+                                @if ($consultation->diagnoses->isNotEmpty())
+
+                                <div class="mt-3">
+
+                                    <p
+                                        class="text-xs font-semibold
+                                                        uppercase tracking-wide
+                                                        text-slate-400">
+                                        Diagnósticos
+                                    </p>
+
+                                    <div
+                                        class="mt-1
+                                                        space-y-1">
+
+                                        @foreach (
+                                        $consultation->diagnoses
+                                        as $diagnosis
+                                        )
+
+                                        <p
+                                            class="text-sm
+                                                                text-slate-700">
+
+                                            @if ($diagnosis->code)
+                                            <span
+                                                class="font-medium">
+                                                {{ $diagnosis->code }}
+                                            </span>
+                                            ·
+                                            @endif
+
+                                            {{ $diagnosis->description }}
+
+                                            @if ($diagnosis->is_primary)
+                                            <span
+                                                class="text-xs
+                                                                        font-medium
+                                                                        text-slate-500">
+                                                (Principal)
+                                            </span>
+                                            @endif
+
+                                        </p>
+
+                                        @endforeach
+
+                                    </div>
+
+                                </div>
+
+                                @endif
+
+
+                                {{-- SIGNOS VITALES --}}
+                                <div
+                                    class="mt-3 flex
+                                                flex-wrap
+                                                gap-x-4 gap-y-1
+                                                text-xs
+                                                text-slate-500">
+
+                                    @if (
+                                    $consultation->systolic_bp
+                                    && $consultation->diastolic_bp
+                                    )
+                                    <span>
+                                        PA:
+                                        {{ $consultation->systolic_bp }}/{{ $consultation->diastolic_bp }}
+                                    </span>
+                                    @endif
+
+                                    @if ($consultation->heart_rate)
+                                    <span>
+                                        FC:
+                                        {{ $consultation->heart_rate }}
+                                        lpm
+                                    </span>
+                                    @endif
+
+                                    @if ($consultation->temperature_c)
+                                    <span>
+                                        Temp:
+                                        {{ $consultation->temperature_c }}
+                                        °C
+                                    </span>
+                                    @endif
+
+                                    @if ($consultation->oxygen_saturation)
+                                    <span>
+                                        SatO₂:
+                                        {{ $consultation->oxygen_saturation }}%
+                                    </span>
+                                    @endif
+
+                                </div>
+
+
+                                {{-- RECETAS DE LA CONSULTA --}}
+                                @if ($consultation->prescriptions->isNotEmpty())
+
+                                <div class="mt-4">
+
+                                    <p
+                                        class="text-xs font-semibold
+                                                        uppercase tracking-wide
+                                                        text-slate-400">
+                                        Tratamiento
+                                    </p>
+
+                                    <div
+                                        class="mt-2 space-y-2">
+
+                                        @foreach (
+                                        $consultation->prescriptions
+                                        as $prescription
+                                        )
+
+                                        <div
+                                            class="rounded-lg
+                                                                bg-slate-50
+                                                                px-3 py-2">
+
+                                            @forelse (
+                                            $prescription->items
+                                            as $item
+                                            )
+
+                                            <p
+                                                class="text-sm
+                                                                        text-slate-700">
+                                                <span
+                                                    class="font-medium">
+                                                    {{ $item->medication_name }}
+                                                </span>
+
+                                                @if ($item->dose)
+                                                · {{ $item->dose }}
+                                                @endif
+
+                                                @if ($item->frequency)
+                                                · {{ $item->frequency }}
+                                                @endif
+
+                                                @if ($item->duration)
+                                                · {{ $item->duration }}
+                                                @endif
+                                            </p>
+
+                                            @empty
+
+                                            <p
+                                                class="text-sm
+                                                                        text-slate-500">
+                                                Receta sin medicamentos registrados.
+                                            </p>
+
+                                            @endforelse
+
+                                            <a
+                                                href="{{ route(
+                                                                    'prescriptions.show',
+                                                                    [
+                                                                        'uuid' =>
+                                                                            $prescription->uuid,
+                                                                    ]
+                                                                ) }}"
+                                                class="mt-1
+                                                                    inline-block
+                                                                    text-xs
+                                                                    font-semibold
+                                                                    text-slate-600
+                                                                    hover:text-slate-900">
+                                                Ver receta
+                                            </a>
+
+                                        </div>
+
+                                        @endforeach
+
+                                    </div>
+
+                                </div>
+
+                                @endif
 
                             </div>
 
-                            <p
-                                class="mt-1 text-sm
-                                           text-slate-600">
-                                {{ $consultation->reason
-                                        ?: 'Sin motivo registrado'
-                                    }}
-                            </p>
+                            <div class="shrink-0">
 
-                            <div
-                                class="mt-2 flex
-                                           flex-wrap
-                                           gap-x-4 gap-y-1
-                                           text-xs
-                                           text-slate-500">
-
-                                @if (
-                                $consultation
-                                ->systolic_bp
-                                && $consultation
-                                ->diastolic_bp
-                                )
-                                <span>
-                                    PA:
-                                    {{ $consultation
-                                                ->systolic_bp
-                                            }}/{{ $consultation
-                                                ->diastolic_bp
-                                            }}
-                                </span>
-                                @endif
-
-                                @if (
-                                $consultation
-                                ->heart_rate
-                                )
-                                <span>
-                                    FC:
-                                    {{ $consultation
-                                                ->heart_rate
-                                            }}
-                                    lpm
-                                </span>
-                                @endif
-
-                                @if (
-                                $consultation
-                                ->temperature_c
-                                )
-                                <span>
-                                    Temp:
-                                    {{ $consultation
-                                                ->temperature_c
-                                            }}
-                                    °C
-                                </span>
-                                @endif
-
-                                @if (
-                                $consultation
-                                ->oxygen_saturation
-                                )
-                                <span>
-                                    SatO₂:
-                                    {{ $consultation
-                                                ->oxygen_saturation
-                                            }}%
-                                </span>
-                                @endif
+                                <a
+                                    href="{{ route(
+                                                'consultations.show',
+                                                [
+                                                    'uuid' =>
+                                                        $consultation->uuid,
+                                                ]
+                                            ) }}"
+                                    class="text-sm
+                                                font-semibold
+                                                text-slate-700
+                                                hover:text-slate-900">
+                                    Ver consulta
+                                </a>
 
                             </div>
-
-                        </div>
-
-                        <div>
-
-                            <a
-                                href="{{ route(
-                                        'consultations.show',
-                                        [
-                                            'uuid' =>
-                                                $consultation
-                                                    ->uuid,
-                                        ]
-                                    ) }}"
-                                class="text-sm
-                                           font-semibold
-                                           text-slate-700
-                                           hover:text-slate-900">
-                                Ver consulta
-                            </a>
 
                         </div>
 
                     </div>
 
+
+                    @elseif ($event['type'] === 'prescription')
+
+                    @php
+                    $prescription =
+                    $event['prescription'];
+                    @endphp
+
+                    <div
+                        class="border-b
+                                    border-slate-100
+                                    px-6 py-5
+                                    last:border-0">
+
+                        <div
+                            class="flex flex-col gap-4
+                                        sm:flex-row
+                                        sm:items-start
+                                        sm:justify-between">
+
+                            <div>
+
+                                <div
+                                    class="flex flex-wrap
+                                                items-center
+                                                gap-2">
+
+                                    <p
+                                        class="font-medium
+                                                    text-slate-900">
+                                        {{ $event['occurred_at']
+                                                    ->format('d/m/Y H:i') }}
+                                    </p>
+
+                                    <span
+                                        class="rounded-full
+                                                    bg-blue-50
+                                                    px-2 py-0.5
+                                                    text-xs font-medium
+                                                    text-blue-700">
+                                        Receta
+                                    </span>
+
+                                </div>
+
+                                <p
+                                    class="mt-1 text-sm
+                                                text-slate-600">
+                                    Receta emitida fuera de una consulta.
+                                </p>
+
+                                <div
+                                    class="mt-3 space-y-1">
+
+                                    @forelse (
+                                    $prescription->items
+                                    as $item
+                                    )
+
+                                    <p
+                                        class="text-sm
+                                                        text-slate-700">
+                                        <span
+                                            class="font-medium">
+                                            {{ $item->medication_name }}
+                                        </span>
+
+                                        @if ($item->dose)
+                                        · {{ $item->dose }}
+                                        @endif
+
+                                        @if ($item->frequency)
+                                        · {{ $item->frequency }}
+                                        @endif
+
+                                        @if ($item->duration)
+                                        · {{ $item->duration }}
+                                        @endif
+                                    </p>
+
+                                    @empty
+
+                                    <p
+                                        class="text-sm
+                                                        text-slate-500">
+                                        Sin medicamentos registrados.
+                                    </p>
+
+                                    @endforelse
+
+                                </div>
+
+                            </div>
+
+                            <div class="shrink-0">
+
+                                <a
+                                    href="{{ route(
+                                                'prescriptions.show',
+                                                [
+                                                    'uuid' =>
+                                                        $prescription->uuid,
+                                                ]
+                                            ) }}"
+                                    class="text-sm
+                                                font-semibold
+                                                text-slate-700
+                                                hover:text-slate-900">
+                                    Ver receta
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    @endif
+
                     @empty
 
                     <div
                         class="px-6 py-10
-                                   text-center">
+                                text-center">
 
                         <p
                             class="font-medium
-                                       text-slate-700">
-                            Sin consultas finalizadas
+                                    text-slate-700">
+                            Sin actividad clínica registrada
                         </p>
 
                         <p
                             class="mt-1 text-sm
-                                       text-slate-500">
-                            Las consultas finalizadas
-                            del paciente aparecerán aquí.
+                                    text-slate-500">
+                            Las consultas finalizadas y las recetas
+                            independientes aparecerán aquí.
                         </p>
 
                     </div>
