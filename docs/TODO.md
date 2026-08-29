@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**56% completado**
+**60% completado**
 
-`███████████░░░░░░░░░` 56%
+`████████████░░░░░░░░` 60%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -310,147 +310,177 @@ producción.
 
 # 4. Pacientes
 
-Relacionado principalmente con DT-4 y DT-7.
+Relacionado principalmente con DT-4, DT-7 y DT-14.
 
-- [x] Modelo `Patient`.
+Modelo Patient.
 
-- [x] Listado de pacientes.
+Listado de pacientes.
 
-- [x] Búsqueda.
+Búsqueda.
 
-- [x] Alta.
+Alta.
 
-- [x] Edición.
+Edición.
 
-- [x] Detalle.
+Detalle.
 
-- [x] Datos generales.
+Datos generales.
 
-- [x] Fecha de nacimiento.
+Fecha de nacimiento.
 
-- [x] Edad.
+Edad.
 
-- [x] Sexo.
+Sexo.
 
-- [x] Grupo sanguíneo.
+Grupo sanguíneo.
 
-- [x] Datos de contacto.
+Datos de contacto.
 
-- [x] Contactos de emergencia.
+Contactos de emergencia.
 
-- [x] Modelo `PatientEmergencyContact`.
+Modelo PatientEmergencyContact.
 
-- [x] Antecedentes médicos.
+Antecedentes médicos.
 
-- [x] Modelo `PatientMedicalHistory`.
+Modelo PatientMedicalHistory.
 
-- [x] Historial de consultas.
+Historial de consultas.
 
-- [x] Acceso a consultas desde expediente.
+Acceso a consultas desde expediente.
 
-- [x] Integración paciente → consulta.
+Integración paciente → consulta.
 
-- [x] Tests de pacientes.
+Expediente clínico longitudinal.
 
-- [x] Tests de contactos de emergencia.
+Resumen clínico del paciente.
 
-- [x] Tests de antecedentes médicos.
+Línea de tiempo clínica unificada.
 
-- [~] Expediente clínico longitudinal.
+Vista rápida de diagnósticos históricos relevantes.
 
-- [ ] Resumen clínico del paciente.
+Vista rápida de tratamientos históricos.
 
-- [ ] Línea de tiempo clínica unificada.
+Medicamentos actuales existentes dentro de antecedentes médicos.
 
-- [ ] Vista rápida de diagnósticos relevantes.
+Referencias navegables a consultas y recetas originales.
 
-- [ ] Vista rápida de medicamentos actuales.
+Tests de pacientes.
 
-- [ ] Alertas clínicas relevantes.
+Tests de contactos de emergencia.
 
-- [ ] Archivos asociados al paciente.
+Tests de antecedentes médicos.
 
-- [ ] Estudios.
+Tests específicos del expediente longitudinal.
 
-- [ ] Laboratorios.
+Alertas clínicas relevantes.
 
-- [ ] Imágenes médicas.
+Archivos asociados al paciente.
 
-- [!] Evaluar detección de pacientes duplicados.
+Estudios.
+
+Laboratorios.
+
+Imágenes médicas.
+
+[!] Evaluar detección de pacientes duplicados.
 
 # 5. Expediente clínico
 
-Relacionado con DT-4, DT-7, DT-9 y futuros DT.
+Relacionado con DT-4, DT-7, DT-9, DT-14 y futuros DT.
 
-Actualmente existe una base funcional del expediente clínico.
+DT-14 convirtió la base clínica existente en un expediente longitudinal funcional sin duplicar las fuentes de verdad ya existentes.
 
-No debe considerarse como un módulo inexistente.
+Antecedentes existentes
 
-## Antecedentes existentes
+Modelo dedicado de antecedentes médicos.
 
-- [x] Modelo dedicado de antecedentes médicos.
+Alergias.
 
-- [x] Alergias.
+Medicamentos actuales.
 
-- [x] Medicamentos actuales.
+Enfermedades crónicas.
 
-- [x] Enfermedades crónicas.
+Cirugías.
 
-- [x] Cirugías.
+Antecedentes familiares.
 
-- [x] Antecedentes familiares.
+Antecedentes personales.
 
-- [x] Antecedentes personales.
+Hábitos.
 
-- [x] Hábitos.
+Notas adicionales.
 
-- [x] Notas adicionales.
+Grupo sanguíneo.
 
-- [x] Grupo sanguíneo.
+Edición de antecedentes.
 
-- [x] Edición de antecedentes.
+Tests de antecedentes.
 
-- [x] Tests de antecedentes.
+Expediente longitudinal implementado en DT-14
 
-## Evolución pendiente
+Resumen clínico dentro del expediente del paciente.
 
-- [~] Mejorar estructura clínica de antecedentes.
+Línea de tiempo clínica unificada.
 
-- [ ] Hospitalizaciones previas.
+Consultas finalizadas dentro de la historia clínica.
 
-- [ ] Resumen clínico.
+Consultas en borrador excluidas del historial oficial.
 
-- [ ] Problemas activos.
+Diagnósticos mostrados en el contexto de su consulta.
 
-- [ ] Diagnósticos históricos consolidados.
+Diagnósticos históricos consolidados.
 
-- [ ] Medicamentos históricos consolidados.
+Recetas asociadas mostradas dentro de la consulta correspondiente.
 
-- [ ] Línea de tiempo clínica.
+Recetas independientes mostradas como eventos propios.
 
-- [ ] Alertas clínicas.
+Prevención de duplicar una receta vinculada como evento independiente.
 
-- [ ] Archivos clínicos.
+Tratamientos históricos consolidados.
 
-- [ ] Estudios de laboratorio.
+Consolidación de tratamientos por medicamento + dosis + frecuencia + duración.
 
-- [ ] Estudios de imagen.
+Última fecha de prescripción disponible por tratamiento consolidado.
 
-- [ ] Otros documentos médicos.
+Enlaces a la consulta y receta originales.
 
-- [ ] Asociación archivo → consulta.
+Orden cronológico descendente.
 
-- [ ] Asociación archivo → paciente.
+Protección multi-tenant.
 
-- [ ] Descarga segura de archivos.
+Proyección longitudinal construida sobre modelos clínicos existentes, sin nueva tabla de eventos.
 
-- [ ] Eliminación controlada.
+Evolución pendiente
 
-- [!] Definir política de almacenamiento.
+[~] Mejorar estructura clínica de antecedentes.
 
-- [!] Definir límites de almacenamiento por tenant.
+Hospitalizaciones previas.
 
-- [!] Definir estrategia de respaldo y retención.
+Problemas activos.
+
+Alertas clínicas.
+
+Archivos clínicos.
+
+Estudios de laboratorio.
+
+Estudios de imagen.
+
+Otros documentos médicos.
+
+Asociación archivo → consulta.
+
+Asociación archivo → paciente.
+
+Descarga segura de archivos.
+
+Eliminación controlada.
+
+[!] Definir política de almacenamiento.
+
+[!] Definir límites de almacenamiento por tenant.
+
+[!] Definir estrategia de respaldo y retención.
 
 # 6. Agenda
 
@@ -706,7 +736,7 @@ formulario.
 
 - [x] Tests del flujo de diagnósticos.
 
-- [ ] Historial consolidado de diagnósticos por paciente.
+- [x] Historial consolidado de diagnósticos por paciente.
 
 - [ ] Problemas clínicos activos.
 
@@ -788,7 +818,7 @@ formulario.
 
 - [ ] QR/verificación de receta.
 
-- [ ] Historial longitudinal de medicamentos por paciente.
+- [x] Historial longitudinal de medicamentos/tratamientos por paciente.
 
 - [ ] Repetir receta anterior.
 
@@ -1363,6 +1393,7 @@ active
 Relacionado principalmente con DT-13.
 
 DT-13 implementó el programa de referidos y la foundation de créditos
+
 promocionales integrada con el lifecycle de billing.
 
 ## Código de referido
@@ -2113,6 +2144,14 @@ Cierre DT-13:
 
 0 failures.
 
+Cierre DT-14:
+
+814 tests verdes.
+
+2339 assertions.
+
+0 failures.
+
 ## Cobertura existente
 
 - [x] Tests de autenticación.
@@ -2193,9 +2232,17 @@ Cierre DT-13:
 
 - [x] Tests de reconciliación de pagos manuales.
 
+Tests de línea de tiempo clínica longitudinal.
+
+Tests de diagnósticos históricos consolidados.
+
+Tests de tratamientos históricos consolidados.
+
+Tests de integración del expediente longitudinal en la vista del paciente.
+
 ## Pendiente futuro
 
-- [x] Baseline actualizado al cierre de DT-13.
+- [x] Baseline actualizado al cierre de DT-14.
 
 - [ ] Tests de archivos.
 
@@ -2536,6 +2583,7 @@ Estado: Completado.
 Objetivo:
 
 Implementar el programa de referidos de DocTotal y los créditos promocionales,
+
 integrándolos de forma segura con el lifecycle comercial y de billing.
 
 Incluye:
@@ -2592,17 +2640,77 @@ Baseline al cierre:
 
 0 failures.
 
+## DT-14 --- Expediente clínico longitudinal
+
+Estado: Completado.
+
+Objetivo:
+
+Convertir la información clínica existente del paciente en una historia longitudinal coherente, reutilizando las entidades clínicas ya existentes y evitando estructuras duplicadas.
+
+Incluye:
+
+Auditoría previa de modelos, migraciones, vistas y tests clínicos existentes.
+
+Evolución de patients.show como expediente longitudinal principal.
+
+Resumen clínico basado en PatientMedicalHistory.
+
+Línea de tiempo clínica unificada.
+
+Solo consultas completed dentro del historial oficial.
+
+Consultas draft mantenidas fuera de la historia clínica final.
+
+Diagnósticos en contexto de consulta.
+
+Diagnósticos históricos consolidados.
+
+Prescripciones ligadas a consulta dentro del evento de consulta.
+
+Prescripciones independientes como eventos propios.
+
+Prevención de duplicados de recetas vinculadas.
+
+Tratamientos históricos consolidados por esquema clínico.
+
+Referencias a las entidades originales.
+
+Protección multi-tenant.
+
+Cobertura automatizada específica.
+
+Integración sin regresiones con pacientes, consultas y recetas.
+
+Decisiones de diseño:
+
+No crear una tabla adicional de timeline/eventos en DT-14.
+
+Construir la historia longitudinal como proyección de lectura sobre las fuentes clínicas existentes.
+
+Mantener medicamentos actuales reportados en antecedentes separados de los tratamientos históricos prescritos.
+
+Mantener cada ocurrencia original visible en la línea de tiempo aunque los resúmenes consoliden información.
+
+Baseline al cierre:
+
+814 tests verdes.
+
+2339 assertions.
+
+0 failures.
+
 # 27. Candidatos para siguientes DT
 
 Los números definitivos deben asignarse al momento de seleccionar el siguiente
 
 bloque.
 
-DT-13 quedó completado.
+DT-14 quedó completado.
 
 El siguiente bloque debe seleccionarse después del cierre documental y del
 
-commit final de DT-13.
+commit final de DT-14.
 
 ## Candidato A --- Archivos y expediente documental
 
@@ -2670,21 +2778,21 @@ Transformar el expediente y la consulta en una experiencia clínica realmente
 
 optimizada.
 
-Construir:
+Construir sobre la foundation longitudinal ya terminada en DT-14:
 
 Patient
-
-→ Clinical summary
 
 → Alerts
 
 → Consultation workspace
 
-→ Timeline
+→ Contexto clínico visible durante consulta
 
-→ Diagnoses
+→ Autosave
 
-→ Prescriptions
+→ Diagnósticos
+
+→ Prescripciones
 
 → Files
 

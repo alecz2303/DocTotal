@@ -386,7 +386,7 @@ class ConsultationFlowTest extends TestCase
             )
             ->assertOk()
             ->assertSee(
-                'Historial de consultas'
+                'Historia clínica'
             )
             ->assertSee(
                 'Dolor abdominal'
