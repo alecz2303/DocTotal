@@ -100,6 +100,11 @@ class Consultation extends Model
         );
     }
 
+    public function clinicalDocuments(): HasMany
+    {
+        return $this->hasMany(ClinicalDocument::class);
+    }
+
     public function isDraft(): bool
     {
         return $this->status === self::STATUS_DRAFT;

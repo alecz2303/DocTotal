@@ -1,7 +1,10 @@
 <?php
 
 use App\Actions\Patients\BuildPatientClinicalTimeline;
+use App\Actions\Patients\DeleteClinicalDocument;
+use App\Actions\Patients\StoreClinicalDocument;
 use Illuminate\Support\Collection;
+use App\Models\ClinicalDocument;
 use App\Models\Consultation;
 use App\Models\Patient;
 use App\Models\PatientEmergencyContact;
@@ -9,12 +12,15 @@ use App\Models\PatientMedicalHistory;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 new
     #[Layout('layouts::app')]
     #[Title('Expediente del paciente | DocTotal')]
     class extends Component
     {
+        use WithFileUploads;
+
         public Patient $patient;
 
         public bool $showEmergencyContactModal = false;
@@ -40,6 +46,22 @@ new
         public Collection $clinicalTimeline;
         public Collection $historicalDiagnoses;
         public Collection $historicalTreatments;
+        public Collection $clinicalDocuments;
+
+        public bool $showClinicalDocumentModal = false;
+
+        public $clinical_document_file = null;
+
+        public string $clinical_document_title = '';
+
+        public string $clinical_document_category =
+        ClinicalDocument::CATEGORY_GENERAL;
+
+        public string $clinical_document_date = '';
+
+        public string $clinical_document_notes = '';
+
+        public ?int $clinical_document_consultation_id = null;
 
         public ?int $editingEmergencyContactId = null;
 
@@ -65,6 +87,13 @@ new
                 $buildPatientClinicalTimeline->treatments(
                     $this->patient
                 );
+
+            $this->clinicalDocuments = $this->patient
+                ->clinicalDocuments()
+                ->with('consultation')
+                ->orderByDesc('document_date')
+                ->orderByDesc('created_at')
+                ->get();
         }
 
         public function createEmergencyContact(): void
@@ -537,6 +566,146 @@ new
             session()->flash(
                 'success',
                 'Antecedentes médicos actualizados correctamente.'
+            );
+
+            $this->redirectRoute(
+                'patients.show',
+                [
+                    'uuid' => $this->patient->uuid,
+                ]
+            );
+        }
+
+
+        public function openClinicalDocumentModal(): void
+        {
+            $this->resetClinicalDocumentForm();
+            $this->resetValidation();
+
+            $this->showClinicalDocumentModal = true;
+        }
+
+        public function closeClinicalDocumentModal(): void
+        {
+            $this->showClinicalDocumentModal = false;
+
+            $this->resetClinicalDocumentForm();
+            $this->resetValidation();
+        }
+
+        private function resetClinicalDocumentForm(): void
+        {
+            $this->reset([
+                'clinical_document_file',
+                'clinical_document_title',
+                'clinical_document_date',
+                'clinical_document_notes',
+                'clinical_document_consultation_id',
+            ]);
+
+            $this->clinical_document_category =
+                ClinicalDocument::CATEGORY_GENERAL;
+        }
+
+        public function saveClinicalDocument(
+            StoreClinicalDocument $storeClinicalDocument
+        ): void {
+            $validated = $this->validate([
+                'clinical_document_file' => [
+                    'required',
+                    'file',
+                    'mimes:pdf,jpg,jpeg,png,webp',
+                    'max:10240',
+                ],
+
+                'clinical_document_title' => [
+                    'required',
+                    'string',
+                    'max:190',
+                ],
+
+                'clinical_document_category' => [
+                    'required',
+                    'string',
+                    'in:' . implode(
+                        ',',
+                        ClinicalDocument::categories()
+                    ),
+                ],
+
+                'clinical_document_date' => [
+                    'nullable',
+                    'date',
+                ],
+
+                'clinical_document_notes' => [
+                    'nullable',
+                    'string',
+                    'max:5000',
+                ],
+
+                'clinical_document_consultation_id' => [
+                    'nullable',
+                    'integer',
+                ],
+            ]);
+
+            $consultation = null;
+
+            if (
+                $validated['clinical_document_consultation_id']
+            ) {
+                $consultation = $this->patient
+                    ->consultations()
+                    ->findOrFail(
+                        $validated['clinical_document_consultation_id']
+                    );
+            }
+
+            $storeClinicalDocument->handle(
+                patient: $this->patient,
+                file: $validated['clinical_document_file'],
+                title: $validated['clinical_document_title'],
+                category: $validated['clinical_document_category'],
+                documentDate: $validated['clinical_document_date'] ?: null,
+                notes: $validated['clinical_document_notes'] ?: null,
+                consultation: $consultation,
+                uploadedBy: auth()->user(),
+            );
+
+            $this->showClinicalDocumentModal = false;
+
+            $this->resetClinicalDocumentForm();
+
+            session()->flash(
+                'success',
+                'Documento clínico agregado correctamente.'
+            );
+
+            $this->redirectRoute(
+                'patients.show',
+                [
+                    'uuid' => $this->patient->uuid,
+                ]
+            );
+        }
+
+        public function deleteClinicalDocument(
+            string $uuid,
+            DeleteClinicalDocument $deleteClinicalDocument
+        ): void {
+            $document = $this->patient
+                ->clinicalDocuments()
+                ->where('uuid', $uuid)
+                ->firstOrFail();
+
+            $deleteClinicalDocument->handle(
+                $document
+            );
+
+            session()->flash(
+                'success',
+                'Documento clínico eliminado correctamente.'
             );
 
             $this->redirectRoute(
@@ -1155,6 +1324,432 @@ new
                 </div>
 
                 @endif
+
+            </div>
+
+
+
+            {{-- DOCUMENTOS CLÍNICOS --}}
+            <div
+                class="rounded-xl
+                       border border-slate-200
+                       bg-white shadow-sm">
+
+                <div
+                    class="flex items-center
+                           justify-between
+                           border-b
+                           border-slate-200
+                           px-6 py-4">
+
+                    <div>
+                        <h2 class="font-semibold text-slate-900">
+                            Documentos clínicos
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Estudios, resultados, imágenes y otros
+                            archivos relacionados con el paciente.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="openClinicalDocumentModal"
+                        class="text-sm font-semibold
+                               text-slate-700
+                               hover:text-slate-900">
+                        + Agregar documento
+                    </button>
+
+                </div>
+
+                <div>
+
+                    @forelse ($clinicalDocuments as $document)
+
+                    @php
+                    $categoryLabels = [
+                    'general' => 'General',
+                    'laboratory' => 'Laboratorio',
+                    'imaging' => 'Imagen',
+                    'other' => 'Otro',
+                    ];
+
+                    $isImage = str_starts_with(
+                    $document->mime_type ?? '',
+                    'image/'
+                    );
+
+                    $isPdf =
+                    $document->mime_type === 'application/pdf';
+                    @endphp
+
+                    <div
+                        class="border-b
+                            border-slate-100
+                            px-6 py-5
+                            last:border-0">
+
+                        <div
+                            class="flex flex-col gap-4
+                                sm:flex-row
+                                sm:items-start">
+
+                            {{-- MINIATURA --}}
+                            <div class="shrink-0">
+
+                                @if ($isImage)
+
+                                <a
+                                    href="{{ route(
+                                            'clinical-documents.view',
+                                            $document
+                                        ) }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="block">
+
+                                    <img
+                                        src="{{ route(
+                                                'clinical-documents.view',
+                                                $document
+                                            ) }}"
+                                        alt="{{ $document->title }}"
+                                        class="h-24 w-24
+                                                rounded-xl
+                                                border border-slate-200
+                                                object-cover
+                                                shadow-sm">
+
+                                </a>
+
+                                @elseif ($isPdf)
+
+                                <a
+                                    href="{{ route(
+                                            'clinical-documents.view',
+                                            $document
+                                        ) }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="flex h-24 w-24
+                                            flex-col
+                                            items-center
+                                            justify-center
+                                            rounded-xl
+                                            border border-red-100
+                                            bg-red-50
+                                            text-red-600
+                                            transition
+                                            hover:bg-red-100">
+
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        class="h-8 w-8">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M14 2H6a2 2 0 0 0-2 2v16
+                                                a2 2 0 0 0 2 2h12
+                                                a2 2 0 0 0 2-2V8z" />
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M14 2v6h6" />
+
+                                    </svg>
+
+                                    <span
+                                        class="mt-1 text-xs
+                                                font-bold">
+                                        PDF
+                                    </span>
+
+                                </a>
+
+                                @else
+
+                                <div
+                                    class="flex h-24 w-24
+                                            flex-col
+                                            items-center
+                                            justify-center
+                                            rounded-xl
+                                            border border-slate-200
+                                            bg-slate-50
+                                            text-slate-500">
+
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        class="h-8 w-8">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M14 2H6a2 2 0 0 0-2 2v16
+                                                a2 2 0 0 0 2 2h12
+                                                a2 2 0 0 0 2-2V8z" />
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M14 2v6h6" />
+
+                                    </svg>
+
+                                    <span
+                                        class="mt-1 text-xs
+                                                font-semibold">
+                                        Archivo
+                                    </span>
+
+                                </div>
+
+                                @endif
+
+                            </div>
+
+
+                            {{-- INFORMACIÓN --}}
+                            <div class="min-w-0 flex-1">
+
+                                <div
+                                    class="flex flex-col gap-3
+                                        sm:flex-row
+                                        sm:items-start
+                                        sm:justify-between">
+
+                                    <div class="min-w-0">
+
+                                        <div
+                                            class="flex flex-wrap
+                                                items-center gap-2">
+
+                                            <p
+                                                class="font-medium
+                                                    text-slate-900">
+                                                {{ $document->title }}
+                                            </p>
+
+                                            <span
+                                                class="rounded-full
+                                                    bg-slate-100
+                                                    px-2 py-0.5
+                                                    text-xs font-medium
+                                                    text-slate-600">
+                                                {{
+                                                    $categoryLabels[
+                                                        $document->category
+                                                    ] ?? 'General'
+                                                }}
+                                            </span>
+
+                                        </div>
+
+
+                                        <p
+                                            class="mt-1 truncate
+                                                text-sm
+                                                text-slate-500"
+                                            title="{{ $document->original_name }}">
+                                            {{ $document->original_name }}
+                                        </p>
+
+
+                                        <div
+                                            class="mt-2 flex flex-wrap
+                                                gap-x-4 gap-y-1
+                                                text-xs
+                                                text-slate-400">
+
+                                            <span>
+                                                Fecha:
+                                                {{
+                                                    $document
+                                                        ->document_date
+                                                        ?->format('d/m/Y')
+                                                    ?? $document
+                                                        ->created_at
+                                                        ->format('d/m/Y')
+                                                }}
+                                            </span>
+
+                                            <span>
+                                                @if (
+                                                $document->size_bytes
+                                                >= 1024 * 1024
+                                                )
+
+                                                {{
+                                                        number_format(
+                                                            $document->size_bytes
+                                                                / 1024
+                                                                / 1024,
+                                                            1
+                                                        )
+                                                    }}
+                                                MB
+
+                                                @else
+
+                                                {{
+                                                        number_format(
+                                                            $document->size_bytes
+                                                                / 1024,
+                                                            0
+                                                        )
+                                                    }}
+                                                KB
+
+                                                @endif
+                                            </span>
+
+                                        </div>
+
+
+                                        @if ($document->consultation)
+
+                                        <div class="mt-2">
+
+                                            <a
+                                                href="{{ route(
+                                                        'consultations.show',
+                                                        [
+                                                            'uuid' =>
+                                                                $document
+                                                                    ->consultation
+                                                                    ->uuid,
+                                                        ]
+                                                    ) }}"
+                                                class="text-xs
+                                                        font-semibold
+                                                        text-slate-500
+                                                        hover:text-slate-900">
+                                                Ver consulta relacionada
+                                            </a>
+
+                                        </div>
+
+                                        @endif
+
+
+                                        @if ($document->notes)
+
+                                        <p
+                                            class="mt-3
+                                                    whitespace-pre-line
+                                                    text-sm
+                                                    text-slate-600">
+                                            {{ $document->notes }}
+                                        </p>
+
+                                        @endif
+
+                                    </div>
+
+
+                                    {{-- ACCIONES --}}
+                                    <div
+                                        class="flex shrink-0
+                                            flex-wrap
+                                            items-center
+                                            gap-3">
+
+                                        <a
+                                            href="{{ route(
+                                                'clinical-documents.view',
+                                                $document
+                                            ) }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="text-sm
+                                                font-semibold
+                                                text-slate-700
+                                                hover:text-slate-900">
+                                            Ver
+                                        </a>
+
+                                        <a
+                                            href="{{ route(
+                                                'clinical-documents.download',
+                                                $document
+                                            ) }}"
+                                            class="text-sm
+                                                font-semibold
+                                                text-slate-700
+                                                hover:text-slate-900">
+                                            Descargar
+                                        </a>
+
+                                        <button
+                                            type="button"
+                                            x-data
+                                            x-on:click="
+                                                Swal.fire({
+                                                    title: '¿Eliminar documento?',
+                                                    text: 'El archivo será eliminado permanentemente del expediente.',
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Sí, eliminar',
+                                                    cancelButtonText: 'Cancelar'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        $wire.deleteClinicalDocument(
+                                                            '{{ $document->uuid }}'
+                                                        )
+                                                    }
+                                                })
+                                            "
+                                            class="text-sm
+                                                font-semibold
+                                                text-red-600
+                                                hover:text-red-700">
+                                            Eliminar
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    @empty
+
+                    <div class="px-6 py-10 text-center">
+
+                        <p
+                            class="font-medium
+                                       text-slate-700">
+                            Sin documentos clínicos
+                        </p>
+
+                        <p
+                            class="mt-1 text-sm
+                                       text-slate-500">
+                            Los estudios, resultados y archivos
+                            del paciente aparecerán aquí.
+                        </p>
+
+                    </div>
+
+                    @endforelse
+
+                </div>
 
             </div>
 
@@ -2275,6 +2870,360 @@ new
                         <span
                             wire:loading
                             wire:target="saveMedicalHistory">
+                            Guardando...
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    @endif
+
+
+    {{-- MODAL DOCUMENTO CLÍNICO --}}
+    @if ($showClinicalDocumentModal)
+
+    <div
+        class="fixed inset-0 z-50
+               flex items-center
+               justify-center
+               bg-slate-950/50 p-4">
+
+        <div
+            class="max-h-[90vh]
+                   w-full max-w-2xl
+                   overflow-y-auto
+                   rounded-2xl bg-white
+                   shadow-xl">
+
+            <div
+                class="flex items-center
+                       justify-between
+                       border-b
+                       border-slate-200
+                       px-6 py-4">
+
+                <div>
+
+                    <h2
+                        class="text-lg font-semibold
+                               text-slate-900">
+                        Agregar documento clínico
+                    </h2>
+
+                    <p
+                        class="mt-1 text-sm
+                               text-slate-500">
+                        Adjunta un estudio, resultado,
+                        imagen u otro documento relacionado
+                        con el paciente.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    wire:click="closeClinicalDocumentModal"
+                    class="text-2xl
+                           leading-none
+                           text-slate-400
+                           hover:text-slate-700">
+                    ×
+                </button>
+
+            </div>
+
+            <form wire:submit="saveClinicalDocument">
+
+                <div class="space-y-5 p-6">
+
+                    <div>
+
+                        <label
+                            class="mb-1 block
+                                   text-sm font-medium
+                                   text-slate-700">
+                            Archivo *
+                        </label>
+
+                        <input
+                            wire:model="clinical_document_file"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            class="block w-full
+                                   rounded-lg
+                                   border border-slate-300
+                                   bg-white
+                                   px-3 py-2
+                                   text-sm
+                                   text-slate-700">
+
+                        <p
+                            class="mt-1 text-xs
+                                   text-slate-400">
+                            PDF, JPG, JPEG, PNG o WebP.
+                            Máximo 10 MB.
+                        </p>
+
+                        @error('clinical_document_file')
+                        <p
+                            class="mt-1 text-sm
+                                   text-red-600">
+                            {{ $message }}
+                        </p>
+                        @enderror
+
+                        <div
+                            wire:loading
+                            wire:target="clinical_document_file"
+                            class="mt-2 text-sm
+                                   text-slate-500">
+                            Procesando archivo...
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <label
+                            class="mb-1 block
+                                   text-sm font-medium
+                                   text-slate-700">
+                            Título *
+                        </label>
+
+                        <input
+                            wire:model="clinical_document_title"
+                            type="text"
+                            maxlength="190"
+                            placeholder="Ej. Biometría hemática"
+                            class="w-full rounded-lg
+                                   border border-slate-300
+                                   px-3 py-2">
+
+                        @error('clinical_document_title')
+                        <p
+                            class="mt-1 text-sm
+                                   text-red-600">
+                            {{ $message }}
+                        </p>
+                        @enderror
+
+                    </div>
+
+                    <div
+                        class="grid gap-5
+                               sm:grid-cols-2">
+
+                        <div>
+
+                            <label
+                                class="mb-1 block
+                                       text-sm font-medium
+                                       text-slate-700">
+                                Categoría *
+                            </label>
+
+                            <select
+                                wire:model="clinical_document_category"
+                                class="w-full rounded-lg
+                                       border border-slate-300
+                                       bg-white
+                                       px-3 py-2">
+
+                                <option value="general">
+                                    General
+                                </option>
+
+                                <option value="laboratory">
+                                    Laboratorio
+                                </option>
+
+                                <option value="imaging">
+                                    Imagen
+                                </option>
+
+                                <option value="other">
+                                    Otro
+                                </option>
+
+                            </select>
+
+                            @error('clinical_document_category')
+                            <p
+                                class="mt-1 text-sm
+                                       text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        <div>
+
+                            <label
+                                class="mb-1 block
+                                       text-sm font-medium
+                                       text-slate-700">
+                                Fecha del documento
+                            </label>
+
+                            <input
+                                wire:model="clinical_document_date"
+                                type="date"
+                                class="w-full rounded-lg
+                                       border border-slate-300
+                                       px-3 py-2">
+
+                            @error('clinical_document_date')
+                            <p
+                                class="mt-1 text-sm
+                                       text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <label
+                            class="mb-1 block
+                                   text-sm font-medium
+                                   text-slate-700">
+                            Consulta relacionada
+                        </label>
+
+                        <select
+                            wire:model="clinical_document_consultation_id"
+                            class="w-full rounded-lg
+                                   border border-slate-300
+                                   bg-white
+                                   px-3 py-2">
+
+                            <option value="">
+                                Sin consulta relacionada
+                            </option>
+
+                            @foreach (
+                            $patient
+                            ->consultations()
+                            ->latest('consultation_at')
+                            ->get()
+                            as $consultation
+                            )
+
+                            <option value="{{ $consultation->id }}">
+                                {{
+                                    $consultation
+                                        ->consultation_at
+                                        ->format('d/m/Y H:i')
+                                }}
+                                @if ($consultation->reason)
+                                — {{ $consultation->reason }}
+                                @endif
+                            </option>
+
+                            @endforeach
+
+                        </select>
+
+                        <p
+                            class="mt-1 text-xs
+                                   text-slate-400">
+                            Opcional. Permite relacionar el archivo
+                            con una consulta específica del paciente.
+                        </p>
+
+                        @error('clinical_document_consultation_id')
+                        <p
+                            class="mt-1 text-sm
+                                   text-red-600">
+                            {{ $message }}
+                        </p>
+                        @enderror
+
+                    </div>
+
+                    <div>
+
+                        <label
+                            class="mb-1 block
+                                   text-sm font-medium
+                                   text-slate-700">
+                            Notas
+                        </label>
+
+                        <textarea
+                            wire:model="clinical_document_notes"
+                            rows="4"
+                            maxlength="5000"
+                            placeholder="Información adicional sobre el documento..."
+                            class="w-full rounded-lg
+                                   border border-slate-300
+                                   px-3 py-2"></textarea>
+
+                        @error('clinical_document_notes')
+                        <p
+                            class="mt-1 text-sm
+                                   text-red-600">
+                            {{ $message }}
+                        </p>
+                        @enderror
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="flex justify-end
+                           gap-3 border-t
+                           border-slate-200
+                           px-6 py-4">
+
+                    <button
+                        type="button"
+                        wire:click="closeClinicalDocumentModal"
+                        wire:loading.attr="disabled"
+                        class="rounded-lg
+                               border border-slate-300
+                               px-4 py-2
+                               text-sm font-medium
+                               text-slate-700
+                               hover:bg-slate-50
+                               disabled:opacity-50">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="saveClinicalDocument,clinical_document_file"
+                        class="rounded-lg
+                               bg-slate-900
+                               px-4 py-2
+                               text-sm font-semibold
+                               text-white
+                               hover:bg-slate-800
+                               disabled:opacity-50">
+
+                        <span
+                            wire:loading.remove
+                            wire:target="saveClinicalDocument">
+                            Guardar documento
+                        </span>
+
+                        <span
+                            wire:loading
+                            wire:target="saveClinicalDocument">
                             Guardando...
                         </span>
 

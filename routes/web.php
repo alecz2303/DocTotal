@@ -367,6 +367,21 @@ Route::middleware('auth')->group(function () {
             }
         )->name('prescriptions.pdf');
 
+        Route::get(
+            '/clinical-documents/{clinicalDocument}/download',
+            \App\Http\Controllers\ClinicalDocumentDownloadController::class
+        )->name('clinical-documents.download');
+
+        Route::delete(
+            '/clinical-documents/{clinicalDocument}',
+            \App\Http\Controllers\ClinicalDocumentDeleteController::class
+        )->name('clinical-documents.destroy');
+
+        Route::get(
+            '/clinical-documents/{clinicalDocument}/view',
+            \App\Http\Controllers\ClinicalDocumentViewController::class
+        )->name('clinical-documents.view');
+
         Route::livewire(
             '/consultations',
             'pages::consultations.index'
