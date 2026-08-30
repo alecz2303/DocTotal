@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**60% completado**
+**63% completado**
 
-`████████████░░░░░░░░` 60%
+`█████████████░░░░░░░` 63%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -386,9 +386,13 @@ Imágenes médicas.
 
 # 5. Expediente clínico
 
-Relacionado con DT-4, DT-7, DT-9, DT-14 y futuros DT.
+Relacionado con DT-4, DT-7, DT-9, DT-14, DT-15 y futuros DT.
 
-DT-14 convirtió la base clínica existente en un expediente longitudinal funcional sin duplicar las fuentes de verdad ya existentes.
+DT-14 convirtió la base clínica existente en un expediente longitudinal
+funcional sin duplicar las fuentes de verdad ya existentes.
+
+DT-15 incorporó la capa documental del expediente sobre storage privado,
+manteniendo los metadatos clínicos separados de los bytes almacenados.
 
 Antecedentes existentes
 
@@ -430,17 +434,21 @@ Diagnósticos mostrados en el contexto de su consulta.
 
 Diagnósticos históricos consolidados.
 
-Recetas asociadas mostradas dentro de la consulta correspondiente.
+Recetas asociadas mostradas dentro de la consulta
+correspondiente.
 
 Recetas independientes mostradas como eventos propios.
 
-Prevención de duplicar una receta vinculada como evento independiente.
+Prevención de duplicar una receta vinculada como evento
+independiente.
 
 Tratamientos históricos consolidados.
 
-Consolidación de tratamientos por medicamento + dosis + frecuencia + duración.
+Consolidación de tratamientos por medicamento + dosis +
+frecuencia + duración.
 
-Última fecha de prescripción disponible por tratamiento consolidado.
+Última fecha de prescripción disponible por tratamiento
+consolidado.
 
 Enlaces a la consulta y receta originales.
 
@@ -448,7 +456,51 @@ Orden cronológico descendente.
 
 Protección multi-tenant.
 
-Proyección longitudinal construida sobre modelos clínicos existentes, sin nueva tabla de eventos.
+Proyección longitudinal construida sobre modelos clínicos
+existentes, sin nueva tabla de eventos.
+
+Expediente documental implementado en DT-15
+
+Modelo ClinicalDocument.
+
+Asociación documento → paciente.
+
+Asociación opcional documento → consulta del mismo paciente.
+
+Categorías general, laboratory, imaging y other.
+
+Metadatos separados del archivo físico.
+
+Fecha clínica/documental opcional.
+
+Notas y título del documento.
+
+Storage privado mediante abstracción de filesystem.
+
+Carga segura de PDF, JPG, JPEG, PNG y WebP.
+
+Límite actual de 10 MB por archivo.
+
+Visualización inline protegida.
+
+Miniatura protegida para imágenes.
+
+Representación visual para PDF.
+
+Descarga segura conservando el nombre original.
+
+Eliminación controlada de registro y archivo físico.
+
+Protección multi-tenant en consulta, visualización, descarga y
+eliminación.
+
+Validación defensiva dentro de StoreClinicalDocument.
+
+Validación de tenant para paciente y uploader.
+
+Integración dentro del expediente del paciente.
+
+Cobertura automatizada específica.
 
 Evolución pendiente
 
@@ -460,27 +512,18 @@ Problemas activos.
 
 Alertas clínicas.
 
-Archivos clínicos.
+Dominios especializados para resultados estructurados de
+laboratorio.
 
-Estudios de laboratorio.
+Integración especializada para imágenes médicas/DICOM/PACS.
 
-Estudios de imagen.
+OCR o extracción estructurada de documentos.
 
-Otros documentos médicos.
-
-Asociación archivo → consulta.
-
-Asociación archivo → paciente.
-
-Descarga segura de archivos.
-
-Eliminación controlada.
-
-[!] Definir política de almacenamiento.
-
-[!] Definir límites de almacenamiento por tenant.
+[!] Definir límites totales de almacenamiento por tenant.
 
 [!] Definir estrategia de respaldo y retención.
+
+[!] Definir política de conservación documental.
 
 # 6. Agenda
 
@@ -818,7 +861,8 @@ formulario.
 
 - [ ] QR/verificación de receta.
 
-- [x] Historial longitudinal de medicamentos/tratamientos por paciente.
+- [x] Historial longitudinal de medicamentos/tratamientos por
+paciente.
 
 - [ ] Repetir receta anterior.
 
@@ -826,63 +870,123 @@ formulario.
 
 # 11. Archivos clínicos
 
-Actualmente aparece "Archivos" dentro de la navegación, pero no existe
+Relacionado principalmente con DT-15.
 
-todavía
+DT-15 implementó la foundation documental del expediente clínico. Los
+archivos se almacenan de forma privada y los metadatos permanecen en
+ClinicalDocument, sin guardar binarios en la base de datos.
 
-infraestructura de expediente documental.
+Implementado
 
-No existen modelos ni migraciones específicas para archivos clínicos.
+Modelo ClinicalDocument.
 
-- [ ] Modelo de archivos.
+UUID para routing.
 
-- [ ] Upload.
+Upload.
 
-- [ ] Descarga.
+Visualización inline protegida.
 
-- [ ] Eliminación.
+Descarga segura.
 
-- [ ] Tipos de archivo.
+Eliminación controlada.
 
-- [ ] PDF.
+PDF.
 
-- [ ] Imágenes.
+Imágenes JPG/JPEG/PNG/WebP.
 
-- [ ] Resultados de laboratorio.
+Categoría general.
 
-- [ ] Estudios.
+Categoría laboratorio.
 
-- [ ] Radiografías.
+Categoría imagen.
 
-- [ ] Fotografías clínicas.
+Categoría otros.
 
-- [ ] Otros documentos.
+Asociación con paciente.
 
-- [ ] Asociación con paciente.
+Asociación opcional con consulta.
 
-- [ ] Asociación con consulta.
+Validación de que la consulta pertenece al mismo paciente.
 
-- [ ] Metadatos.
+Metadatos.
 
-- [ ] Fecha del estudio.
+Fecha del documento/estudio.
 
-- [ ] Descripción.
+Título.
 
-- [ ] Vista previa.
+Notas.
 
-- [ ] Seguridad multi-tenant.
+Nombre original.
 
-- [ ] Límites por archivo.
+MIME type.
 
-- [ ] Límites por tenant.
+Tamaño en bytes.
 
-- [ ] Storage privado.
+Usuario que realizó la carga.
 
-- [ ] URLs temporales/seguras.
+Vista previa mediante miniatura protegida para imágenes.
 
-- [!] Definir proveedor de almacenamiento.
+Tarjeta visual para PDF.
 
-- [!] Definir política de conservación.
+Seguridad multi-tenant.
+
+Protección contra paciente de otro tenant.
+
+Protección contra uploader de otro tenant.
+
+Storage privado.
+
+Límite de 10 MB por archivo.
+
+Tipos permitidos validados también dentro de la Action.
+
+Limpieza del archivo si falla la persistencia en base de datos.
+
+Limpieza del registro cuando el archivo físico ya no existe.
+
+Integración con el expediente del paciente.
+
+Tests de almacenamiento, aislamiento, visualización, descarga y
+eliminación.
+
+Decisiones de arquitectura
+
+Los binarios no se almacenan en base de datos.
+
+El disco utilizado se registra por documento para permitir
+migraciones futuras de storage.
+
+El filesystem se consume mediante Storage, sin exponer rutas
+físicas.
+
+No se generan URLs públicas permanentes para documentos
+clínicos.
+
+ResolveTenant se ejecuta antes de SubstituteBindings para
+que el route model binding respete TenantScope.
+
+Pendiente futuro
+
+Límites totales de almacenamiento por tenant.
+
+Indicador de almacenamiento utilizado.
+
+Migración/selección operativa de proveedor externo cuando sea
+necesaria.
+
+URLs temporales firmadas si un flujo futuro las requiere.
+
+Thumbnails derivados para PDF.
+
+OCR/extracción.
+
+DICOM/PACS.
+
+Resultados de laboratorio estructurados.
+
+[!] Definir política de conservación y retención.
+
+[!] Definir estrategia de respaldo de documentos clínicos.
 
 # 12. Dashboard
 
@@ -1072,9 +1176,11 @@ del Tenant.
 
 Relacionado principalmente con DT-11 y DT-12.
 
-La infraestructura de suscripciones ya define el periodo de servicio, ciclos
+La infraestructura de suscripciones ya define el periodo de servicio,
+ciclos
 
-de facturación, estados comerciales, derecho de acceso del tenant e integración
+de facturación, estados comerciales, derecho de acceso del tenant e
+integración
 
 con billing real mediante Stripe.
 
@@ -1164,7 +1270,8 @@ con billing real mediante Stripe.
 
 - [x] Derecho de acceso centralizado.
 
-- [x] Acceso durante `past_due` mientras el tenant no esté suspendido.
+- [x] Acceso durante `past_due` mientras el tenant no esté
+suspendido.
 
 - [x] Suspensión del Tenant independiente del estado de Subscription.
 
@@ -1210,9 +1317,12 @@ con billing real mediante Stripe.
 
 - [x] Precio anual definido: $6,000 MXN.
 
-- [x] Descuento anual definido: equivalente a 2 meses sin costo frente al plan mensual.
+- [x] Descuento anual definido: equivalente a 2 meses sin costo
+frente al plan mensual.
 
-- [x] Regla base de cancelación definida: cancelación al final del periodo con posibilidad de conservar la suscripción antes del vencimiento.
+- [x] Regla base de cancelación definida: cancelación al final del
+periodo con posibilidad de conservar la suscripción antes del
+vencimiento.
 
 - [!] Definir reglas de reembolso.
 
@@ -1220,11 +1330,14 @@ con billing real mediante Stripe.
 
 Relacionado principalmente con DT-12.
 
-DT-12 implementó la foundation operativa de pagos y recuperación SaaS sobre
+DT-12 implementó la foundation operativa de pagos y recuperación SaaS
+sobre
 
-la Subscription construida en DT-11. Stripe quedó integrado y validado en modo
+la Subscription construida en DT-11. Stripe quedó integrado y validado
+en modo
 
-de prueba. Los cobros automáticos permanecen protegidos por feature flag hasta
+de prueba. Los cobros automáticos permanecen protegidos por feature flag
+hasta
 
 su activación controlada en el entorno objetivo.
 
@@ -1252,13 +1365,15 @@ su activación controlada en el entorno objetivo.
 
 - [x] Reintentos programados.
 
-- [x] Renovación automática implementada y protegida por feature flag.
+- [x] Renovación automática implementada y protegida por feature
+flag.
 
 - [x] Vencimiento y recuperación `past_due`.
 
 - [x] Periodo de gracia de 7 días.
 
-- [x] Suspensión automática por falta de pago al vencer el grace period.
+- [x] Suspensión automática por falta de pago al vencer el grace
+period.
 
 - [x] Reactivación después del pago.
 
@@ -1272,7 +1387,8 @@ su activación controlada en el entorno objetivo.
 
 - [x] Alta, actualización y eliminación del método de pago Stripe.
 
-- [x] Idempotencia de intentos de renovación, recuperación y checkout manual.
+- [x] Idempotencia de intentos de renovación, recuperación y checkout
+manual.
 
 - [x] Integración de descuentos y créditos promocionales con billing.
 
@@ -1280,7 +1396,8 @@ su activación controlada en el entorno objetivo.
 
 - [x] Consumo de créditos únicamente después de pago exitoso.
 
-- [x] Liberación de créditos después de pago fallido o checkout cancelado.
+- [x] Liberación de créditos después de pago fallido o checkout
+cancelado.
 
 - [x] Prevención de checkouts manuales pendientes duplicados.
 
@@ -1288,9 +1405,11 @@ su activación controlada en el entorno objetivo.
 
 - [x] Limpieza automática de checkouts manuales abandonados.
 
-- [x] Reconciliación segura de checkouts cuyo PaymentIntent ya fue cobrado en Stripe.
+- [x] Reconciliación segura de checkouts cuyo PaymentIntent ya fue
+cobrado en Stripe.
 
-- [x] Scheduler para renovaciones, reintentos, cancelaciones, grace periods vencidos y limpieza de checkouts abandonados.
+- [x] Scheduler para renovaciones, reintentos, cancelaciones, grace
+periods vencidos y limpieza de checkouts abandonados.
 
 - [x] Stripe test mode validado end-to-end.
 
@@ -1308,7 +1427,8 @@ su activación controlada en el entorno objetivo.
 
 # 17. Ciclo de vida del tenant
 
-Actualmente existe una parte importante de la automatización comercial base.
+Actualmente existe una parte importante de la automatización comercial
+base.
 
 ## Campos existentes
 
@@ -1360,7 +1480,8 @@ active
 
 ## Estado actual
 
-- [x] Estados comerciales básicos definidos entre Tenant y Subscription.
+- [x] Estados comerciales básicos definidos entre Tenant y
+Subscription.
 
 - [x] Transiciones base de billing automatizadas.
 
@@ -1378,15 +1499,19 @@ active
 
 - [x] Scheduler SaaS para billing.
 
-- [~] Procesamiento programado implementado mediante comandos; queues/jobs dedicados quedan para necesidades futuras.
+- [~] Procesamiento programado implementado mediante comandos;
+queues/jobs dedicados quedan para necesidades futuras.
 
 - [ ] Auditoría formal de transiciones.
 
-- [!] Definir política de conservación de expedientes después de cancelar.
+- [!] Definir política de conservación de expedientes después de
+cancelar.
 
-- [x] Comportamiento de acceso en estado `past_due`: acceso mientras el tenant no esté suspendido.
+- [x] Comportamiento de acceso en estado `past_due`: acceso
+mientras el tenant no esté suspendido.
 
-- [x] Comportamiento de acceso en estado `suspended`: sin acceso al servicio.
+- [x] Comportamiento de acceso en estado `suspended`: sin acceso al
+servicio.
 
 # 18. Referidos y promociones
 
@@ -1420,7 +1545,8 @@ promocionales integrada con el lifecycle de billing.
 
 ## Uso durante registro
 
-- [x] Un tenant nuevo puede utilizar como máximo un código de referido.
+- [x] Un tenant nuevo puede utilizar como máximo un código de
+referido.
 
 - [x] Captura del código durante la inscripción inicial.
 
@@ -1446,7 +1572,8 @@ promocionales integrada con el lifecycle de billing.
 
 - [x] Máximo mensual actual de $250 MXN.
 
-- [x] El periodo se determina por la fecha del primer pago exitoso del referido.
+- [x] El periodo se determina por la fecha del primer pago exitoso
+del referido.
 
 - [x] Conteo de referencias calificadas durante el periodo.
 
@@ -1456,9 +1583,11 @@ promocionales integrada con el lifecycle de billing.
 
 - [x] Registro de referencias que alcanzaron el límite mensual.
 
-- [x] El sexto referido y posteriores no generan crédito adicional para el referidor.
+- [x] El sexto referido y posteriores no generan crédito adicional
+para el referidor.
 
-- [x] El límite del referidor no elimina el beneficio propio del referido.
+- [x] El límite del referidor no elimina el beneficio propio del
+referido.
 
 ## Beneficio del referido
 
@@ -1506,15 +1635,18 @@ promocionales integrada con el lifecycle de billing.
 
 ## Checkout y promociones
 
-- [x] Desglose de importe bruto, descuento de referido y crédito promocional.
+- [x] Desglose de importe bruto, descuento de referido y crédito
+promocional.
 
-- [x] Prevención de múltiples checkouts manuales pendientes para el mismo tenant.
+- [x] Prevención de múltiples checkouts manuales pendientes para el
+mismo tenant.
 
 - [x] Reutilización idempotente del checkout pendiente.
 
 - [x] Cambio mensual ↔ anual cancelando primero el checkout anterior.
 
-- [x] Cancelación del PaymentIntent de Stripe al abandonar un checkout.
+- [x] Cancelación del PaymentIntent de Stripe al abandonar un
+checkout.
 
 - [x] Estado `canceled` para pagos abandonados.
 
@@ -1522,7 +1654,8 @@ promocionales integrada con el lifecycle de billing.
 
 - [x] Expiración configurable de checkout manual.
 
-- [x] Reconciliación de PaymentIntent `succeeded` cuando el Payment local continúa `pending`.
+- [x] Reconciliación de PaymentIntent `succeeded` cuando el Payment
+local continúa `pending`.
 
 - [x] Scheduler horario para limpieza de checkouts abandonados.
 
@@ -1562,7 +1695,8 @@ promocionales integrada con el lifecycle de billing.
 
 - [ ] Auditoría administrativa/comercial avanzada de promociones.
 
-- [ ] Herramientas administrativas para consultar y gestionar referidos.
+- [ ] Herramientas administrativas para consultar y gestionar
+referidos.
 
 - [!] Definir comportamiento comercial ante reembolsos futuros.
 
@@ -1942,7 +2076,7 @@ System.
 
 - [ ] Eventos administrativos.
 
-- [ ] Protección de archivos.
+- [x] Protección base de archivos clínicos.
 
 - [ ] Revisión de autorización.
 
@@ -2064,7 +2198,8 @@ accidentalmente
 
 Existe infraestructura base de Laravel para cache/jobs y DT-12 incorporó
 
-scheduler operativo para billing. Todavía falta definir la operación completa
+scheduler operativo para billing. Todavía falta definir la operación
+completa
 
 de producción.
 
@@ -2074,7 +2209,8 @@ de producción.
 
 - [ ] Configurar queue de producción.
 
-- [~] Procesos SaaS de billing implementados mediante comandos programados.
+- [~] Procesos SaaS de billing implementados mediante comandos
+programados.
 
 - [x] Scheduler para procesos SaaS de billing.
 
@@ -2088,7 +2224,8 @@ de producción.
 
 - [x] Limpieza automática de checkouts manuales abandonados.
 
-- [x] Reconciliación segura de checkouts manuales ya cobrados en Stripe.
+- [x] Reconciliación segura de checkouts manuales ya cobrados en
+Stripe.
 
 - [ ] Procesamiento de eliminaciones.
 
@@ -2149,6 +2286,14 @@ Cierre DT-14:
 814 tests verdes.
 
 2339 assertions.
+
+0 failures.
+
+Cierre DT-15:
+
+837 tests verdes.
+
+2395 assertions.
 
 0 failures.
 
@@ -2238,15 +2383,16 @@ Tests de diagnósticos históricos consolidados.
 
 Tests de tratamientos históricos consolidados.
 
-Tests de integración del expediente longitudinal en la vista del paciente.
+Tests de integración del expediente longitudinal en la vista del
+paciente.
 
 ## Pendiente futuro
 
-- [x] Baseline actualizado al cierre de DT-14.
+- [x] Baseline actualizado al cierre de DT-15.
 
-- [ ] Tests de archivos.
+- [x] Tests de archivos.
 
-- [ ] Tests de almacenamiento.
+- [x] Tests de almacenamiento.
 
 - [ ] Tests de webhooks.
 
@@ -2492,15 +2638,18 @@ Baseline al cierre:
 
 0 failures.
 
-## DT-12 --- Payments, billing recovery and automatic account lifecycle
+## DT-12 --- Payments, billing recovery and automatic account
+lifecycle
 
 Estado: Completado.
 
 Objetivo:
 
-Convertir la foundation de Subscription de DT-11 en un sistema de billing SaaS
+Convertir la foundation de Subscription de DT-11 en un sistema de
+billing SaaS
 
-capaz de cobrar, renovar, recuperar pagos fallidos, suspender y reactivar tenants
+capaz de cobrar, renovar, recuperar pagos fallidos, suspender y
+reactivar tenants
 
 con mínima intervención manual.
 
@@ -2510,7 +2659,8 @@ Incluye:
 
 - [x] Precios mensual ($600 MXN) y anual ($6,000 MXN).
 
-- [x] Modelo `Payment` y lifecycle `pending` / `succeeded` / `failed`.
+- [x] Modelo `Payment` y lifecycle `pending` / `succeeded` /
+`failed`.
 
 - [x] Stripe Customer y métodos de pago guardados.
 
@@ -2526,7 +2676,8 @@ Incluye:
 
 - [x] Recuperación `past_due`.
 
-- [x] Reintentos programados con idempotencia por episodio de recuperación.
+- [x] Reintentos programados con idempotencia por episodio de
+recuperación.
 
 - [x] Grace period de 7 días.
 
@@ -2540,11 +2691,13 @@ Incluye:
 
 - [x] Reanudación antes del vencimiento.
 
-- [x] Protección contra renovación/cobro cuando existe cancelación programada.
+- [x] Protección contra renovación/cobro cuando existe cancelación
+programada.
 
 - [x] Historial de pagos y estado de suscripción en UI.
 
-- [x] Scheduler para renovaciones, retries, cancelaciones y grace periods vencidos.
+- [x] Scheduler para renovaciones, retries, cancelaciones y grace
+periods vencidos.
 
 - [x] Feature flag `BILLING_AUTOMATIC_CHARGING_ENABLED`.
 
@@ -2562,13 +2715,15 @@ Pendiente fuera del alcance de DT-12:
 
 - [ ] Auditoría formal de eventos de pago.
 
-- [ ] Activación operativa de cobros automáticos en el entorno objetivo.
+- [ ] Activación operativa de cobros automáticos en el entorno
+objetivo.
 
 Nota operativa:
 
 Mantener `BILLING_AUTOMATIC_CHARGING_ENABLED=false` hasta realizar una
 
-activación controlada de cobros automáticos en el entorno correspondiente.
+activación controlada de cobros automáticos en el entorno
+correspondiente.
 
 Baseline al cierre:
 
@@ -2582,7 +2737,8 @@ Estado: Completado.
 
 Objetivo:
 
-Implementar el programa de referidos de DocTotal y los créditos promocionales,
+Implementar el programa de referidos de DocTotal y los créditos
+promocionales,
 
 integrándolos de forma segura con el lifecycle comercial y de billing.
 
@@ -2626,7 +2782,8 @@ Incluye:
 
 - [x] Limpieza automática de checkouts abandonados.
 
-- [x] Reconciliación segura cuando Stripe ya reporta un PaymentIntent como `succeeded`.
+- [x] Reconciliación segura cuando Stripe ya reporta un PaymentIntent
+como `succeeded`.
 
 - [x] Scheduler horario para mantenimiento de checkouts.
 
@@ -2646,13 +2803,17 @@ Estado: Completado.
 
 Objetivo:
 
-Convertir la información clínica existente del paciente en una historia longitudinal coherente, reutilizando las entidades clínicas ya existentes y evitando estructuras duplicadas.
+Convertir la información clínica existente del paciente en una historia
+longitudinal coherente, reutilizando las entidades clínicas ya
+existentes y evitando estructuras duplicadas.
 
 Incluye:
 
-Auditoría previa de modelos, migraciones, vistas y tests clínicos existentes.
+Auditoría previa de modelos, migraciones, vistas y tests
+clínicos existentes.
 
-Evolución de patients.show como expediente longitudinal principal.
+Evolución de patients.show como expediente longitudinal
+principal.
 
 Resumen clínico basado en PatientMedicalHistory.
 
@@ -2686,11 +2847,14 @@ Decisiones de diseño:
 
 No crear una tabla adicional de timeline/eventos en DT-14.
 
-Construir la historia longitudinal como proyección de lectura sobre las fuentes clínicas existentes.
+Construir la historia longitudinal como proyección de lectura
+sobre las fuentes clínicas existentes.
 
-Mantener medicamentos actuales reportados en antecedentes separados de los tratamientos históricos prescritos.
+Mantener medicamentos actuales reportados en antecedentes
+separados de los tratamientos históricos prescritos.
 
-Mantener cada ocurrencia original visible en la línea de tiempo aunque los resúmenes consoliden información.
+Mantener cada ocurrencia original visible en la línea de tiempo
+aunque los resúmenes consoliden información.
 
 Baseline al cierre:
 
@@ -2700,51 +2864,97 @@ Baseline al cierre:
 
 0 failures.
 
-# 27. Candidatos para siguientes DT
+DT-15 --- Clinical files and medical documents
 
-Los números definitivos deben asignarse al momento de seleccionar el siguiente
-
-bloque.
-
-DT-14 quedó completado.
-
-El siguiente bloque debe seleccionarse después del cierre documental y del
-
-commit final de DT-14.
-
-## Candidato A --- Archivos y expediente documental
+Estado: Completado.
 
 Objetivo:
 
-Completar la parte documental del expediente.
+Incorporar archivos y documentos clínicos al expediente del paciente
+sobre una base segura, multi-tenant y extensible, sin duplicar
+responsabilidades del expediente longitudinal construido en DT-14.
 
-Construir:
+Incluye:
 
-Patient
+Auditoría de uploads, filesystem, storage y rutas existentes.
 
-→ Clinical Files
+Modelo ClinicalDocument.
 
-→ Studies
+Migración y relaciones con Patient y Consultation.
 
-→ Labs
+Asociación obligatoria con paciente.
 
-→ Images
+Asociación opcional con consulta del mismo paciente.
 
-→ Consultation attachments
+Categorías general, laboratorio, imagen y otros.
 
-Dependencias importantes:
+Storage privado configurable mediante CLINICAL_DOCUMENTS_DISK.
 
-- Storage.
+Metadata separada del archivo físico.
 
-- Seguridad.
+Upload seguro.
 
-- Multi-tenancy.
+Límite de 10 MB por archivo.
 
-- Límites.
+PDF, JPG, JPEG, PNG y WebP.
 
-- Retención.
+Visualización inline protegida.
 
-## Candidato B --- DocTotal Design System
+Miniaturas protegidas para imágenes.
+
+Descarga segura.
+
+Eliminación controlada.
+
+Integración en el expediente del paciente.
+
+Protección multi-tenant.
+
+Hardening de StoreClinicalDocument.
+
+Corrección de prioridad de middleware para resolver tenant antes
+del route model binding.
+
+Cobertura automatizada específica.
+
+Validación manual de upload, miniatura, visualización, descarga
+y eliminación.
+
+Fuera de alcance / pendiente posterior:
+
+Límites totales de almacenamiento por tenant.
+
+OCR/extracción.
+
+DICOM/PACS.
+
+Interpretación o estructura avanzada de laboratorios.
+
+Thumbnails derivados de PDF.
+
+Política definitiva de retención y respaldo.
+
+Baseline al cierre:
+
+837 tests verdes.
+
+2395 assertions.
+
+0 failures.
+
+# 27. Candidatos para siguientes DT
+
+Los números definitivos deben asignarse al momento de seleccionar el
+siguiente
+
+bloque.
+
+DT-15 quedó completado.
+
+El siguiente bloque debe seleccionarse después del cierre documental y
+del commit final de DT-15.
+
+## Candidato A --- DocTotal Design System
 
 Objetivo:
 
@@ -2770,11 +2980,12 @@ Design tokens
 
 Después migrar progresivamente las pantallas existentes.
 
-## Candidato C --- Clinical workspace
+## Candidato B --- Clinical workspace
 
 Objetivo:
 
-Transformar el expediente y la consulta en una experiencia clínica realmente
+Transformar el expediente y la consulta en una experiencia clínica
+realmente
 
 optimizada.
 
@@ -2808,19 +3019,22 @@ resolverse antes de los módulos que dependan de ellas.
 
 - [x] Precio anual: $6,000 MXN.
 
-- [x] Descuento anual: 2 meses equivalentes sin costo frente al mensual.
+- [x] Descuento anual: 2 meses equivalentes sin costo frente al
+mensual.
 
 - [!] Duración definitiva del trial.
 
 - [x] Periodo de gracia de billing: 7 días.
 
-- [x] Política base de cancelación: al final del periodo; reversible antes del vencimiento.
+- [x] Política base de cancelación: al final del periodo; reversible
+antes del vencimiento.
 
 - [!] Política de reembolso.
 
 ## Referidos
 
-- [x] Beneficio para tenant nuevo: $50 MXN de descuento en el primer pago.
+- [x] Beneficio para tenant nuevo: $50 MXN de descuento en el primer
+pago.
 
 - [x] Beneficio para referente: $50 MXN de crédito.
 
@@ -2842,7 +3056,8 @@ resolverse antes de los módulos que dependan de ellas.
 
 - [x] Proveedor de pagos: Stripe.
 
-- [!] Proveedor de almacenamiento.
+- [~] Storage privado local implementado; proveedor externo
+pendiente de decisión operativa.
 
 - [!] Proveedor de correo.
 
@@ -2856,7 +3071,8 @@ resolverse antes de los módulos que dependan de ellas.
 
 - [!] Política de modificación de información clínica finalizada.
 
-- [!] Política de archivos.
+- [~] Política técnica base de archivos implementada en DT-15;
+retención y cuotas pendientes.
 
 - [!] Retención de expedientes.
 
