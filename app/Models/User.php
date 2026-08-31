@@ -45,4 +45,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(DoctorProfile::class);
     }
+
+    /**
+     * Envía la notificación personalizada para restablecer la contraseña.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(
+            new \App\Notifications\ResetPasswordNotification($token)
+        );
+    }
 }

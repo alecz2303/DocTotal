@@ -254,6 +254,18 @@
             line-height: 1.5;
         }
 
+
+        .cancelled-banner {
+            margin-bottom: 18px;
+            padding: 10px;
+            border: 2px solid #991b1b;
+            color: #991b1b;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: .08em;
+        }
+
         @media print {
             @page {
                 size: Letter;
@@ -276,16 +288,6 @@
                 box-shadow: none;
             }
 
-            .cancelled-banner {
-                margin-bottom: 18px;
-                padding: 10px;
-                border: 2px solid #991b1b;
-                color: #991b1b;
-                font-size: 14px;
-                font-weight: 700;
-                text-align: center;
-                letter-spacing: .08em;
-            }
         }
     </style>
 </head>

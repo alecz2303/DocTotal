@@ -26,3 +26,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 test-output.txt
+
+# Local development backup files
+*.bak
+*.blade copy.php
