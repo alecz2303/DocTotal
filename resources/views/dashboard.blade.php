@@ -1,17 +1,18 @@
 <x-layouts.app>
 
-    <div class="mx-auto max-w-7xl">
+    <div class="dt-page mx-auto max-w-7xl">
 
         {{-- HEADER --}}
         <div
-            class="mb-8 flex flex-col gap-4
-                   lg:flex-row lg:items-end lg:justify-between">
+            class="relative mb-8 overflow-hidden rounded-3xl border border-blue-200/60
+                   bg-gradient-to-br from-white via-blue-50/70 to-violet-50/70
+                   p-6 shadow-[0_20px_55px_-30px_rgba(37,99,235,0.35)]
+                   sm:p-7 lg:flex-row lg:items-center lg:justify-between">
 
             <div>
 
                 <h1
-                    class="text-2xl font-bold
-                           tracking-tight text-slate-900">
+                    class="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
                     Bienvenido, {{ auth()->user()->name }}
                 </h1>
 
@@ -25,25 +26,18 @@
 
                 <a
                     href="{{ route('appointments.index') }}"
-                    class="inline-flex items-center
-                           rounded-lg
-                           border border-slate-300
-                           bg-white px-4 py-2.5
-                           text-sm font-semibold
-                           text-slate-700
-                           hover:bg-slate-50">
+                    class="inline-flex items-center justify-center rounded-xl border border-blue-200
+                           bg-white px-4 py-2.5 text-sm font-semibold text-blue-700
+                           shadow-sm transition hover:border-blue-300 hover:bg-blue-50">
                     Ver agenda
                 </a>
 
                 <a
                     href="{{ route('appointments.create') }}"
-                    class="inline-flex items-center
-                           rounded-lg
-                           bg-slate-900
-                           px-4 py-2.5
-                           text-sm font-semibold
-                           text-white
-                           hover:bg-slate-800">
+                    class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r
+                           from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold
+                           text-white shadow-lg shadow-blue-600/20 transition
+                           hover:from-blue-700 hover:to-indigo-700">
                     + Nueva cita
                 </a>
 
@@ -53,18 +47,14 @@
 
 
         {{-- INDICADORES PRINCIPALES --}}
-        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
             {{-- CITAS HOY --}}
             <a
                 href="{{ route('appointments.index') }}"
-                class="group rounded-xl
-                       border border-slate-200
-                       bg-white p-5
-                       shadow-sm
-                       transition
-                       hover:-translate-y-0.5
-                       hover:shadow-md">
+                class="group rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/60
+                       p-5 shadow-[0_14px_38px_-28px_rgba(37,99,235,0.45)] transition
+                       hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg">
 
                 <div class="flex items-start justify-between">
 
@@ -120,12 +110,9 @@
             {{-- PACIENTES --}}
             <a
                 href="{{ route('patients.index') }}"
-                class="group rounded-xl
-                       border border-slate-200
-                       bg-white p-5
-                       shadow-sm transition
-                       hover:-translate-y-0.5
-                       hover:shadow-md">
+                class="group rounded-2xl border border-violet-100 bg-gradient-to-br from-white to-violet-50/60
+                       p-5 shadow-[0_14px_38px_-28px_rgba(124,58,237,0.42)] transition
+                       hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg">
 
                 <p class="text-sm font-medium text-slate-500">
                     Pacientes
@@ -146,10 +133,8 @@
 
             {{-- POR ATENDER --}}
             <div
-                class="rounded-xl
-                       border border-slate-200
-                       bg-white p-5
-                       shadow-sm">
+                class="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50/55
+                       p-5 shadow-[0_14px_38px_-28px_rgba(217,119,6,0.35)]">
 
                 <p class="text-sm font-medium text-slate-500">
                     Por atender
@@ -186,10 +171,8 @@
 
             {{-- PRÓXIMA CITA --}}
             <div
-                class="rounded-xl
-                       border border-slate-200
-                       bg-white p-5
-                       shadow-sm">
+                class="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50/55
+                       p-5 shadow-[0_14px_38px_-28px_rgba(217,119,6,0.35)]">
 
                 <p class="text-sm font-medium text-slate-500">
                     Próxima cita
@@ -263,10 +246,8 @@
 
             {{-- AGENDA DE HOY --}}
             <section
-                class="overflow-hidden
-                       rounded-xl
-                       border border-slate-200
-                       bg-white shadow-sm">
+                class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white
+                       shadow-[0_18px_50px_-28px_rgba(15,23,42,0.25)]">
 
                 <div
                     class="flex items-center
@@ -710,9 +691,8 @@
 
             {{-- ACTIVIDAD DE HOY --}}
             <section
-                class="rounded-xl
-                       border border-slate-200
-                       bg-white shadow-sm">
+                class="rounded-3xl border border-slate-200/80 bg-white
+                       shadow-[0_18px_50px_-28px_rgba(15,23,42,0.25)]">
 
                 <div
                     class="border-b
@@ -849,10 +829,8 @@
 
             {{-- GRÁFICA 7 DÍAS --}}
             <section
-                class="rounded-xl
-                       border border-slate-200
-                       bg-white p-6
-                       shadow-sm">
+                class="rounded-3xl border border-slate-200/80 bg-white p-6
+                       shadow-[0_18px_50px_-28px_rgba(15,23,42,0.25)]">
 
                 <h2 class="font-semibold text-slate-900">
                     Próximos 7 días
@@ -904,11 +882,8 @@
                                        items-end">
 
                             <div
-                                class="w-full
-                                           rounded-t-lg
-                                           bg-slate-900
-                                           transition-all
-                                           hover:bg-slate-700"
+                                class="w-full rounded-t-xl bg-gradient-to-t from-blue-600 to-cyan-400
+                                           shadow-sm transition-all hover:from-blue-700 hover:to-cyan-500"
                                 style="height: {{ $height }}%"></div>
 
                         </div>
@@ -946,10 +921,8 @@
 
             {{-- ESTADOS --}}
             <section
-                class="rounded-xl
-                       border border-slate-200
-                       bg-white p-6
-                       shadow-sm">
+                class="rounded-3xl border border-slate-200/80 bg-white p-6
+                       shadow-[0_18px_50px_-28px_rgba(15,23,42,0.25)]">
 
                 <h2 class="font-semibold text-slate-900">
                     Estado de la agenda
@@ -1048,9 +1021,7 @@
                                        bg-slate-100">
 
                             <div
-                                class="h-full
-                                           rounded-full
-                                           bg-slate-900"
+                                class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500"
                                 style="width:
                                         {{ $percentage }}%"></div>
 
@@ -1069,11 +1040,8 @@
 
         {{-- ACCIONES RÁPIDAS --}}
         <section
-            class="mt-8
-                   rounded-xl
-                   border border-slate-200
-                   bg-white p-6
-                   shadow-sm">
+            class="mb-8 mt-8 rounded-3xl border border-slate-200/80 bg-white p-6
+                   shadow-[0_18px_50px_-28px_rgba(15,23,42,0.25)]">
 
             <h2 class="font-semibold text-slate-900">
                 Acciones rápidas
@@ -1086,45 +1054,37 @@
 
                 <a
                     href="{{ route('appointments.create') }}"
-                    class="rounded-lg
-                           border border-slate-200
-                           p-4
-                           text-sm font-semibold
-                           text-slate-700
-                           hover:bg-slate-50">
-                    + Programar cita
+                    class="flex items-center rounded-2xl border border-slate-200 bg-slate-50/60
+                           p-4 text-sm font-semibold text-slate-700 transition
+                           hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/70
+                           hover:text-blue-800">
+                    <span class="mr-2 text-blue-600">＋</span> Programar cita
                 </a>
 
                 <a
                     href="{{ route('patients.index') }}"
-                    class="rounded-lg
-                           border border-slate-200
-                           p-4
-                           text-sm font-semibold
-                           text-slate-700
-                           hover:bg-slate-50">
+                    class="flex items-center rounded-2xl border border-slate-200 bg-slate-50/60
+                           p-4 text-sm font-semibold text-slate-700 transition
+                           hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/70
+                           hover:text-blue-800">
                     Pacientes
                 </a>
 
                 <a
                     href="{{ route('consultations.index') }}"
-                    class="rounded-lg
-                           border border-slate-200
-                           p-4
-                           text-sm font-semibold
-                           text-slate-700
-                           hover:bg-slate-50">
+                    class="flex items-center rounded-2xl border border-slate-200 bg-slate-50/60
+                           p-4 text-sm font-semibold text-slate-700 transition
+                           hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/70
+                           hover:text-blue-800">
                     Consultas
                 </a>
 
                 <a
                     href="{{ route('prescriptions.index') }}"
-                    class="rounded-lg
-                           border border-slate-200
-                           p-4
-                           text-sm font-semibold
-                           text-slate-700
-                           hover:bg-slate-50">
+                    class="flex items-center rounded-2xl border border-slate-200 bg-slate-50/60
+                           p-4 text-sm font-semibold text-slate-700 transition
+                           hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/70
+                           hover:text-blue-800">
                     Recetas
                 </a>
 

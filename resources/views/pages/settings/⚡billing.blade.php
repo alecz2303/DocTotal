@@ -1045,144 +1045,66 @@ new
     };
 ?>
 
-<div class="mx-auto max-w-6xl">
-
+<div class="dt-page mx-auto max-w-6xl">
     {{-- Header --}}
-    <div
-        class="relative mb-8 overflow-hidden rounded-2xl
-               bg-slate-950 px-6 py-7 text-white
-               shadow-sm sm:px-8">
+    <div class="relative mb-8 overflow-hidden rounded-3xl border border-blue-400/10 bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 px-6 py-7 text-white shadow-[0_28px_70px_-32px_rgba(30,64,175,0.65)] sm:px-8">
+        <div class="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl"></div>
 
-        <div
-            class="absolute -right-16 -top-20 h-56 w-56
-                   rounded-full bg-white/5">
-        </div>
-
-        <div
-            class="absolute -bottom-24 right-28 h-48 w-48
-                   rounded-full bg-white/5">
-        </div>
-
-        <div
-            class="relative flex flex-col gap-6
-                   sm:flex-row sm:items-center
-                   sm:justify-between">
-
+        <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-
-                <div class="mb-2 flex items-center gap-2">
-
-                    <span
-                        class="inline-flex rounded-full
-                               border border-white/10
-                               bg-white/10 px-2.5 py-1
-                               text-xs font-semibold
-                               text-slate-200">
-                        DocTotal Billing
-                    </span>
-
+                <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100 backdrop-blur">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="M3 10h18" />
+                        <path d="M7 15h4" />
+                    </svg>
+                    Suscripción y pagos
                 </div>
 
-                <h1
-                    class="text-2xl font-bold tracking-tight
-                           sm:text-3xl">
+                <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
                     Facturación
                 </h1>
 
-                <p
-                    class="mt-2 max-w-2xl text-sm
-                           leading-6 text-slate-300">
-                    Administra tu suscripción, pagos y método
-                    para renovaciones automáticas.
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                    Administra tu plan, pagos, renovaciones, tarjeta guardada,
+                    beneficios por referidos e historial de facturación.
                 </p>
-
             </div>
 
-            <div
-                class="shrink-0 rounded-xl
-                       border border-white/10
-                       bg-white/10 px-4 py-3
-                       backdrop-blur">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs font-medium text-slate-300">Estado de cuenta</p>
 
-                <p
-                    class="text-xs font-medium uppercase
-                           tracking-wider text-slate-400">
-                    Estado de cuenta
-                </p>
-
-                <div class="mt-1 flex items-center gap-2">
-
-                    @if ($tenant->status === 'active')
-
-                    <span
-                        class="h-2 w-2 rounded-full
-                                   bg-emerald-400">
-                    </span>
-
-                    <span class="text-sm font-semibold">
-                        Activo
-                    </span>
-
-                    @elseif (
-                    $tenant->status === 'trial'
-                    && $tenant->isOnTrial()
-                    )
-
-                    <span
-                        class="h-2 w-2 rounded-full
-                                   bg-sky-400">
-                    </span>
-
-                    <span class="text-sm font-semibold">
-                        Periodo de prueba
-                    </span>
-
-                    @elseif (
-                    $tenant->status === 'trial'
-                    && $tenant->trialHasExpired()
-                    )
-
-                    <span
-                        class="h-2 w-2 rounded-full
-                                   bg-amber-400">
-                    </span>
-
-                    <span class="text-sm font-semibold">
-                        Prueba vencida
-                    </span>
-
-                    @elseif ($tenant->status === 'suspended')
-
-                    <span
-                        class="h-2 w-2 rounded-full
-                                   bg-red-400">
-                    </span>
-
-                    <span class="text-sm font-semibold">
-                        Suspendido
-                    </span>
-
-                    @else
-
-                    <span
-                        class="h-2 w-2 rounded-full
-                                   bg-slate-400">
-                    </span>
-
-                    <span class="text-sm font-semibold">
-                        {{ ucfirst($tenant->status) }}
-                    </span>
-
-                    @endif
-
+                    <div class="mt-1 flex items-center gap-2">
+                        @if ($tenant->status === 'active')
+                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                        <span class="text-sm font-semibold">Activo</span>
+                        @elseif ($tenant->status === 'trial' && $tenant->isOnTrial())
+                        <span class="h-2 w-2 rounded-full bg-sky-400"></span>
+                        <span class="text-sm font-semibold">Periodo de prueba</span>
+                        @elseif ($tenant->status === 'trial' && $tenant->trialHasExpired())
+                        <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                        <span class="text-sm font-semibold">Prueba vencida</span>
+                        @elseif ($tenant->status === 'suspended')
+                        <span class="h-2 w-2 rounded-full bg-rose-400"></span>
+                        <span class="text-sm font-semibold">Suspendido</span>
+                        @else
+                        <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                        <span class="text-sm font-semibold">{{ ucfirst($tenant->status) }}</span>
+                        @endif
+                    </div>
                 </div>
 
+                <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs font-medium text-slate-300">Crédito disponible</p>
+                    <p class="mt-1 text-sm font-semibold">
+                        ${{ number_format($availablePromotionalCredit / 100, 2) }} MXN
+                    </p>
+                </div>
             </div>
-
         </div>
-
     </div>
-
 
     {{-- Settings navigation --}}
     <div class="mb-7 border-b border-slate-200">
@@ -1201,9 +1123,9 @@ new
 
             <a
                 href="{{ route('settings.billing') }}"
-                class="border-b-2 border-slate-950
+                class="border-b-2 border-blue-600
                        px-1 pb-3 text-sm font-semibold
-                       text-slate-950">
+                       text-blue-700">
                 Facturación
             </a>
 
@@ -1217,9 +1139,9 @@ new
 
         {{-- Plan --}}
         <section
-            class="relative overflow-hidden rounded-2xl
-                   border border-slate-200 bg-white
-                   p-6 shadow-sm">
+            class="relative overflow-hidden rounded-3xl
+                   border border-slate-200/80 bg-white
+                   p-6 shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
             <div
                 class="absolute right-0 top-0 h-24 w-24
@@ -1281,7 +1203,7 @@ new
                     @if ($subscription?->isPastDue())
 
                     <span
-                        class="rounded-full bg-amber-50
+                        class="rounded-full border border-amber-100 bg-amber-50
                                    px-2.5 py-1 text-xs
                                    font-semibold text-amber-700">
                         Pago pendiente
@@ -1290,7 +1212,7 @@ new
                     @elseif ($subscription?->isActive())
 
                     <span
-                        class="rounded-full bg-emerald-50
+                        class="rounded-full border border-emerald-100 bg-emerald-50
                                    px-2.5 py-1 text-xs
                                    font-semibold text-emerald-700">
                         Activo
@@ -1302,7 +1224,7 @@ new
                     )
 
                     <span
-                        class="rounded-full bg-sky-50
+                        class="rounded-full border border-sky-100 bg-sky-50
                                    px-2.5 py-1 text-xs
                                    font-semibold text-sky-700">
                         Prueba
@@ -1325,7 +1247,7 @@ new
 
                 <div
                     class="mt-6 grid grid-cols-2 gap-2
-                               rounded-xl bg-slate-100 p-1">
+                               rounded-2xl border border-slate-200 bg-slate-100/80 p-1">
 
                     <button
                         type="button"
@@ -1462,10 +1384,10 @@ new
                         wire:target="startManualPayment"
                         class="inline-flex items-center
                                    justify-center rounded-lg
-                                   bg-slate-950 px-4 py-2.5
+                                   bg-blue-600 px-4 py-2.5
                                    text-sm font-semibold text-white
                                    shadow-sm transition
-                                   hover:bg-slate-800
+                                   hover:bg-blue-700
                                    disabled:cursor-not-allowed
                                    disabled:opacity-50">
 
@@ -1531,8 +1453,8 @@ new
                         wire:loading.attr="disabled"
                         wire:target="startPastDuePayment"
                         class="inline-flex items-center justify-center rounded-lg
-                               bg-slate-950 px-4 py-2.5 text-sm font-semibold
-                               text-white shadow-sm transition hover:bg-slate-800
+                               bg-blue-600 px-4 py-2.5 text-sm font-semibold
+                               text-white shadow-sm transition hover:bg-blue-700
                                disabled:cursor-not-allowed disabled:opacity-50">
                         <span wire:loading.remove wire:target="startPastDuePayment">
                             Pagar ahora
@@ -1815,8 +1737,8 @@ new
 
         {{-- Subscription details --}}
         <section
-            class="rounded-2xl border border-slate-200
-                   bg-white p-6 shadow-sm">
+            class="rounded-3xl border border-slate-200/80
+                   bg-white p-6 shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
             <p
                 class="text-xs font-semibold uppercase
@@ -2451,12 +2373,12 @@ new
 
     {{-- Referral program --}}
     <section
-        class="mt-6 overflow-hidden rounded-2xl
-               border border-slate-200 bg-white shadow-sm">
+        class="mt-6 overflow-hidden rounded-3xl
+               border border-slate-200/80 bg-white shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
         <div
             class="border-b border-slate-100
-                   bg-gradient-to-r from-slate-950 to-slate-800
+                   bg-gradient-to-r from-blue-950 via-indigo-950 to-violet-950
                    px-6 py-6 text-white">
 
             <div
@@ -2783,9 +2705,9 @@ new
     @if ($recentPayments?->isNotEmpty())
 
     <section
-        class="mt-6 overflow-hidden rounded-2xl
-               border border-slate-200
-               bg-white shadow-sm">
+        class="mt-6 overflow-hidden rounded-3xl
+               border border-slate-200/80
+               bg-white shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
         <div
             class="border-b border-slate-100
@@ -3009,9 +2931,9 @@ new
     <section
         id="manual-payment-section"
         tabindex="-1"
-        class="mt-6 scroll-mt-6 overflow-hidden rounded-2xl
-                   border border-slate-200
-                   bg-white shadow-sm outline-none">
+        class="mt-6 scroll-mt-6 overflow-hidden rounded-3xl
+                   border border-slate-200/80
+                   bg-white shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)] outline-none">
 
         <div
             class="border-b border-slate-100
@@ -3251,9 +3173,9 @@ new
                         id="stripe-confirm-saved-recovery-payment"
                         data-payment-method-id="{{ $paymentMethod->provider_payment_method_id }}"
                         class="inline-flex shrink-0 items-center justify-center
-                               rounded-lg bg-slate-950 px-5 py-2.5
+                               rounded-lg bg-blue-600 px-5 py-2.5
                                text-sm font-semibold text-white shadow-sm
-                               transition hover:bg-slate-800
+                               transition hover:bg-blue-700
                                disabled:cursor-not-allowed
                                disabled:opacity-50">
                         Pagar ${{ number_format($checkoutAmount / 100, 0) }}
@@ -3325,8 +3247,8 @@ new
                         type="button"
                         id="stripe-confirm-manual-payment"
                         class="inline-flex items-center justify-center rounded-lg
-                               bg-slate-950 px-5 py-2.5 text-sm font-semibold
-                               text-white shadow-sm transition hover:bg-slate-800
+                               bg-blue-600 px-5 py-2.5 text-sm font-semibold
+                               text-white shadow-sm transition hover:bg-blue-700
                                disabled:cursor-not-allowed disabled:opacity-50">
                         Pagar ${{ number_format($checkoutAmount / 100, 0) }}
                         {{ $checkoutCurrency }}
@@ -3417,9 +3339,9 @@ new
 
     {{-- Automatic payment method --}}
     <section
-        class="mt-6 overflow-hidden rounded-2xl
-               border border-slate-200
-               bg-white shadow-sm">
+        class="mt-6 overflow-hidden rounded-3xl
+               border border-slate-200/80
+               bg-white shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
         <div
             class="flex flex-col gap-4
@@ -3449,13 +3371,13 @@ new
             <span
                 class="inline-flex w-fit
                            items-center gap-1.5
-                           rounded-full bg-emerald-50
+                           rounded-full border border-emerald-100 bg-emerald-50
                            px-3 py-1.5 text-xs
                            font-semibold text-emerald-700">
 
                 <span
                     class="h-1.5 w-1.5
-                               rounded-full bg-emerald-500">
+                               rounded-full border border-emerald-100 bg-emerald-500">
                 </span>
 
                 Predeterminada
@@ -3692,11 +3614,11 @@ new
                     wire:target="startCardSetup"
                     class="inline-flex shrink-0
                                items-center justify-center
-                               rounded-lg bg-slate-950
+                               rounded-lg bg-blue-600
                                px-4 py-2.5 text-sm
                                font-semibold text-white
                                shadow-sm transition
-                               hover:bg-slate-800
+                               hover:bg-blue-700
                                disabled:opacity-50">
 
                     <span
@@ -3726,9 +3648,9 @@ new
     @if ($cardFormVisible)
 
     <section
-        class="mt-6 overflow-hidden rounded-2xl
-                   border border-slate-200
-                   bg-white shadow-sm">
+        class="mt-6 overflow-hidden rounded-3xl
+                   border border-slate-200/80
+                   bg-white shadow-[0_18px_50px_-26px_rgba(15,23,42,0.28)]">
 
         <div
             class="border-b border-slate-100
@@ -3827,10 +3749,10 @@ new
                     id="stripe-save-card"
                     class="inline-flex items-center
                                justify-center rounded-lg
-                               bg-slate-950 px-5 py-2.5
+                               bg-blue-600 px-5 py-2.5
                                text-sm font-semibold
                                text-white shadow-sm
-                               transition hover:bg-slate-800
+                               transition hover:bg-blue-700
                                disabled:cursor-not-allowed
                                disabled:opacity-50">
                     Guardar tarjeta
@@ -3847,9 +3769,9 @@ new
 
     {{-- Security --}}
     <section
-        class="mt-6 rounded-2xl
+        class="mb-8 mt-6 rounded-3xl
                border border-slate-200
-               bg-slate-50 p-5">
+               bg-gradient-to-r from-slate-50 to-blue-50/40 p-5">
 
         <div class="flex items-start gap-4">
 

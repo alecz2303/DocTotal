@@ -338,606 +338,441 @@ new
     };
 ?>
 
-<div class="min-h-screen bg-slate-50 px-4 py-10">
 
-    <div class="mx-auto max-w-4xl">
+<div class="min-h-screen bg-[#f6f8fc]">
+    <div class="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row">
 
-        <div class="mb-8 text-center">
-            <h1 class="text-3xl font-bold tracking-tight text-slate-900">
-                Configura tu consultorio
-            </h1>
+        {{-- Panel lateral de marca --}}
+        <aside class="relative overflow-hidden bg-slate-950 px-6 py-8 text-white lg:w-[320px] lg:px-8 lg:py-10">
+            <div class="absolute -left-20 top-16 h-56 w-56 rounded-full bg-blue-600/20 blur-3xl"></div>
+            <div class="absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl"></div>
 
-            <p class="mt-2 text-slate-500">
-                Te tomará solo unos minutos.
-            </p>
-        </div>
+            <div class="relative flex h-full flex-col">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/20">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" d="M12 5v14M5 12h14" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold tracking-tight">DocTotal</p>
+                            <p class="text-xs text-slate-400">Gestión médica inteligente</p>
+                        </div>
+                    </div>
 
-        {{-- Progreso --}}
-        <div class="mb-8 grid grid-cols-4 gap-2">
+                    <div class="mt-14">
+                        <span class="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-blue-200">
+                            Configuración inicial
+                        </span>
 
-            @foreach ([1, 2, 3, 4] as $number)
+                        <h1 class="mt-5 max-w-sm text-3xl font-bold leading-tight tracking-tight">
+                            Configura tu consultorio en pocos minutos.
+                        </h1>
 
-            <div>
-                <div
-                    class="h-2 rounded-full
-                            {{ $step >= $number
-                                ? 'bg-slate-900'
-                                : 'bg-slate-200' }}"></div>
-
-                <p class="mt-2 text-center text-xs text-slate-500">
-                    Paso {{ $number }}
-                </p>
-            </div>
-
-            @endforeach
-
-        </div>
-
-        <div
-            class="rounded-2xl border border-slate-200
-                   bg-white p-6 shadow-sm sm:p-8">
-
-            {{-- PASO 1 --}}
-            @if ($step === 1)
-
-            <div>
-
-                <h2 class="text-xl font-semibold">
-                    Datos profesionales
-                </h2>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Información básica del médico.
-                </p>
-
-                <div class="mt-6 grid gap-5 sm:grid-cols-2">
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Nombre
-                        </label>
-
-                        <input
-                            wire:model="first_name"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-
-                        @error('first_name')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
+                        <p class="mt-4 max-w-sm text-sm leading-6 text-slate-400">
+                            Completa tus datos profesionales, la información del consultorio y tus horarios de atención.
                         </p>
-                        @enderror
                     </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Apellido
-                        </label>
-
-                        <input
-                            wire:model="last_name"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-
-                        @error('last_name')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
-                        </p>
-                        @enderror
-                    </div>
-
-                    <div class="sm:col-span-2">
-
-                        <label class="mb-1 block text-sm font-medium">
-                            Especialidad
-                        </label>
-
-                        <select
-                            wire:model="specialty_id"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                            <option value="">
-                                Selecciona una especialidad
-                            </option>
-
-                            @foreach ($this->specialties() as $specialty)
-                            <option value="{{ $specialty->id }}">
-                                {{ $specialty->name }}
-                            </option>
-                            @endforeach
-                        </select>
-
-                        @error('specialty_id')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
-                        </p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Cédula profesional
-                        </label>
-
-                        <input
-                            wire:model="professional_license"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Teléfono
-                        </label>
-
-                        <input
-                            wire:model="doctor_phone"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            WhatsApp
-                        </label>
-
-                        <input
-                            wire:model="doctor_whatsapp"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
                 </div>
 
-            </div>
-
-            @endif
-
-            {{-- PASO 2 --}}
-            @if ($step === 2)
-
-            <div>
-
-                <h2 class="text-xl font-semibold">
-                    Datos del consultorio
-                </h2>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Esta información podrá mostrarse posteriormente
-                    en tu minisitio.
-                </p>
-
-                <div class="mt-6 grid gap-5 sm:grid-cols-2">
-
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium">
-                            Nombre público
-                        </label>
-
-                        <input
-                            wire:model="public_name"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-
-                        @error('public_name')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
-                        </p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Teléfono
-                        </label>
-
-                        <input
-                            wire:model="practice_phone"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            WhatsApp
-                        </label>
-
-                        <input
-                            wire:model="practice_whatsapp"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    {{-- CP primero para autocompletar --}}
-                    <div>
-                        <label
-                            for="postal_code"
-                            class="mb-1 block text-sm font-medium">
-                            Código postal
-                        </label>
-
-                        <div class="relative">
-
-                            <input
-                                id="postal_code"
-                                wire:model.live.debounce.500ms="postal_code"
-                                type="text"
-                                inputmode="numeric"
-                                maxlength="5"
-                                placeholder="Ej. 29025"
-                                class="w-full rounded-lg border
-                                           border-slate-300 px-3 py-2">
-
-                            <div
-                                wire:loading
-                                wire:target="postal_code"
-                                class="absolute right-3 top-2.5
-                                           text-xs text-slate-400">
-                                Buscando...
+                <div class="relative mt-10 lg:mt-auto">
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
+                                <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6" />
+                                </svg>
                             </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">Tus datos quedan guardados</p>
+                                <p class="mt-1 text-xs leading-5 text-slate-400">
+                                    Podrás actualizar esta información más adelante desde Configuración.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
+        {{-- Contenido principal --}}
+        <main class="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+            <div class="mx-auto max-w-4xl">
+
+                {{-- Encabezado + progreso --}}
+                <div class="mb-7">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-blue-600">Paso {{ $step }} de 4</p>
+                            <h2 class="mt-1 text-2xl font-bold tracking-tight text-slate-950">
+                                @switch($step)
+                                @case(1) Tu perfil profesional @break
+                                @case(2) Tu consultorio @break
+                                @case(3) Tu disponibilidad @break
+                                @default Revisa y finaliza
+                                @endswitch
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                @switch($step)
+                                @case(1) Comencemos con tus datos como profesional de la salud. @break
+                                @case(2) Ahora agrega los datos principales de tu consultorio. @break
+                                @case(3) Define los días y horarios en que atiendes. @break
+                                @default Confirma que todo esté correcto antes de comenzar.
+                                @endswitch
+                            </p>
                         </div>
 
-                        @error('postal_code')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
-                        </p>
-                        @enderror
+                        <span class="text-sm font-medium text-slate-400">{{ $step * 25 }}%</span>
+                    </div>
 
-                        @if ($postalCodeError)
-                        <p class="mt-1 text-sm text-amber-600">
-                            {{ $postalCodeError }}
-                            Puedes capturar la dirección manualmente.
-                        </p>
+                    <div class="mt-5 h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                            class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300"
+                            style="width: {{ $step * 25 }}%">
+                        </div>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-4 gap-2 text-center text-[11px] font-medium text-slate-400">
+                        <span class="{{ $step >= 1 ? 'text-blue-600' : '' }}">Perfil</span>
+                        <span class="{{ $step >= 2 ? 'text-blue-600' : '' }}">Consultorio</span>
+                        <span class="{{ $step >= 3 ? 'text-blue-600' : '' }}">Horarios</span>
+                        <span class="{{ $step >= 4 ? 'text-blue-600' : '' }}">Listo</span>
+                    </div>
+                </div>
+
+                <section class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_20px_55px_-32px_rgba(15,23,42,0.28)]">
+                    <div class="p-5 sm:p-7 lg:p-8">
+
+                        {{-- PASO 1 --}}
+                        @if ($step === 1)
+                        <div>
+                            <div class="mb-6 flex items-start gap-4">
+                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19a6 6 0 0 0-12 0m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6 1h6m-3-3v6" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-950">Datos profesionales</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Información básica del médico.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-5 sm:grid-cols-2">
+                                <div>
+                                    <label class="dt-label">Nombre</label>
+                                    <input wire:model="first_name" type="text" class="dt-input">
+                                    @error('first_name')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Apellido</label>
+                                    <input wire:model="last_name" type="text" class="dt-input">
+                                    @error('last_name')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="dt-label">Especialidad</label>
+                                    <select wire:model="specialty_id" class="dt-select">
+                                        <option value="">Selecciona una especialidad</option>
+                                        @foreach ($this->specialties() as $specialty)
+                                        <option value="{{ $specialty->id }}">{{ $specialty->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('specialty_id')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Cédula profesional</label>
+                                    <input wire:model="professional_license" type="text" class="dt-input">
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Teléfono</label>
+                                    <input wire:model="doctor_phone" type="text" class="dt-input">
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">WhatsApp</label>
+                                    <input wire:model="doctor_whatsapp" type="text" class="dt-input">
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- PASO 2 --}}
+                        @if ($step === 2)
+                        <div>
+                            <div class="mb-6 flex items-start gap-4">
+                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 10h2m2 0h2M9 14h2m2 0h2" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-950">Datos del consultorio</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Esta información podrá mostrarse posteriormente en tu minisitio.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-5 sm:grid-cols-2">
+                                <div class="sm:col-span-2">
+                                    <label class="dt-label">Nombre público</label>
+                                    <input wire:model="public_name" type="text" class="dt-input">
+                                    @error('public_name')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Teléfono</label>
+                                    <input wire:model="practice_phone" type="text" class="dt-input">
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">WhatsApp</label>
+                                    <input wire:model="practice_whatsapp" type="text" class="dt-input">
+                                </div>
+
+                                <div>
+                                    <label for="postal_code" class="dt-label">Código postal</label>
+                                    <div class="relative">
+                                        <input
+                                            id="postal_code"
+                                            wire:model.live.debounce.500ms="postal_code"
+                                            type="text"
+                                            inputmode="numeric"
+                                            maxlength="5"
+                                            placeholder="Ej. 29025"
+                                            class="dt-input pr-24">
+
+                                        <div
+                                            wire:loading
+                                            wire:target="postal_code"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-600">
+                                            Buscando...
+                                        </div>
+                                    </div>
+
+                                    @error('postal_code')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+
+                                    @if ($postalCodeError)
+                                    <div class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                                        {{ $postalCodeError }} Puedes capturar la dirección manualmente.
+                                    </div>
+                                    @endif
+                                </div>
+
+                                <div>
+                                    <label for="neighborhood" class="dt-label">Colonia</label>
+
+                                    @if (count($neighborhoodOptions) > 0)
+                                    <select id="neighborhood" wire:model="neighborhood" class="dt-select">
+                                        <option value="">Selecciona una colonia</option>
+                                        @foreach ($neighborhoodOptions as $option)
+                                        <option value="{{ $option }}">{{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                    @else
+                                    <input
+                                        id="neighborhood"
+                                        wire:model="neighborhood"
+                                        type="text"
+                                        placeholder="Colonia"
+                                        class="dt-input">
+                                    @endif
+
+                                    @error('neighborhood')
+                                    <p class="mt-1.5 text-sm text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Ciudad / Municipio</label>
+                                    <input wire:model="city" type="text" class="dt-input">
+                                </div>
+
+                                <div>
+                                    <label class="dt-label">Estado</label>
+                                    <input wire:model="state" type="text" class="dt-input">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="dt-label">Dirección</label>
+                                    <input wire:model="address_line_1" type="text" placeholder="Calle y número" class="dt-input">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="dt-label">Interior / complemento</label>
+                                    <input wire:model="address_line_2" type="text" placeholder="Interior, piso, edificio, etc." class="dt-input">
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- PASO 3 --}}
+                        @if ($step === 3)
+                        <div>
+                            <div class="mb-6 flex items-start gap-4">
+                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 2v3m8-3v3M3 9h18M5 5h14a2 2 0 0 1 2 2v12H3V7a2 2 0 0 1 2-2Z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-950">Horarios de atención</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Selecciona los días y horarios en que atiendes.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                @foreach ($days as $dayNumber => $day)
+                                <div
+                                    wire:key="day-{{ $dayNumber }}"
+                                    class="grid items-center gap-3 rounded-2xl border p-4 transition
+                                                {{ $day['enabled']
+                                                    ? 'border-blue-200 bg-blue-50/40'
+                                                    : 'border-slate-200 bg-slate-50/50' }}
+                                                sm:grid-cols-[180px_1fr_1fr]">
+
+                                    <label class="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            wire:model="days.{{ $dayNumber }}.enabled"
+                                            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+
+                                        <span class="font-semibold {{ $day['enabled'] ? 'text-slate-900' : 'text-slate-500' }}">
+                                            {{ $day['label'] }}
+                                        </span>
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        wire:model="days.{{ $dayNumber }}.start_time"
+                                        @disabled(! $day['enabled'])
+                                        class="dt-input disabled:bg-slate-100 disabled:text-slate-400">
+
+                                    <input
+                                        type="time"
+                                        wire:model="days.{{ $dayNumber }}.end_time"
+                                        @disabled(! $day['enabled'])
+                                        class="dt-input disabled:bg-slate-100 disabled:text-slate-400">
+                                </div>
+                                @endforeach
+                            </div>
+
+                            @error('days')
+                            <p class="mt-3 text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
+
+                            <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <label class="dt-label">Duración de cada cita</label>
+                                <select wire:model="appointment_duration" class="dt-select max-w-xs">
+                                    <option value="15">15 minutos</option>
+                                    <option value="20">20 minutos</option>
+                                    <option value="30">30 minutos</option>
+                                    <option value="45">45 minutos</option>
+                                    <option value="60">60 minutos</option>
+                                    <option value="90">90 minutos</option>
+                                </select>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- PASO 4 --}}
+                        @if ($step === 4)
+                        <div>
+                            <div class="mb-7 text-center">
+                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                                    <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6" />
+                                    </svg>
+                                </div>
+                                <h3 class="mt-4 text-2xl font-bold tracking-tight text-slate-950">Todo listo</h3>
+                                <p class="mt-1 text-sm text-slate-500">Revisa tu información antes de finalizar.</p>
+                            </div>
+
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Médico</p>
+                                    <p class="mt-2 font-semibold text-slate-900">{{ $first_name }} {{ $last_name }}</p>
+                                </div>
+
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Consultorio</p>
+                                    <p class="mt-2 font-semibold text-slate-900">{{ $public_name }}</p>
+                                </div>
+
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:col-span-2">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Dirección</p>
+                                    <p class="mt-2 font-medium leading-6 text-slate-800">
+                                        @if ($address_line_1) {{ $address_line_1 }} @endif
+                                        @if ($neighborhood) · {{ $neighborhood }} @endif
+                                        @if ($city) · {{ $city }} @endif
+                                        @if ($state) · {{ $state }} @endif
+                                        @if ($postal_code) · C.P. {{ $postal_code }} @endif
+                                    </p>
+                                </div>
+
+                                <div class="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 sm:col-span-2">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-500">Duración de cita</p>
+                                    <p class="mt-2 text-lg font-bold text-blue-950">{{ $appointment_duration }} minutos</p>
+                                </div>
+                            </div>
+                        </div>
                         @endif
                     </div>
 
-                    {{-- Colonia dinámica --}}
-                    <div>
-                        <label
-                            for="neighborhood"
-                            class="mb-1 block text-sm font-medium">
-                            Colonia
-                        </label>
+                    {{-- Navegación --}}
+                    <div class="flex items-center justify-between border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7 lg:px-8">
+                        <div>
+                            @if ($step > 1)
+                            <button
+                                type="button"
+                                wire:click="previousStep"
+                                class="dt-btn dt-btn-secondary">
+                                Anterior
+                            </button>
+                            @endif
+                        </div>
 
-                        @if (count($neighborhoodOptions) > 0)
-
-                        <select
-                            id="neighborhood"
-                            wire:model="neighborhood"
-                            class="w-full rounded-lg border
-                                           border-slate-300 px-3 py-2">
-                            <option value="">
-                                Selecciona una colonia
-                            </option>
-
-                            @foreach ($neighborhoodOptions as $option)
-                            <option value="{{ $option }}">
-                                {{ $option }}
-                            </option>
-                            @endforeach
-                        </select>
-
-                        @else
-
-                        <input
-                            id="neighborhood"
-                            wire:model="neighborhood"
-                            type="text"
-                            placeholder="Colonia"
-                            class="w-full rounded-lg border
-                                           border-slate-300 px-3 py-2">
-
-                        @endif
-
-                        @error('neighborhood')
-                        <p class="mt-1 text-sm text-red-600">
-                            {{ $message }}
-                        </p>
-                        @enderror
+                        <div>
+                            @if ($step < 4)
+                                <button
+                                type="button"
+                                wire:click="nextStep"
+                                wire:loading.attr="disabled"
+                                class="dt-btn dt-btn-primary disabled:opacity-50">
+                                <span wire:loading.remove wire:target="nextStep">Continuar</span>
+                                <span wire:loading wire:target="nextStep">Validando...</span>
+                                </button>
+                                @else
+                                <button
+                                    type="button"
+                                    wire:click="finish"
+                                    wire:loading.attr="disabled"
+                                    class="dt-btn dt-btn-primary disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="finish">Finalizar configuración</span>
+                                    <span wire:loading wire:target="finish">Guardando...</span>
+                                </button>
+                                @endif
+                        </div>
                     </div>
+                </section>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Ciudad / Municipio
-                        </label>
-
-                        <input
-                            wire:model="city"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">
-                            Estado
-                        </label>
-
-                        <input
-                            wire:model="state"
-                            type="text"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium">
-                            Dirección
-                        </label>
-
-                        <input
-                            wire:model="address_line_1"
-                            type="text"
-                            placeholder="Calle y número"
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium">
-                            Interior / complemento
-                        </label>
-
-                        <input
-                            wire:model="address_line_2"
-                            type="text"
-                            placeholder="Interior, piso, edificio, etc."
-                            class="w-full rounded-lg border
-                                       border-slate-300 px-3 py-2">
-                    </div>
-
-                </div>
-
-            </div>
-
-            @endif
-
-            {{-- PASO 3 --}}
-            @if ($step === 3)
-
-            <div>
-
-                <h2 class="text-xl font-semibold">
-                    Horarios de atención
-                </h2>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Selecciona los días y horarios en que atiendes.
+                <p class="mt-5 text-center text-xs text-slate-400">
+                    DocTotal · Configuración inicial segura
                 </p>
-
-                <div class="mt-6 space-y-3">
-
-                    @foreach ($days as $dayNumber => $day)
-
-                    <div
-                        wire:key="day-{{ $dayNumber }}"
-                        class="grid items-center gap-3 rounded-xl
-                                       border border-slate-200 p-4
-                                       sm:grid-cols-[160px_1fr_1fr]">
-
-                        <label class="flex items-center gap-3">
-
-                            <input
-                                type="checkbox"
-                                wire:model="days.{{ $dayNumber }}.enabled">
-
-                            <span class="font-medium">
-                                {{ $day['label'] }}
-                            </span>
-
-                        </label>
-
-                        <input
-                            type="time"
-                            wire:model="days.{{ $dayNumber }}.start_time"
-                            @disabled(! $day['enabled'])
-                            class="rounded-lg border border-slate-300
-                                           px-3 py-2 disabled:bg-slate-100">
-
-                        <input
-                            type="time"
-                            wire:model="days.{{ $dayNumber }}.end_time"
-                            @disabled(! $day['enabled'])
-                            class="rounded-lg border border-slate-300
-                                           px-3 py-2 disabled:bg-slate-100">
-
-                    </div>
-
-                    @endforeach
-
-                </div>
-
-                @error('days')
-                <p class="mt-3 text-sm text-red-600">
-                    {{ $message }}
-                </p>
-                @enderror
-
-                <div class="mt-6">
-
-                    <label class="mb-1 block text-sm font-medium">
-                        Duración de cada cita
-                    </label>
-
-                    <select
-                        wire:model="appointment_duration"
-                        class="w-full max-w-xs rounded-lg border
-                                   border-slate-300 px-3 py-2">
-                        <option value="15">15 minutos</option>
-                        <option value="20">20 minutos</option>
-                        <option value="30">30 minutos</option>
-                        <option value="45">45 minutos</option>
-                        <option value="60">60 minutos</option>
-                        <option value="90">90 minutos</option>
-                    </select>
-
-                </div>
-
             </div>
-
-            @endif
-
-            {{-- PASO 4 --}}
-            @if ($step === 4)
-
-            <div>
-
-                <h2 class="text-xl font-semibold">
-                    Todo listo
-                </h2>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Revisa tu información antes de finalizar.
-                </p>
-
-                <div class="mt-6 space-y-4">
-
-                    <div class="rounded-xl bg-slate-50 p-4">
-
-                        <p class="text-sm text-slate-500">
-                            Médico
-                        </p>
-
-                        <p class="mt-1 font-medium">
-                            {{ $first_name }} {{ $last_name }}
-                        </p>
-
-                    </div>
-
-                    <div class="rounded-xl bg-slate-50 p-4">
-
-                        <p class="text-sm text-slate-500">
-                            Consultorio
-                        </p>
-
-                        <p class="mt-1 font-medium">
-                            {{ $public_name }}
-                        </p>
-
-                    </div>
-
-                    <div class="rounded-xl bg-slate-50 p-4">
-
-                        <p class="text-sm text-slate-500">
-                            Dirección
-                        </p>
-
-                        <p class="mt-1 font-medium">
-                            @if ($address_line_1)
-                            {{ $address_line_1 }}
-                            @endif
-
-                            @if ($neighborhood)
-                            · {{ $neighborhood }}
-                            @endif
-
-                            @if ($city)
-                            · {{ $city }}
-                            @endif
-
-                            @if ($state)
-                            · {{ $state }}
-                            @endif
-
-                            @if ($postal_code)
-                            · C.P. {{ $postal_code }}
-                            @endif
-                        </p>
-
-                    </div>
-
-                    <div class="rounded-xl bg-slate-50 p-4">
-
-                        <p class="text-sm text-slate-500">
-                            Duración de cita
-                        </p>
-
-                        <p class="mt-1 font-medium">
-                            {{ $appointment_duration }} minutos
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            @endif
-
-            {{-- Navegación --}}
-            <div
-                class="mt-8 flex items-center justify-between
-                       border-t border-slate-200 pt-6">
-
-                <div>
-                    @if ($step > 1)
-
-                    <button
-                        type="button"
-                        wire:click="previousStep"
-                        class="rounded-lg border border-slate-300
-                                   px-4 py-2 text-sm font-medium">
-                        Anterior
-                    </button>
-
-                    @endif
-                </div>
-
-                <div>
-
-                    @if ($step < 4)
-
-                        <button
-                        type="button"
-                        wire:click="nextStep"
-                        wire:loading.attr="disabled"
-                        class="rounded-lg bg-slate-900 px-5 py-2.5
-                                   text-sm font-semibold text-white
-                                   disabled:opacity-50">
-                        Continuar
-                        </button>
-
-                        @else
-
-                        <button
-                            type="button"
-                            wire:click="finish"
-                            wire:loading.attr="disabled"
-                            class="rounded-lg bg-slate-900 px-5 py-2.5
-                                   text-sm font-semibold text-white
-                                   disabled:opacity-50">
-
-                            <span
-                                wire:loading.remove
-                                wire:target="finish">
-                                Finalizar configuración
-                            </span>
-
-                            <span
-                                wire:loading
-                                wire:target="finish">
-                                Guardando...
-                            </span>
-
-                        </button>
-
-                        @endif
-
-                </div>
-
-            </div>
-
-        </div>
-
+        </main>
     </div>
-
 </div>

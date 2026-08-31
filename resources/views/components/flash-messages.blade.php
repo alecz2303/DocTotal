@@ -6,6 +6,7 @@
             title: '¡Listo!',
             text: @json(session('success')),
             confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#2563eb',
         });
     });
 </script>
@@ -19,6 +20,7 @@
             title: 'Ocurrió un problema',
             text: @json(session('error')),
             confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#2563eb',
         });
     });
 </script>
@@ -32,6 +34,7 @@
             title: 'Atención',
             text: @json(session('warning')),
             confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#2563eb',
         });
     });
 </script>
@@ -45,6 +48,7 @@
             title: 'Información',
             text: @json(session('info')),
             confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#2563eb',
         });
     });
 </script>

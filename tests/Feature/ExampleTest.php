@@ -2,17 +2,14 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_root_redirects_to_dashboard(): void
+    public function test_root_displays_public_landing_page(): void
     {
         $this->get('/')
-            ->assertRedirect('/dashboard');
+            ->assertOk()
+            ->assertSee('DocTotal');
     }
 }
