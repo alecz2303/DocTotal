@@ -1,70 +1,70 @@
 DocTotal --- ROADMAP
 
-Este documento define los bloques principales de desarrollo de DocTotal
-y sirve como visión de alto nivel del producto.
+Este documento define los bloques principales de desarrollo de DocTotal y sirve como visión de alto nivel del producto.
 
 DocTotal tiene tres objetivos principales:
 
 Operación clínica
 
-   - Pacientes.
+Pacientes.
 
-   - Agenda.
+Agenda.
 
-   - Citas.
+Citas.
 
-   - Consultas.
+Consultas.
 
-   - Diagnósticos.
+Diagnósticos.
 
-   - Recetas.
+Recetas.
 
-   - Expediente clínico longitudinal.
+Expediente clínico longitudinal.
 
-   - Documentos y archivos clínicos.
+Documentos y archivos clínicos.
 
 Autoadministración SaaS
 
-   - Trial.
+Trial.
 
-   - Suscripciones.
+Suscripciones.
 
-   - Pagos.
+Pagos.
 
-   - Renovaciones.
+Renovaciones.
 
-   - Recuperación de pagos.
+Recuperación de pagos.
 
-   - Suspensión.
+Suspensión.
 
-   - Reactivación.
+Reactivación.
 
-   - Cancelación.
+Cancelación.
 
-   - Referidos.
+Referidos.
 
-   - Promociones.
+Promociones.
 
-   - Créditos.
+Créditos.
 
 Experiencia de producto
 
-   - Convertir la interfaz funcional actual en una experiencia moderna,
-profesional, consistente y agradable para médicos y consultorios.
+Convertir la interfaz funcional en una experiencia moderna, profesional, consistente y agradable para médicos y consultorios.
 
-   - Reducir la apariencia genérica de Livewire.
+Reducir la apariencia genérica de Laravel/Livewire.
 
-   - Construir una identidad visual propia de DocTotal.
+Construir y mantener una identidad visual propia de DocTotal.
+
+Optimizar los flujos según el trabajo real del médico.
 
 DT-1 --- Base multi-tenant database structure
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Construir la base de datos inicial con soporte multi-tenant.
 
-Incluye:
+Incluye
 
 Estructura inicial multi-tenant.
 
@@ -72,7 +72,7 @@ Tenant como entidad principal de aislamiento.
 
 Relaciones base necesarias para el resto del sistema.
 
-Commit principal:
+Commit principal
 
 DT-1 Implement base multi-tenant database structure
 
@@ -80,11 +80,11 @@ DT-2 --- Core Eloquent models and relationships
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Implementar los modelos Eloquent principales y sus relaciones.
 
-Incluye:
+Incluye
 
 Modelos base del dominio.
 
@@ -92,7 +92,7 @@ Relaciones entre entidades.
 
 Preparación para aislamiento por tenant.
 
-Commit principal:
+Commit principal
 
 DT-2 Implement core Eloquent models and relationships
 
@@ -100,12 +100,11 @@ DT-3 --- Tenant isolation and request resolution
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Garantizar aislamiento entre tenants y resolver el tenant activo por
-request.
+Garantizar aislamiento entre tenants y resolver el tenant activo por request.
 
-Incluye:
+Incluye
 
 TenantContext.
 
@@ -115,7 +114,7 @@ Protección contra acceso cruzado entre tenants.
 
 Middleware de tenant.
 
-Commit principal:
+Commit principal
 
 DT-3 Implement tenant isolation and request resolution
 
@@ -123,11 +122,11 @@ DT-4 --- Patient clinical record foundation
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Construir la base inicial del expediente clínico del paciente.
 
-Incluye:
+Incluye
 
 Pacientes.
 
@@ -139,14 +138,11 @@ Base de consultas.
 
 Fundamentos del expediente clínico.
 
-Nota:
+Nota
 
-DT-4 constituye únicamente la foundation inicial.
+DT-4 constituyó la foundation inicial. El expediente longitudinal fue desarrollado posteriormente en DT-14.
 
-El expediente clínico longitudinal completo continúa pendiente en
-bloques posteriores.
-
-Commit principal:
+Commit principal
 
 DT-4 Implement patient clinical record foundation
 
@@ -154,11 +150,11 @@ DT-5 --- Authentication, registration, dashboard and trial
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Implementar autenticación, registro y flujo inicial del usuario.
 
-Incluye:
+Incluye
 
 Registro.
 
@@ -174,7 +170,7 @@ trial_ends_at.
 
 Asociación del usuario con su tenant.
 
-Commit principal:
+Commit principal
 
 DT-5 Implement authentication registration dashboard and trial
 
@@ -182,11 +178,11 @@ DT-6 --- Onboarding wizard and postal code autocomplete
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Construir el onboarding inicial del médico y consultorio.
 
-Incluye:
+Incluye
 
 Wizard de onboarding.
 
@@ -200,7 +196,7 @@ Horarios de atención.
 
 Autocompletado por código postal.
 
-Commit principal:
+Commit principal
 
 DT-6 feat: implement onboarding wizard with postal code autocomplete
 
@@ -208,11 +204,11 @@ DT-7 --- Gestión de pacientes
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Construir el flujo principal de pacientes y expediente.
 
-Incluye:
+Incluye
 
 Listado de pacientes.
 
@@ -228,7 +224,7 @@ Contactos de emergencia.
 
 Integración con consultas.
 
-Commit principal:
+Commit principal
 
 DT-7 Implement gestión de pacientes
 
@@ -236,11 +232,11 @@ DT-8 --- Agenda, citas y ciclo operativo
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
 Construir el sistema completo de agenda y citas.
 
-Incluye:
+Incluye
 
 Creación de citas.
 
@@ -288,106 +284,56 @@ Continuar consulta cuando la cita queda en progreso.
 
 Aislamiento multi-tenant.
 
-Cobertura completa con tests.
+Cobertura automatizada.
 
-Estados de Appointment:
+Baseline al cierre
 
-scheduled
-
-confirmed
-
-checked_in
-
-in_progress
-
-completed
-
-cancelled
-
-no_show
-
-Regla de no-show:
-
-Una cita solamente puede marcarse como no-show cuando:
-
-now() >= ends_at + 15 minutos
-
-El cambio a no-show nunca es automático.
-
-La acción debe ser confirmada por el usuario.
-
-Baseline al cierre de DT-8:
-
-366 tests verdes
+366 tests verdes.
 
 DT-9 --- Consultation workflow and clinical lifecycle
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Convertir Consultation en una entidad clínica persistente desde el
-inicio de la atención.
+Convertir Consultation en una entidad clínica persistente desde el inicio de la atención.
 
-Flujo:
+Flujo
 
 Appointment
-
 → Iniciar consulta
-
 → Appointment = in_progress
-
 → Consultation = draft
-
 → Captura clínica
-
 → Guardar avances
-
 → Continuar posteriormente
-
 → Finalizar consulta
-
 → Consultation = completed
-
 → Appointment = completed
 
-Incluye:
+Incluye
 
 Estado draft.
 
 Estado completed.
 
-Crear Consultation al iniciar una cita.
-
 Una sola Consultation por Appointment.
 
 Consultas sin cita.
 
-Continuar una Consultation existente.
+Continuación y edición de drafts.
 
-Editar consulta mientras está en draft.
+Finalización explícita.
 
-Finalización explícita de Consultation.
+Diagnósticos y diagnóstico principal.
 
-Completar Appointment al finalizar Consultation.
-
-Diagnósticos durante la consulta.
-
-Diagnóstico principal.
-
-Catálogo de diagnósticos.
-
-Autocomplete de diagnósticos.
+Catálogo y autocomplete de diagnósticos.
 
 Recetas asociadas.
 
-Catálogo de medicamentos.
+Catálogo y autocomplete de medicamentos.
 
-Autocomplete de medicamentos.
-
-Edición de recetas.
-
-Cancelación de recetas.
+Edición y cancelación de recetas.
 
 PDF de receta.
 
@@ -397,23 +343,19 @@ Protección multi-tenant.
 
 Tests del ciclo clínico.
 
-Baseline al cierre de DT-9:
+Baseline al cierre
 
-393 tests verdes
+393 tests verdes.
 
 DT-10 --- Product inventory, roadmap and TODO
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Realizar un inventario general de DocTotal antes de continuar
-desarrollando funcionalidades aisladas.
+Realizar un inventario general de DocTotal antes de continuar desarrollando funcionalidades aisladas.
 
-DT-10 establece una visión completa del producto y permite decidir qué
-desarrollar posteriormente según prioridades reales.
-
-Incluye:
+Incluye
 
 Inventario funcional.
 
@@ -423,1028 +365,720 @@ Inventario SaaS.
 
 Inventario visual.
 
-Identificación de funcionalidades existentes.
+Identificación de funcionalidades existentes, parciales e inexistentes.
 
-Identificación de funcionalidades parciales.
-
-Identificación de funcionalidades inexistentes.
-
-Definición de los tres pilares principales de DocTotal.
+Definición de los tres pilares principales.
 
 Creación de ROADMAP.
 
 Creación de TODO.
 
-Identificación del expediente clínico longitudinal como bloque
-futuro.
+Identificación de los grandes bloques futuros.
 
-Identificación de archivos clínicos como bloque independiente.
+Baseline al cierre
 
-Identificación del billing como bloque crítico.
-
-Definición inicial del sistema de referidos.
-
-Identificación del rediseño visual como bloque estratégico.
+393 tests verdes.
+1179 assertions.
+0 failures.
 
 DT-11 --- Subscription lifecycle foundation
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Construir el dominio base de suscripciones necesario para que DocTotal
-pueda administrar posteriormente de forma automática el ciclo económico
-de cada tenant.
+Construir el dominio base de suscripciones necesario para administrar el ciclo económico de cada tenant.
 
-Incluye:
+Incluye
 
 Modelo Subscription.
 
-Relación Tenant → Subscriptions.
+UUID y soft deletes.
 
 Protección multi-tenant.
 
-UUID de Subscription.
+Ciclos monthly/yearly.
 
-Soft deletes.
+Estados active, past_due y cancelled.
 
-Ciclos de facturación:
+Billing anchor.
 
-monthly
+Renovaciones sin billing drift.
 
-yearly
+Manejo de fin de mes y años bisiestos.
 
-Estados de Subscription:
+Cancelación programada.
 
-active
+Reanudación.
 
-past_due
+Transiciones comerciales.
 
-cancelled
+Separación Subscription/Tenant.
 
-Información temporal:
+Derecho de acceso centralizado.
 
-starts_at
+Cobertura automatizada.
 
-current_period_starts_at
+Baseline al cierre
 
-current_period_ends_at
+445 tests verdes.
+0 failures.
 
-next_billing_at
-
-cancel_at_period_end
-
-cancelled_at
-
-Activación
-
-La suscripción comienza exactamente en el instante del primer pago.
-
-Ejemplo:
-
-2026-08-26 16:37:22
-
-La fecha y hora del primer pago se convierten en el billing anchor
-original.
-
-starts_at permanece como referencia original de la suscripción.
-
-Renovación
-
-Se implementó renovación para:
-
-Suscripciones mensuales.
-
-Suscripciones anuales.
-
-La renovación conserva:
-
-Día original cuando existe.
-
-Hora.
-
-Minuto.
-
-Segundo.
-
-Se evita billing drift.
-
-Ejemplo mensual:
-
-31 enero → 28 febrero → 31 marzo → 30 abril → 31 mayo
-
-El paso por un mes corto no modifica permanentemente el día original de
-facturación.
-
-Fin de mes
-
-Las renovaciones utilizan el último día válido del mes cuando el día
-original no existe.
-
-Años bisiestos
-
-Las suscripciones anuales iniciadas el 29 de febrero utilizan el último
-día válido de febrero en años no bisiestos y pueden recuperar el 29
-cuando vuelva a existir.
-
-Cancelación programada
-
-Se soporta:
-
-cancel_at_period_end = true
-
-Esto significa que el tenant conserva acceso hasta:
-
-current_period_ends_at
-
-La suscripción no se cancela antes del final exacto del periodo.
-
-Al finalizar:
-
-status = cancelled
-
-cancel_at_period_end = false
-
-cancelled_at = now()
-
-next_billing_at = null
-
-Estados comerciales
-
-Transiciones implementadas:
-
-active → past_due
-
-past_due → active
-
-active → cancelled
-
-cancelled se considera estado terminal para el lifecycle actual.
-
-Protección contra múltiples suscripciones
-
-Un tenant no puede recibir una nueva suscripción mientras exista una
-suscripción abierta en estado:
-
-active
-
-past_due
-
-Una suscripción past_due debe recuperarse/reactivarse.
-
-No debe crearse otra Subscription para sustituirla.
-
-Subscription vs Tenant
-
-Se separaron explícitamente dos conceptos.
-
-Subscription representa el estado comercial:
-
-active
-
-past_due
-
-cancelled
-
-Tenant representa el estado operativo de la cuenta:
-
-trial
-
-active
-
-suspended
-
-cancelled
-
-Por tanto:
-
-past_due != suspended
-
-Una falla de cobro no implica suspensión inmediata.
-
-Acceso al servicio
-
-Reglas actuales:
-
-Trial vigente:
-
-acceso permitido
-
-Subscription active con periodo vigente:
-
-acceso permitido
-
-Subscription past_due con periodo vigente y Tenant activo:
-
-acceso permitido
-
-Subscription past_due con Tenant suspended:
-
-acceso denegado
-
-Subscription cancelled:
-
-acceso denegado
-
-Periodo de suscripción terminado:
-
-acceso denegado
-
-Tenant cancelled:
-
-acceso denegado
-
-Vigencia temporal
-
-Una Subscription solamente es vigente cuando:
-
-current_period_starts_at <= now()
-
-y:
-
-current_period_ends_at > now()
-
-Una suscripción que comienza en el futuro todavía no es vigente.
-
-Una suscripción cuyo current_period_ends_at es exactamente igual a
-now() ya no es vigente.
-
-Fuera de alcance de DT-11
-
-Se dejan expresamente para DT-12:
-
-Pagos reales.
-
-Payment.
-
-Intentos de cobro.
-
-Proveedor de pagos.
-
-Webhooks.
-
-Idempotencia.
-
-Grace period.
-
-Reintentos.
-
-Suspensión automática.
-
-Reactivación automática por pago.
-
-Scheduler.
-
-Jobs de billing.
-
-Notificaciones comerciales.
-
-Baseline al cierre de DT-11:
-
-445 tests verdes
-
-Commit sugerido:
-
-feat: implement subscription lifecycle foundation DT-11
-
-DT-12 --- Payments, billing recovery and automatic account
-
-lifecycle
+DT-12 --- Payments, billing recovery and automatic account lifecycle
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Conectar la foundation de suscripciones de DT-11 con Stripe y
-convertirla en un sistema de billing SaaS capaz de cobrar, renovar,
-recuperar pagos fallidos, suspender y reactivar tenants con mínima
-intervención manual.
+Conectar Subscription con Stripe y convertirla en un sistema de billing SaaS capaz de cobrar, renovar, recuperar pagos fallidos, suspender y reactivar tenants con mínima intervención manual.
 
-Incluye:
+Incluye
 
 Modelo Payment.
 
-Estados pending, succeeded y failed.
+Stripe.
 
-Registro de importe, moneda, ciclo, intento, pago, fallo y referencia
-del proveedor.
+Stripe Customer.
 
-Stripe como proveedor de pagos.
+SetupIntent.
 
-Stripe Customer por tenant.
+PaymentIntent.
 
-Alta y actualización de métodos de pago mediante SetupIntent.
+Métodos de pago guardados.
 
-Eliminación de método de pago.
-
-Checkout manual para activar una suscripción.
+Checkout manual.
 
 Plan mensual de $600 MXN.
 
 Plan anual de $6,000 MXN.
 
-Cambio mensual ↔ anual programado para el siguiente periodo.
+Cambio mensual ↔ anual.
 
-Renovación mensual y anual conservando el billing anchor.
+Renovaciones automáticas.
 
-Protección contra billing drift.
+Feature flag BILLING_AUTOMATIC_CHARGING_ENABLED.
 
-Cobros automáticos protegidos mediante
-BILLING_AUTOMATIC_CHARGING_ENABLED.
+Recuperación past_due.
 
-Registro de pagos fallidos.
+Grace period de 7 días.
 
-Transición active → past_due.
+Reintentos.
 
-Periodo de gracia de 7 días.
+Idempotencia.
 
-Política de reintentos programados.
+Suspensión y reactivación.
 
-Idempotencia por renovación y por episodio de recuperación.
+Cancelación programada y reanudación.
 
-Recuperación automática mediante tarjeta guardada.
+Historial de pagos.
 
-Recuperación manual mediante tarjeta guardada o tarjeta alternativa.
+Scheduler.
 
-Reactivación de Subscription y Tenant después de recuperar el pago.
+Hardening de estados límite y multi-tenancy.
 
-Suspensión automática del Tenant al vencer el grace period.
-
-Cancelación programada al final del periodo.
-
-Reanudación de una cancelación programada antes del vencimiento.
-
-Protección contra renovación/cobro cuando cancel_at_period_end = true.
-
-Historial de pagos visible en Billing.
-
-Estado de suscripción y recuperación visible en UI.
-
-Scheduler para renovaciones, reintentos, cancelaciones y grace periods
-vencidos.
-
-Commands administrativos de billing.
-
-Protección multi-tenant.
-
-Hardening de estados límite e idempotencia.
-
-Flujo implementado:
-
-next_billing_at
-
-→ intento de cobro
-
-Si el pago es exitoso:
-
-→ Payment = succeeded
-
-→ renovar Subscription
-
-→ mantener Subscription = active
-
-→ mantener Tenant = active
-
-Si el pago falla:
-
-→ Payment = failed
-
-→ Subscription = past_due
-
-→ iniciar grace period
-
-→ programar reintentos
-
-Si se recupera:
-
-→ Payment = succeeded
-
-→ Subscription = active
-
-→ Tenant = active
-
-Si vence el grace period sin recuperación:
-
-→ Subscription = past_due
-
-→ Tenant = suspended
-
-Cancelación:
-
-active
-
-→ cancel_at_period_end = true
-
-→ conservar acceso hasta current_period_ends_at
-
-→ impedir nueva renovación
-
-→ cancelled al final exacto del periodo
-
-La cancelación programada puede revertirse antes del vencimiento.
-
-Validaciones manuales/end-to-end realizadas:
-
-Alta y pago manual con Stripe test mode.
-
-Plan mensual.
-
-Plan anual.
-
-Cambio anual → mensual.
-
-Cambio mensual → anual.
-
-Fallo de renovación.
-
-Recuperación automática.
-
-Tres reintentos fallidos y progresión de retry schedule.
-
-Idempotencia entre episodios de recuperación.
-
-Suspensión exactamente al vencer el grace period.
-
-Recuperación manual.
-
-Pago con tarjeta guardada.
-
-Pago con tarjeta alternativa.
-
-Tarjeta rechazada sin reemplazar el método guardado.
-
-Cancelación programada.
-
-Reanudación de la suscripción.
-
-Protección contra cobro en una suscripción programada para cancelar.
-
-Fuera de alcance / pendiente posterior:
+Fuera de alcance
 
 Webhooks Stripe.
-
-Idempotencia de webhooks.
 
 Recibos/comprobantes.
 
 Facturación fiscal.
 
-Auditoría formal de eventos de billing.
+Auditoría formal de billing.
 
 Notificaciones comerciales.
 
-Eliminación programada del tenant.
+Baseline al cierre
 
-Nota operativa:
-
-Mantener BILLING_AUTOMATIC_CHARGING_ENABLED=false hasta realizar una
-activación controlada de cobros automáticos en el entorno objetivo.
-
-Baseline al cierre de DT-12:
-
-696 tests verdes
-
-0 failures
-
-Commit sugerido:
-
-feat: complete payments billing recovery and automatic account lifecycle
-DT-12
+696 tests verdes.
+0 failures.
 
 DT-13 --- Referral program and promotional credits
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Implementar el programa de referidos de DocTotal y la foundation de
-créditos promocionales integrada con el lifecycle comercial y de
-billing.
+Implementar el programa de referidos y la foundation de créditos promocionales integrada con billing.
 
-Incluye:
+Incluye
 
-Código único y permanente de referido por tenant.
-
-Generación automática y backfill para tenants existentes.
+Código único y permanente por tenant.
 
 Enlace de referido.
 
-Captura opcional del código durante registro.
+Captura durante registro.
 
-Aplicación automática mediante parámetro ref.
-
-Validación del código.
-
-Prevención de auto-referidos.
-
-Prevención de atribuciones duplicadas.
+Prevención de auto-referidos y duplicados.
 
 Modelo Referral.
 
-Estado pendiente hasta el primer pago exitoso.
+Calificación por primer pago exitoso.
 
-Calificación idempotente de referencias.
+Descuento de $50 MXN al referido.
 
-Descuento único de $50 MXN para el referido.
+Crédito de $50 MXN al referidor.
 
-Plan mensual: $600 MXN → $550 MXN.
+Máximo de 5 recompensas / $250 MXN al mes.
 
-Plan anual: $6,000 MXN → $5,950 MXN.
-
-Crédito de $50 MXN para el referidor.
-
-Máximo de 5 recompensas / $250 MXN por mes calendario.
-
-Beneficio del referido independiente del límite mensual del referidor.
-
-Modelo PromotionalCredit.
+PromotionalCredit.
 
 Estados available, reserved y consumed.
 
-Créditos promocionales sin caducidad.
+Reserva, consumo y liberación idempotentes.
 
-Reserva idempotente antes del cobro.
+Integración con pagos, renovaciones y recuperación.
 
-Consumo después de pago exitoso.
+Checkout promocional.
 
-Liberación después de pago fallido o checkout cancelado.
+Limpieza y reconciliación.
 
-Aplicación automática de créditos en pagos manuales.
-
-Aplicación automática de créditos en renovaciones.
-
-Integración con recuperación de pagos.
-
-Desglose de promociones visible en Billing.
-
-Prevención de checkouts manuales pendientes duplicados.
-
-Reutilización idempotente del checkout pendiente.
-
-Cambio mensual ↔ anual mediante cancelación segura del checkout
-anterior.
-
-Estado canceled para pagos abandonados.
-
-Cancelación del PaymentIntent asociado.
-
-Limpieza automática de checkouts manuales abandonados.
-
-Reconciliación segura cuando Stripe reporta succeeded y el Payment local
-continúa pending.
-
-Scheduler horario para limpieza de checkouts.
+Scheduler.
 
 Protección multi-tenant.
 
-Hardening de idempotencia y estados límite.
+Cobertura automatizada.
 
-Cobertura automatizada completa.
+Baseline al cierre
 
-Flujo de referido:
+797 tests verdes.
+2244 assertions.
+0 failures.
 
-Tenant referidor
+Commit principal
 
-→ comparte código
-
-→ nuevo tenant se registra
-
-→ Referral = pending
-
-→ primer pago exitoso del referido
-
-→ Referral = qualified
-
-→ referido obtiene $50 MXN de descuento
-
-→ referidor obtiene $50 MXN de crédito si no alcanzó su límite mensual
-
-→ crédito = available
-
-→ siguiente pago elegible
-
-→ crédito = reserved
-
-→ pago exitoso
-
-→ crédito = consumed
-
-Si el pago falla o el checkout se cancela:
-
-→ crédito vuelve a available
-
-Límite mensual del referidor:
-
-Primeros 5 referidos calificados del mes
-
-→ generan $50 MXN cada uno
-
-→ máximo $250 MXN
-
-Sexto referido y posteriores:
-
-→ no generan crédito adicional para el referidor
-
-→ conservan su propio descuento de $50 MXN
-
-Baseline al cierre de DT-13:
-
-797 tests verdes
-
-2244 assertions
-
-0 failures
-
-Commit sugerido:
-
-feat: complete referral program and promotional credits DT-13
+f4d7322 DT-13 feat: complete referral program and promotional credits
 
 DT-14 --- Expediente clínico longitudinal
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Convertir la información clínica existente del paciente en un expediente
-clínico longitudinal coherente, reutilizando las entidades clínicas
-existentes y evitando duplicar datos o introducir una nueva fuente de
-verdad clínica.
+Convertir la información clínica existente del paciente en un expediente longitudinal coherente, reutilizando las entidades clínicas existentes y evitando nuevas fuentes de verdad.
 
-Incluye:
+Incluye
 
-Auditoría de modelos, migraciones, vistas y tests clínicos existentes.
+Auditoría clínica previa.
 
-Evolución de la vista existente de paciente como expediente
-longitudinal.
+Evolución de patients.show.
 
 Resumen clínico basado en PatientMedicalHistory.
 
 Línea de tiempo clínica unificada.
 
-Inclusión de consultas finalizadas (completed) dentro del historial
-clínico.
+Solo consultas completed en historial oficial.
 
-Exclusión de consultas en borrador (draft) del historial oficial.
+Drafts excluidos.
 
-Diagnósticos mostrados dentro del contexto de la consulta que los
-originó.
+Diagnósticos dentro de su consulta.
 
 Diagnósticos históricos consolidados.
 
-Recetas asociadas a una consulta mostradas dentro de ese evento clínico.
+Recetas vinculadas dentro del evento de consulta.
 
-Recetas independientes (consultation_id = null) mostradas como eventos
-propios.
+Recetas independientes como eventos propios.
 
-Prevención de duplicar como evento independiente una receta ya vinculada
-a consulta.
+Prevención de duplicados.
 
 Tratamientos históricos consolidados.
 
-Consolidación por medicamento + dosis + frecuencia + duración.
-
-Fecha de última prescripción por esquema consolidado.
-
-Enlace a la consulta original.
-
-Enlace a la última receta correspondiente.
-
-Orden cronológico descendente.
+Referencias a entidades originales.
 
 Protección multi-tenant.
 
-Cobertura automatizada de acción, vista e integración.
+Cobertura automatizada.
 
-Decisiones de arquitectura:
+Decisiones de arquitectura
 
-No se creó una tabla adicional de eventos clínicos.
+No crear tabla adicional de eventos.
 
-La línea de tiempo se construye como una proyección de lectura sobre
-Consultation, ConsultationDiagnosis, Prescription y PrescriptionItem.
+Construir la línea de tiempo como proyección sobre las entidades existentes.
 
-PatientMedicalHistory continúa siendo la fuente de antecedentes del
-paciente.
+PatientMedicalHistory continúa como fuente de antecedentes.
 
-Los medicamentos actuales reportados en antecedentes permanecen
-separados de los tratamientos históricos prescritos.
+Medicamentos actuales permanecen separados de tratamientos históricos prescritos.
 
-La consolidación se utiliza solamente para los resúmenes; la línea de
-tiempo conserva las ocurrencias clínicas originales.
+Baseline al cierre
 
-Baseline al cierre de DT-14:
+814 tests verdes.
+2339 assertions.
+0 failures.
 
-814 tests verdes
+Commit principal
 
-2339 assertions
-
-0 failures
-
-Commit principal:
-
-Pendiente del commit final de cierre de DT-14.
+3df050f DT-14 feat: implement longitudinal clinical record
 
 DT-15 --- Clinical files and medical documents
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Incorporar archivos y documentos clínicos al expediente del paciente
-sobre una base segura, multi-tenant y extensible, preparada para
-estudios, laboratorios, imágenes médicas y otros documentos sin duplicar
-el expediente longitudinal de DT-14.
+Incorporar documentos clínicos al expediente sobre una base segura, multi-tenant y extensible.
 
-Incluye:
-
-Auditoría de uploads, filesystem y storage existentes.
+Incluye
 
 Modelo ClinicalDocument.
 
-UUID para routing seguro.
+UUID.
 
-Asociación obligatoria con Patient.
+Asociación con Patient.
 
-Asociación opcional con Consultation.
-
-Validación de que la consulta pertenece al mismo paciente.
+Asociación opcional con Consultation del mismo paciente.
 
 Categorías general, laboratory, imaging y other.
 
-Título, fecha documental, notas, nombre original, MIME type y tamaño.
+Metadata separada del archivo.
 
-Registro opcional del usuario que realizó la carga.
+Storage privado.
 
-Storage privado configurable mediante CLINICAL_DOCUMENTS_DISK.
+CLINICAL_DOCUMENTS_DISK.
 
-Metadata separada de los bytes almacenados.
+PDF, JPG, JPEG, PNG y WebP.
 
-Upload de PDF, JPG, JPEG, PNG y WebP.
+Límite de 10 MB.
 
-Límite actual de 10 MB por archivo.
+Visualización inline.
 
-Visualización inline protegida.
+Miniaturas protegidas.
 
-Miniaturas protegidas para imágenes.
+Descarga segura.
 
-Representación visual de PDF.
+Eliminación controlada.
 
-Descarga segura conservando el nombre original.
+Integración con expediente.
 
-Eliminación controlada de archivo y registro.
+Protección multi-tenant.
 
-Integración dentro del expediente del paciente.
+Hardening de StoreClinicalDocument.
 
-Protección multi-tenant en model binding, lectura, visualización,
-descarga y eliminación.
+ResolveTenant antes de SubstituteBindings.
 
-Hardening de StoreClinicalDocument para validar tenant, uploader, tipo y
-tamaño antes de escribir en storage.
+Cobertura automatizada y validación manual.
 
-Corrección de prioridad de middleware para ejecutar ResolveTenant antes
-de SubstituteBindings.
+Fuera de alcance
 
-Cobertura automatizada y validación manual del flujo completo.
+Cuotas totales de almacenamiento.
 
-Decisiones de arquitectura:
+Proveedor externo definitivo.
 
-Los archivos binarios no se almacenan en base de datos.
+Retención y respaldo definitivos.
 
-ClinicalDocument conserva metadata y referencia de disk + path.
-
-Se utiliza la abstracción Storage para mantener compatibilidad con otros
-proveedores.
-
-No se exponen rutas físicas ni URLs públicas permanentes.
-
-Los documentos existentes conservan el disco con el que fueron creados.
-
-No se implementó una tabla separada para estudios, laboratorios o
-imágenes; DT-15 establece una foundation documental reutilizable.
-
-La eliminación física y la eliminación en base de datos se coordinan de
-forma defensiva, reconociendo que filesystem y DB no forman una
-transacción atómica única.
-
-Fuera de alcance / pendiente posterior:
-
-Límites totales de almacenamiento por tenant.
-
-Proveedor externo definitivo de almacenamiento.
-
-Política definitiva de retención y respaldo.
-
-OCR/extracción.
+OCR.
 
 DICOM/PACS.
 
-Procesamiento avanzado de imágenes.
-
-Interpretación o estructura avanzada de laboratorios.
+Laboratorios estructurados.
 
 Firma digital.
 
 Thumbnails derivados de PDF.
 
-Baseline al cierre de DT-15:
+Baseline al cierre
 
-837 tests verdes
+837 tests verdes.
+2395 assertions.
+0 failures.
 
-2395 assertions
+Commit principal
 
-0 failures
-
-Commit principal:
-
-Pendiente del commit final de cierre de DT-15.
+07f73ec DT-15 feat: implement clinical files and medical documents
 
 DT-16 --- Visual redesign / DocTotal UI
 
 Estado: Completado
 
-Objetivo:
+Objetivo
 
-Transformar la interfaz funcional actual de DocTotal en un producto
-visualmente profesional, moderno, consistente y agradable para médicos.
+Transformar la interfaz funcional de DocTotal en una experiencia visual propia, moderna, profesional, consistente y responsive, preservando workflows y lógica de negocio.
 
-La aplicación no debe conservar una apariencia genérica de Livewire.
+Incluye
 
-Incluye:
+Foundation visual.
 
-Identidad visual.
+Design tokens.
 
-Design system.
+Identidad y branding.
 
-Tipografía.
+Logo y favicons.
 
-Escala de espaciado.
+Shell principal.
 
-Paleta.
+Sidebar y header.
 
-Botones.
-
-Inputs.
-
-Selects.
-
-Autocomplete.
-
-Cards.
-
-Tablas.
-
-Badges.
-
-Modales.
-
-Alerts.
-
-Toasts.
-
-Empty states.
-
-Loading states.
-
-Skeletons.
-
-Navegación.
-
-Dashboard.
-
-Agenda.
+Navegación responsive.
 
 Pacientes.
 
-Expediente.
+Expediente longitudinal.
 
-Consulta.
+Agenda y citas.
+
+Consultas.
 
 Recetas.
 
 Onboarding.
 
+Configuración.
+
 Billing.
 
-Login.
+Login y registro.
 
-Registro.
+Recuperación/restablecimiento de contraseña.
 
-Responsive.
+Correo personalizado de reset.
 
-Accesibilidad.
+Landing pública.
 
-Consistencia visual global.
-
-El rediseño se realizó preservando los workflows funcionales ya
-cubiertos por tests.
-
-Implementado:
-
-Foundation visual y design tokens reutilizables.
-
-Identidad visual, logo, branding y favicons de DocTotal.
-
-Shell principal con sidebar, header y navegación responsive.
-
-Rediseño de pacientes y expediente clínico longitudinal.
-
-Rediseño de agenda y ciclo visual de citas.
-
-Rediseño de consultas.
-
-Rediseño de recetas.
-
-Rediseño de onboarding.
-
-Rediseño de configuración de perfil y Billing.
-
-Rediseño de login y registro.
-
-Recuperación y restablecimiento de contraseña con vistas propias.
-
-Correo personalizado de restablecimiento de contraseña.
-
-Landing page pública de DocTotal.
-
-Revisión visual del dashboard conservando la estructura aprobada.
+Flash messages.
 
 Revisión de receta imprimible y PDF.
 
-Flash messages integrados con la nueva identidad.
+Auditoría visual final.
 
-Ajustes responsive y auditoría visual final.
+Suite completa sin regresiones.
 
-Corrección de regresiones detectadas durante la validación final.
+Baseline al cierre
 
-Fuera de alcance / pendiente posterior:
+837 tests verdes.
+0 failures.
 
-Workspace clínico avanzado.
+Commit principal
 
-Autosave de consultas.
+68fa046 DT-16 feat: complete DocTotal visual redesign
+
+DT-17 --- Clinical workspace / Consulta médica avanzada
+
+Estado: Completado
+
+Objetivo
+
+Evolucionar la consulta desde una experiencia basada principalmente en formulario hacia un workspace clínico avanzado que mantenga visible el contexto relevante del paciente y proteja la captura mediante autosave seguro.
+
+Incluye
+
+Contexto clínico
+
+Workspace responsive.
+
+Resumen rápido del paciente.
+
+Edad.
+
+Sexo.
+
+Grupo sanguíneo.
+
+Alergias.
+
+Medicamentos actuales.
+
+Enfermedades crónicas.
+
+Cirugías.
+
+Antecedentes relevantes.
+
+Consultas recientes finalizadas.
+
+Diagnósticos recientes dentro de su contexto.
+
+Fuentes de verdad
+
+PatientMedicalHistory continúa como fuente de alergias, medicamentos actuales y antecedentes.
+
+Consultation y ConsultationDiagnosis alimentan el historial reciente.
+
+Solo consultas completed se muestran como historia clínica final.
+
+No se creó un nuevo modelo para duplicar información clínica.
+
+Captura clínica
+
+Reorganización de motivo de consulta.
+
+Signos vitales.
+
+SOAP.
+
+Diagnósticos.
+
+Panel contextual persistente.
+
+Barra flotante de acciones.
+
+Autosave
+
+Autosave de Consultation draft.
+
+Guardado automático de campos clínicos.
+
+Estados de cambios pendientes, guardando, guardado y error.
+
+Protección beforeunload frente a cambios pendientes.
+
+Validación
+
+Mensajes de validación en español.
+
+Nombres clínicos amigables.
+
+Resaltado visual de campos inválidos.
+
+Resaltado de signos vitales inválidos.
+
+Scroll automático al primer error.
+
+Foco automático en el primer campo inválido.
+
+Los rangos implementados son límites técnicos de captura y no constituyen alertas clínicas ni un sistema de decisión médica.
+
+Finalización segura
+
+Protección frente a finalización con cambios pendientes.
+
+Protección mientras existe guardado en curso.
+
+Protección cuando existe error de guardado.
+
+Persistencia y validación backend antes de completar.
+
+Una Consultation inválida no puede finalizar.
+
+Appointment solamente se completa después de finalizar correctamente su Consultation.
+
+Compatibilidad
+
+Lifecycle draft/completed preservado.
+
+Appointment ↔ Consultation preservado.
+
+Consultas directas sin cita preservadas.
+
+Continuidad de drafts preservada.
+
+Diagnósticos preservados.
+
+Recetas posteriores a finalización preservadas.
+
+Aislamiento multi-tenant preservado.
+
+Fuera de alcance
+
+Alertas clínicas inteligentes.
+
+Problemas clínicos activos.
+
+Plantillas clínicas.
+
+Plantillas por especialidad.
+
+Motor de decisión clínica.
+
+Repetición avanzada de tratamientos.
+
+Calidad
+
+Tests específicos de consultas:
+
+76 tests verdes.
+
+ConsultationFlowTest:
+
+18 tests verdes.
+
+Suite completa al cierre de DT-17:
+
+840 tests verdes.
+0 failures.
+
+No se registró un número final de assertions para DT-17.
+
+Commit principal
+
+0fb847f DT-17 feat: implement advanced clinical consultation workspace
+
+DT-18 --- Documentation baseline normalization and next DocTotal development block
+
+Estado: En curso
+
+Objetivo
+
+Iniciar el siguiente bloque de desarrollo desde documentación sincronizada con el estado real de DocTotal después de DT-17.
+
+DT-18 comienza normalizando TODO y ROADMAP antes de seleccionar e implementar su siguiente bloque funcional.
+
+Baseline de entrada
+
+Estado funcional heredado de DT-17:
+
+Clinical workspace implementado.
 
 Contexto clínico persistente durante consulta.
 
-Comunicaciones externas completas.
+Autosave seguro.
 
-Panel administrativo interno.
+Validación y protección de finalización.
 
-Auditoría avanzada de accesibilidad.
+DT-17 integrado en master.
 
-Baseline al cierre de DT-16:
+840 tests verdes.
 
-837 tests verdes
+0 failures.
 
-0 failures
+Avance global ponderado al inicio de DT-18: 72%.
 
-Commit principal:
+Este baseline corresponde al cierre validado de DT-17. No implica que se haya registrado una nueva ejecución completa post-merge en master.
 
-Pendiente del commit final de cierre de DT-16.
+Fase 1 — Normalización documental
+
+Actualizar TODO al estado post-DT-17.
+
+Actualizar ROADMAP al estado post-DT-17.
+
+Registrar commits reales de DT-14 a DT-17.
+
+Registrar baseline de 840 tests.
+
+Retirar Clinical workspace de los bloques futuros.
+
+Identificar los pendientes reales del producto.
+
+Establecer la nueva regla documental de inicio/cierre de cada DT.
+
+Fase 2 — Auditoría y selección funcional
+
+Después de normalizar la documentación:
+
+Revisar pendientes.
+
+Revisar dependencias.
+
+Identificar el problema de mayor prioridad.
+
+Definir objetivo.
+
+Definir alcance.
+
+Definir fuera de alcance.
+
+Verificar impacto multi-tenant, clínico y SaaS.
+
+El bloque funcional de DT-18 permanece pendiente de selección hasta completar esta auditoría.
+
+No debe asignarse funcionalidad arbitrariamente antes de finalizar la normalización inicial.
+
+Fase 3 — Desarrollo
+
+Una vez seleccionado el bloque:
+
+Implementación.
+
+Tests específicos.
+
+Integración.
+
+Validación de regresiones.
+
+Fase 4 — Cierre
+
+Suite completa.
+
+Registrar baseline final.
+
+Recalcular avance global con el mismo criterio ponderado.
+
+Normalizar nuevamente TODO.
+
+Normalizar nuevamente ROADMAP.
+
+Commit final.
+
+Merge.
+
+Cierre de Jira.
 
 Estado actual
 
-Bloques completados:
+Bloques completados
 
 DT-1
-
 DT-2
-
 DT-3
-
 DT-4
-
 DT-5
-
 DT-6
-
 DT-7
-
 DT-8
-
 DT-9
-
 DT-10
-
 DT-11
-
 DT-12
-
 DT-13
-
 DT-14
-
 DT-15
-
 DT-16
+DT-17
 
-Baseline actual:
+Bloque en curso
 
-837 tests verdes
+DT-18 — Documentation baseline normalization and next DocTotal development block
 
-0 failures
+Baseline actual de entrada
 
-Próximo bloque:
+840 tests verdes.
+0 failures.
+72% de avance global ponderado.
 
-Pendiente de selección.
+Siguiente bloque funcional
 
-El workspace clínico avanzado continúa como bloque futuro sobre la
-foundation longitudinal de DT-14, la foundation documental de DT-15 y la
-foundation visual de DT-16.
+Pendiente de selección dentro de DT-18 después de la normalización documental y auditoría de prioridades.
+
+El Clinical workspace ya no es un bloque futuro: fue implementado en DT-17.
+
+Regla documental a partir de DT-18
+
+El ciclo documental y de desarrollo queda establecido como:
+
+Inicio del DT
+→ normalización de TODO y ROADMAP contra el estado real heredado
+→ auditoría
+→ definición del bloque
+→ desarrollo
+→ tests
+→ normalización documental final
+→ commit/merge
+→ cierre Jira.
+
+Esto evita que TODO y ROADMAP permanezcan un DT atrás respecto al estado real del producto.
+
+Principio para seleccionar próximos bloques
+
+La selección del siguiente bloque debe considerar conjuntamente:
+
+Valor para el médico.
+
+Valor para la operación del consultorio.
+
+Riesgo clínico.
+
+Riesgo SaaS/comercial.
+
+Seguridad y privacidad.
+
+Dependencias técnicas.
+
+Multi-tenancy.
+
+Madurez de la infraestructura.
+
+Cobertura automatizada.
+
+Experiencia de usuario.
+
+Preparación para producción.
+
+DocTotal debe continuar evolucionando como un producto integrado y no como una colección de funcionalidades aisladas.
