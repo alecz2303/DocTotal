@@ -8,6 +8,7 @@ use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\PatientProblem;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -455,6 +456,44 @@ class PatientClinicalTimelineViewTest extends TestCase
             ->assertSee('400 mg')
             ->assertSee('Cada 8 horas')
             ->assertSee('3 días');
+    }
+
+    public function test_patient_show_displays_active_and_resolved_clinical_problems(): void
+    {
+        [$tenant, $user, $doctor, $patient] =
+            $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        PatientProblem::create([
+            'patient_id' => $patient->id,
+            'code' => 'I10',
+            'description' => 'Hipertensión esencial activa',
+            'status' => PatientProblem::STATUS_ACTIVE,
+            'started_at' => '2026-01-15',
+            'notes' => 'Paciente en seguimiento.',
+        ]);
+
+        PatientProblem::create([
+            'patient_id' => $patient->id,
+            'code' => 'J18',
+            'description' => 'Neumonía adquirida en la comunidad resuelta',
+            'status' => PatientProblem::STATUS_RESOLVED,
+            'started_at' => '2025-11-01',
+            'resolved_at' => '2025-11-20',
+            'notes' => 'Evolución favorable.',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::patients.show', [
+                'uuid' => $patient->uuid,
+            ])
+            ->assertSee('Problemas clínicos')
+            ->assertSee('I10')
+            ->assertSee('Hipertensión esencial activa')
+            ->assertSee('Paciente en seguimiento.')
+            ->assertSee('J18')
+            ->assertSee('Neumonía adquirida en la comunidad resuelta');
     }
 
     private function createContext(): array

@@ -9,8 +9,11 @@ use App\Models\Consultation;
 use App\Models\Patient;
 use App\Models\PatientEmergencyContact;
 use App\Models\PatientMedicalHistory;
+use App\Models\PatientProblem;
+use App\Models\DiagnosisCatalog;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -69,6 +72,26 @@ new
         public ?int $clinical_document_consultation_id = null;
 
         public ?int $editingEmergencyContactId = null;
+
+        public bool $showPatientProblemModal = false;
+
+        public ?int $editingPatientProblemId = null;
+
+        public string $patientProblemSearch = '';
+
+        public string $patient_problem_code = '';
+
+        public string $patient_problem_description = '';
+
+        public string $patient_problem_status = PatientProblem::STATUS_ACTIVE;
+
+        public string $patient_problem_started_at = '';
+
+        public string $patient_problem_resolved_at = '';
+
+        public string $patient_problem_notes = '';
+
+        public Collection $patientProblems;
 
         private function collectionPageCount(
             Collection $collection,
@@ -185,6 +208,291 @@ new
                 ->orderByDesc('document_date')
                 ->orderByDesc('created_at')
                 ->get();
+
+            $this->patientProblems = $this->patient
+                ->problems()
+                ->orderByRaw("
+                    CASE
+                        WHEN status = ? THEN 0
+                        ELSE 1
+                    END
+                ", [PatientProblem::STATUS_ACTIVE])
+                ->orderByDesc('started_at')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        public function openCreatePatientProblemModal(): void
+        {
+            $this->resetPatientProblemForm();
+
+            $this->showPatientProblemModal = true;
+        }
+
+        public function openEditPatientProblemModal(int $problemId): void
+        {
+            $problem = $this->patient
+                ->problems()
+                ->findOrFail($problemId);
+
+            $this->editingPatientProblemId = $problem->id;
+
+            $this->patient_problem_code = $problem->code ?? '';
+            $this->patient_problem_description = $problem->description;
+            $this->patient_problem_status = $problem->status;
+            $this->patient_problem_started_at =
+                $problem->started_at?->format('Y-m-d') ?? '';
+            $this->patient_problem_resolved_at =
+                $problem->resolved_at?->format('Y-m-d') ?? '';
+            $this->patient_problem_notes = $problem->notes ?? '';
+
+            $this->showPatientProblemModal = true;
+        }
+
+        #[Computed]
+        public function patientProblemResults()
+        {
+            $search = trim(
+                $this->patientProblemSearch
+            );
+
+            if (mb_strlen($search) < 2) {
+                return collect();
+            }
+
+            return DiagnosisCatalog::query()
+                ->where('active', true)
+                ->where(
+                    function ($query) use ($search) {
+                        $query
+                            ->where(
+                                'code',
+                                'like',
+                                $search . '%'
+                            )
+                            ->orWhere(
+                                'description',
+                                'like',
+                                '%' . $search . '%'
+                            );
+                    }
+                )
+                ->orderByRaw(
+                    'CASE
+                        WHEN code = ? THEN 0
+                        WHEN code LIKE ? THEN 1
+                        ELSE 2
+                    END',
+                    [
+                        $search,
+                        $search . '%',
+                    ]
+                )
+                ->orderBy('description')
+                ->limit(10)
+                ->get();
+        }
+
+        public function selectPatientProblem(
+            int $catalogId
+        ): void {
+            $diagnosis = DiagnosisCatalog::query()
+                ->where('active', true)
+                ->findOrFail($catalogId);
+
+            $this->patient_problem_code =
+                $diagnosis->code;
+
+            $this->patient_problem_description =
+                $diagnosis->description;
+
+            $this->patientProblemSearch = '';
+
+            unset($this->patientProblemResults);
+        }
+
+        public function savePatientProblem(): void
+        {
+            $validated = $this->validate([
+                'patient_problem_code' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                ],
+                'patient_problem_description' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'patient_problem_status' => [
+                    'required',
+                    'in:'
+                        . PatientProblem::STATUS_ACTIVE
+                        . ','
+                        . PatientProblem::STATUS_RESOLVED,
+                ],
+                'patient_problem_started_at' => [
+                    'nullable',
+                    'date',
+                ],
+                'patient_problem_resolved_at' => [
+                    'nullable',
+                    'date',
+                    'after_or_equal:patient_problem_started_at',
+                ],
+                'patient_problem_notes' => [
+                    'nullable',
+                    'string',
+                    'max:5000',
+                ],
+            ], [], [
+                'patient_problem_code' => 'código',
+                'patient_problem_description' => 'descripción',
+                'patient_problem_status' => 'estado',
+                'patient_problem_started_at' => 'fecha de inicio',
+                'patient_problem_resolved_at' => 'fecha de resolución',
+                'patient_problem_notes' => 'notas',
+            ]);
+
+            if (
+                $validated['patient_problem_status']
+                === PatientProblem::STATUS_ACTIVE
+            ) {
+                $validated['patient_problem_resolved_at'] = null;
+            }
+
+            if (
+                $validated['patient_problem_status']
+                === PatientProblem::STATUS_RESOLVED
+                && empty($validated['patient_problem_resolved_at'])
+            ) {
+                $validated['patient_problem_resolved_at'] =
+                    now()->toDateString();
+            }
+
+            $data = [
+                'code' => $validated['patient_problem_code'] ?: null,
+                'description' => $validated['patient_problem_description'],
+                'status' => $validated['patient_problem_status'],
+                'started_at' => $validated['patient_problem_started_at'] ?: null,
+                'resolved_at' => $validated['patient_problem_resolved_at'] ?: null,
+                'notes' => $validated['patient_problem_notes'] ?: null,
+            ];
+
+            $wasEditing = $this->editingPatientProblemId !== null;
+
+            if ($wasEditing) {
+                $problem = $this->patient
+                    ->problems()
+                    ->findOrFail($this->editingPatientProblemId);
+
+                $problem->update($data);
+            } else {
+                $this->patient
+                    ->problems()
+                    ->create($data);
+            }
+
+            $this->refreshPatientProblems();
+
+            $this->showPatientProblemModal = false;
+
+            $this->resetPatientProblemForm();
+
+            session()->flash(
+                'success',
+                $wasEditing
+                    ? 'Problema clínico actualizado correctamente.'
+                    : 'Problema clínico registrado correctamente.'
+            );
+        }
+
+        public function resolvePatientProblem(int $problemId): void
+        {
+            $problem = $this->patient
+                ->problems()
+                ->findOrFail($problemId);
+
+            $problem->resolve();
+
+            $this->refreshPatientProblems();
+
+            session()->flash(
+                'success',
+                'Problema clínico marcado como resuelto.'
+            );
+        }
+
+        public function reopenPatientProblem(int $problemId): void
+        {
+            $problem = $this->patient
+                ->problems()
+                ->findOrFail($problemId);
+
+            $problem->reopen();
+
+            $this->refreshPatientProblems();
+
+            session()->flash(
+                'success',
+                'Problema clínico reabierto correctamente.'
+            );
+        }
+
+        public function deletePatientProblem(int $problemId): void
+        {
+            $problem = $this->patient
+                ->problems()
+                ->findOrFail($problemId);
+
+            $problem->delete();
+
+            $this->refreshPatientProblems();
+
+            session()->flash(
+                'success',
+                'Problema clínico eliminado correctamente.'
+            );
+        }
+
+        private function refreshPatientProblems(): void
+        {
+            $this->patientProblems = $this->patient
+                ->problems()
+                ->orderByRaw("
+                    CASE
+                        WHEN status = ? THEN 0
+                        ELSE 1
+                    END
+                ", [PatientProblem::STATUS_ACTIVE])
+                ->orderByDesc('started_at')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        private function resetPatientProblemForm(): void
+        {
+            $this->editingPatientProblemId = null;
+
+            $this->patient_problem_code = '';
+            $this->patient_problem_description = '';
+            $this->patient_problem_status =
+                PatientProblem::STATUS_ACTIVE;
+            $this->patient_problem_started_at = '';
+            $this->patient_problem_resolved_at = '';
+            $this->patient_problem_notes = '';
+            $this->patientProblemSearch = '';
+
+            unset($this->patientProblemResults);
+
+            $this->resetValidation([
+                'patient_problem_code',
+                'patient_problem_description',
+                'patient_problem_status',
+                'patient_problem_started_at',
+                'patient_problem_resolved_at',
+                'patient_problem_notes',
+            ]);
         }
 
         public function createEmergencyContact(): void
@@ -1704,6 +2012,314 @@ new
 
         @endif
 
+        {{-- PROBLEMAS CLÍNICOS --}}
+        @php
+        $activePatientProblems = $patientProblems
+        ->where('status', 'active');
+
+        $resolvedPatientProblems = $patientProblems
+        ->where('status', 'resolved');
+        @endphp
+
+        <div class="border-t border-slate-200 bg-white p-4 sm:p-5">
+
+            <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-doctotal-md">
+
+                <div class="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+                    <div class="flex items-start gap-3">
+
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                class="h-5 w-5">
+                                <circle cx="12" cy="12" r="9" />
+                                <path
+                                    d="M12 7v5M12 16h.01"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+
+                                <h3 class="font-semibold text-slate-900">
+                                    Problemas clínicos
+                                </h3>
+
+                                @if ($activePatientProblems->isNotEmpty())
+                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
+                                    {{ $activePatientProblems->count() }}
+                                    {{ $activePatientProblems->count() === 1 ? 'activo' : 'activos' }}
+                                </span>
+                                @endif
+
+                            </div>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Problemas de salud estructurados para seguimiento longitudinal.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="openCreatePatientProblemModal"
+                        class="dt-btn dt-btn-primary">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-4 w-4">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+
+                        Agregar problema
+                    </button>
+
+                </div>
+
+                {{-- PROBLEMAS ACTIVOS --}}
+                @if ($activePatientProblems->isNotEmpty())
+
+                <div class="p-4 sm:p-5">
+
+                    <div class="mb-3 flex items-center gap-2">
+
+                        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Problemas activos
+                        </p>
+
+                    </div>
+
+                    <div class="grid gap-3 lg:grid-cols-2">
+
+                        @foreach ($activePatientProblems as $problem)
+
+                        <article class="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white p-4">
+
+                            <div class="flex items-start justify-between gap-4">
+
+                                <div class="min-w-0 flex-1">
+
+                                    <div class="flex flex-wrap items-center gap-2">
+
+                                        @if ($problem->code)
+                                        <span class="inline-flex items-center rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-600 ring-1 ring-inset ring-slate-200">
+                                            {{ $problem->code }}
+                                        </span>
+                                        @endif
+
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                            Activo
+                                        </span>
+
+                                    </div>
+
+                                    <h4 class="mt-3 font-semibold leading-6 text-slate-900">
+                                        {{ $problem->description }}
+                                    </h4>
+
+                                    @if ($problem->started_at)
+                                    <p class="mt-2 text-xs font-medium text-slate-500">
+                                        Inicio:
+                                        {{ $problem->started_at->format('d/m/Y') }}
+                                    </p>
+                                    @endif
+
+                                    @if ($problem->notes)
+                                    <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
+                                        {{ $problem->notes }}
+                                    </p>
+                                    @endif
+
+                                </div>
+
+                            </div>
+
+                            <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-amber-100 pt-3">
+
+                                <button
+                                    type="button"
+                                    wire:click="openEditPatientProblemModal({{ $problem->id }})"
+                                    class="text-xs font-semibold text-slate-600 hover:text-blue-600">
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="resolvePatientProblem({{ $problem->id }})"
+                                    class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
+                                    Marcar como resuelto
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-data
+                                    x-on:click="
+                                                Swal.fire({
+                                                    title: '¿Eliminar problema clínico?',
+                                                    text: 'El registro dejará de mostrarse en el expediente.',
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Sí, eliminar',
+                                                    cancelButtonText: 'Cancelar'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        $wire.deletePatientProblem({{ $problem->id }})
+                                                    }
+                                                })
+                                            "
+                                    class="text-xs font-semibold text-red-600 hover:text-red-700">
+                                    Eliminar
+                                </button>
+
+                            </div>
+
+                        </article>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+                @else
+
+                <div class="p-5">
+
+                    <div class="dt-empty-state py-7">
+
+                        <div class="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                class="h-5 w-5">
+                                <path d="m5 12 4 4L19 6" />
+                            </svg>
+                        </div>
+
+                        <p class="mt-3 font-medium text-slate-700">
+                            Sin problemas clínicos activos
+                        </p>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            No hay problemas activos registrados actualmente.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                @endif
+
+                {{-- HISTORIAL DE PROBLEMAS RESUELTOS --}}
+                @if ($resolvedPatientProblems->isNotEmpty())
+
+                <div class="border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-5">
+
+                    <div class="mb-3 flex items-center justify-between gap-3">
+
+                        <div class="flex items-center gap-2">
+
+                            <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Historial de problemas resueltos
+                            </p>
+
+                        </div>
+
+                        <span class="text-xs font-semibold text-slate-400">
+                            {{ $resolvedPatientProblems->count() }}
+                        </span>
+
+                    </div>
+
+                    <div class="space-y-2">
+
+                        @foreach ($resolvedPatientProblems as $problem)
+
+                        <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+
+                            <div class="min-w-0">
+
+                                <div class="flex flex-wrap items-center gap-2">
+
+                                    @if ($problem->code)
+                                    <span class="text-xs font-bold text-slate-400">
+                                        {{ $problem->code }}
+                                    </span>
+                                    @endif
+
+                                    <p class="font-medium text-slate-700">
+                                        {{ $problem->description }}
+                                    </p>
+
+                                    <span class="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                        Resuelto
+                                    </span>
+
+                                </div>
+
+                                <p class="mt-1 text-xs text-slate-400">
+                                    @if ($problem->started_at)
+                                    Inicio {{ $problem->started_at->format('d/m/Y') }}
+                                    @endif
+
+                                    @if ($problem->started_at && $problem->resolved_at)
+                                    ·
+                                    @endif
+
+                                    @if ($problem->resolved_at)
+                                    Resuelto {{ $problem->resolved_at->format('d/m/Y') }}
+                                    @endif
+                                </p>
+
+                            </div>
+
+                            <div class="flex shrink-0 items-center gap-3">
+
+                                <button
+                                    type="button"
+                                    wire:click="openEditPatientProblemModal({{ $problem->id }})"
+                                    class="text-xs font-semibold text-slate-500 hover:text-blue-600">
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="reopenPatientProblem({{ $problem->id }})"
+                                    class="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                                    Reabrir
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+                @endif
+
+            </section>
+
+        </div>
+
         {{-- HISTÓRICOS + DOCUMENTOS --}}
         @php
         $summaryPerPage = 4;
@@ -2903,6 +3519,358 @@ new
 
         </div>
 
+    </div>
+
+    @endif
+
+
+    {{-- MODAL PROBLEMA CLÍNICO --}}
+    @if ($showPatientProblemModal)
+
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+        x-data
+        x-on:keydown.escape.window="$wire.showPatientProblemModal = false">
+        <div
+            class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+            x-on:click.stop>
+
+            {{-- HEADER --}}
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+
+                <div class="flex items-start gap-3">
+
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-5 w-5">
+                            <circle cx="12" cy="12" r="9" />
+                            <path
+                                d="M12 7v5M12 16h.01"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">
+                            {{ $editingPatientProblemId
+                                ? 'Editar problema clínico'
+                                : 'Nuevo problema clínico' }}
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Registra un problema de salud para su seguimiento longitudinal.
+                        </p>
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    wire:click="$set('showPatientProblemModal', false)"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Cerrar">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        class="h-5 w-5">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
+
+            </div>
+
+            {{-- FORMULARIO --}}
+            <form wire:submit="savePatientProblem">
+
+                <div class="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6">
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+
+                        {{-- BUSCAR EN CATÁLOGO --}}
+                        <div class="relative sm:col-span-2">
+
+                            <label class="dt-label">
+                                Buscar en catálogo CIE-10
+                            </label>
+
+                            <div class="relative">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path d="m20 20-3.5-3.5" />
+                                </svg>
+
+                                <input
+                                    wire:model.live.debounce.300ms="patientProblemSearch"
+                                    type="search"
+                                    autocomplete="off"
+                                    placeholder="Escribe código o problema, ej. hipertensión..."
+                                    class="dt-input pl-10">
+
+                            </div>
+
+                            @if (mb_strlen(trim($patientProblemSearch)) >= 2)
+
+                            <div class="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+
+                                @forelse ($this->patientProblemResults as $result)
+
+                                <button
+                                    type="button"
+                                    wire:click="selectPatientProblem({{ $result->id }})"
+                                    class="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-blue-50">
+
+                                    <span class="shrink-0 rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">
+                                        {{ $result->code }}
+                                    </span>
+
+                                    <span class="text-sm text-slate-700">
+                                        {{ $result->description }}
+                                    </span>
+
+                                </button>
+
+                                @empty
+
+                                <div class="rounded-xl bg-slate-50 px-4 py-4">
+
+                                    <p class="text-sm font-semibold text-slate-700">
+                                        Sin coincidencias
+                                    </p>
+
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        Puedes capturar el problema clínico manualmente.
+                                    </p>
+
+                                </div>
+
+                                @endforelse
+
+                            </div>
+
+                            @endif
+
+                            <p class="mt-1.5 text-xs text-slate-400">
+                                Busca por código o descripción. Al seleccionar una opción se llenarán automáticamente los campos.
+                            </p>
+
+                        </div>
+
+                        {{-- DESCRIPCIÓN --}}
+                        <div class="sm:col-span-2">
+
+                            <label
+                                for="patient_problem_description"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Problema clínico
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <input
+                                id="patient_problem_description"
+                                type="text"
+                                wire:model="patient_problem_description"
+                                class="dt-input w-full"
+                                placeholder="Ej. Hipertensión arterial"
+                                autofocus>
+
+                            @error('patient_problem_description')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        {{-- CÓDIGO --}}
+                        <div>
+
+                            <label
+                                for="patient_problem_code"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Código
+                            </label>
+
+                            <input
+                                id="patient_problem_code"
+                                type="text"
+                                wire:model="patient_problem_code"
+                                class="dt-input w-full"
+                                placeholder="Ej. I10">
+
+                            <p class="mt-1.5 text-xs text-slate-400">
+                                Opcional. Puede utilizarse para un código diagnóstico.
+                            </p>
+
+                            @error('patient_problem_code')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        {{-- ESTADO --}}
+                        <div>
+
+                            <label
+                                for="patient_problem_status"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Estado
+                            </label>
+
+                            <select
+                                id="patient_problem_status"
+                                wire:model.live="patient_problem_status"
+                                class="dt-input w-full">
+                                <option value="{{ \App\Models\PatientProblem::STATUS_ACTIVE }}">
+                                    Activo
+                                </option>
+
+                                <option value="{{ \App\Models\PatientProblem::STATUS_RESOLVED }}">
+                                    Resuelto
+                                </option>
+                            </select>
+
+                            @error('patient_problem_status')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        {{-- FECHA INICIO --}}
+                        <div>
+
+                            <label
+                                for="patient_problem_started_at"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Fecha de inicio
+                            </label>
+
+                            <input
+                                id="patient_problem_started_at"
+                                type="date"
+                                wire:model="patient_problem_started_at"
+                                class="dt-input w-full">
+
+                            @error('patient_problem_started_at')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        {{-- FECHA RESOLUCIÓN --}}
+                        @if (
+                        $patient_problem_status
+                        === \App\Models\PatientProblem::STATUS_RESOLVED
+                        )
+
+                        <div>
+
+                            <label
+                                for="patient_problem_resolved_at"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Fecha de resolución
+                            </label>
+
+                            <input
+                                id="patient_problem_resolved_at"
+                                type="date"
+                                wire:model="patient_problem_resolved_at"
+                                class="dt-input w-full">
+
+                            <p class="mt-1.5 text-xs text-slate-400">
+                                Si se deja vacía, se utilizará la fecha actual.
+                            </p>
+
+                            @error('patient_problem_resolved_at')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                        @endif
+
+                        {{-- NOTAS --}}
+                        <div class="sm:col-span-2">
+
+                            <label
+                                for="patient_problem_notes"
+                                class="mb-2 block text-sm font-semibold text-slate-700">
+                                Notas
+                            </label>
+
+                            <textarea
+                                id="patient_problem_notes"
+                                wire:model="patient_problem_notes"
+                                rows="4"
+                                class="dt-input w-full resize-y"
+                                placeholder="Información adicional para el seguimiento..."></textarea>
+
+                            @error('patient_problem_notes')
+                            <p class="mt-1.5 text-xs font-medium text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- FOOTER --}}
+                <div class="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+
+                    <button
+                        type="button"
+                        wire:click="$set('showPatientProblemModal', false)"
+                        class="dt-btn dt-btn-secondary">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="savePatientProblem"
+                        class="dt-btn dt-btn-primary">
+                        <span
+                            wire:loading.remove
+                            wire:target="savePatientProblem">
+                            {{ $editingPatientProblemId
+                                ? 'Guardar cambios'
+                                : 'Registrar problema' }}
+                        </span>
+
+                        <span
+                            wire:loading
+                            wire:target="savePatientProblem">
+                            Guardando...
+                        </span>
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
     </div>
 
     @endif
