@@ -707,6 +707,179 @@ class ConsultationFlowTest extends TestCase
             ->assertDontSee('Eliminar');
     }
 
+    public function test_consultation_workspace_displays_patient_clinical_context(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        \App\Models\PatientMedicalHistory::create([
+            'patient_id' => $patient->id,
+            'allergies_text' => 'Penicilina',
+            'current_medications_text' => 'Losartán 50 mg',
+            'chronic_conditions_text' => 'Hipertensión arterial',
+            'surgeries_text' => 'Apendicectomía en 2018',
+            'family_history_text' => 'Madre con diabetes mellitus',
+            'personal_history_text' => 'Sin hospitalizaciones recientes',
+            'habits_text' => 'No fuma',
+        ]);
+
+        $previousConsultation = Consultation::create([
+            'patient_id' => $patient->id,
+            'doctor_profile_id' => $doctor->id,
+            'consultation_at' => now()->subMonth(),
+            'reason' => 'Control de hipertensión',
+            'status' => Consultation::STATUS_COMPLETED,
+            'completed_at' => now()->subMonth(),
+        ]);
+
+        ConsultationDiagnosis::create([
+            'consultation_id' => $previousConsultation->id,
+            'code' => 'I10',
+            'description' => 'Hipertensión esencial',
+            'is_primary' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(
+                route('consultations.create', [
+                    'uuid' => $patient->uuid,
+                ])
+            )
+            ->assertOk()
+            ->assertSee('Contexto clínico')
+            ->assertSee('Penicilina')
+            ->assertSee('Losartán 50 mg')
+            ->assertSee('Hipertensión arterial')
+            ->assertSee('Apendicectomía en 2018')
+            ->assertSee('Control de hipertensión')
+            ->assertSee('Hipertensión esencial');
+    }
+
+    public function test_consultation_can_be_autosaved_as_draft(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'reason',
+                'Dolor lumbar'
+            )
+            ->set(
+                'subjective',
+                'Dolor de tres días de evolución.'
+            )
+            ->call('autosaveDraft')
+            ->assertHasNoErrors();
+
+        $consultation = Consultation::query()
+            ->where(
+                'patient_id',
+                $patient->id
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            Consultation::STATUS_DRAFT,
+            $consultation->status
+        );
+
+        $this->assertSame(
+            'Dolor lumbar',
+            $consultation->reason
+        );
+
+        $this->assertSame(
+            'Dolor de tres días de evolución.',
+            $consultation->subjective
+        );
+
+        $this->assertNull(
+            $consultation->completed_at
+        );
+
+        $this->assertDatabaseCount(
+            'consultations',
+            1
+        );
+    }
+
+    public function test_invalid_consultation_cannot_be_completed(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::consultations.create',
+                [
+                    'uuid' => $patient->uuid,
+                ]
+            )
+            ->set(
+                'reason',
+                'Consulta de seguimiento'
+            )
+            ->set(
+                'temperature_c',
+                99
+            )
+            ->call('completeConsultation')
+            ->assertHasErrors([
+                'temperature_c',
+            ]);
+
+        $consultation = Consultation::query()
+            ->where(
+                'patient_id',
+                $patient->id
+            )
+            ->first();
+
+        if ($consultation) {
+            $this->assertSame(
+                Consultation::STATUS_DRAFT,
+                $consultation->status
+            );
+
+            $this->assertNull(
+                $consultation->completed_at
+            );
+        }
+
+        $this->assertDatabaseMissing(
+            'consultations',
+            [
+                'patient_id' => $patient->id,
+                'status' => Consultation::STATUS_COMPLETED,
+            ]
+        );
+    }
+
     private function createContext(
         string $tenantName = 'Consultorio Test',
         string $tenantSlug = 'consultorio-test',
