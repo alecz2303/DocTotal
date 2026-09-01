@@ -745,6 +745,23 @@ class ConsultationFlowTest extends TestCase
             'is_primary' => true,
         ]);
 
+        \App\Models\PatientProblem::create([
+            'patient_id' => $patient->id,
+            'code' => 'E11',
+            'description' => 'Diabetes mellitus activa',
+            'status' => \App\Models\PatientProblem::STATUS_ACTIVE,
+            'started_at' => now()->subMonths(6)->toDateString(),
+        ]);
+
+        \App\Models\PatientProblem::create([
+            'patient_id' => $patient->id,
+            'code' => 'J18',
+            'description' => 'Neumonía resuelta',
+            'status' => \App\Models\PatientProblem::STATUS_RESOLVED,
+            'started_at' => now()->subYear()->toDateString(),
+            'resolved_at' => now()->subMonths(8)->toDateString(),
+        ]);
+
         $this->actingAs($user)
             ->get(
                 route('consultations.create', [
@@ -757,6 +774,10 @@ class ConsultationFlowTest extends TestCase
             ->assertSee('Losartán 50 mg')
             ->assertSee('Hipertensión arterial')
             ->assertSee('Apendicectomía en 2018')
+            ->assertSee('Problemas clínicos activos')
+            ->assertSee('E11')
+            ->assertSee('Diabetes mellitus activa')
+            ->assertDontSee('Neumonía resuelta')
             ->assertSee('Control de hipertensión')
             ->assertSee('Hipertensión esencial');
     }

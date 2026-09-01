@@ -65,6 +65,15 @@ new
             $this->patient = Patient::query()
                 ->with([
                     'medicalHistory',
+                    'problems' => function ($query) {
+                        $query
+                            ->where(
+                                'status',
+                                \App\Models\PatientProblem::STATUS_ACTIVE
+                            )
+                            ->orderByDesc('started_at')
+                            ->orderByDesc('created_at');
+                    },
                     'consultations' => function ($query) {
                         $query
                             ->with('diagnoses')
@@ -1201,6 +1210,57 @@ new
                         <p class="mt-2 whitespace-pre-line text-sm text-slate-800">
                             {{ $patient->medicalHistory?->current_medications_text ?: 'Sin medicamentos registrados' }}
                         </p>
+                    </div>
+
+                    {{-- ACTIVE CLINICAL PROBLEMS --}}
+                    <div class="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-xs font-bold uppercase tracking-wide text-violet-700">
+                                Problemas clínicos activos
+                            </p>
+
+                            @if ($patient->problems->isNotEmpty())
+                            <span class="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold text-violet-700">
+                                {{ $patient->problems->count() }}
+                            </span>
+                            @endif
+                        </div>
+
+                        @if ($patient->problems->isEmpty())
+                        <p class="mt-2 text-sm text-slate-700">
+                            Sin problemas clínicos activos
+                        </p>
+                        @else
+                        <div class="mt-3 space-y-3">
+                            @foreach ($patient->problems as $problem)
+                            <div class="rounded-xl border border-violet-100 bg-white/80 px-3 py-2.5">
+                                <div class="flex items-start gap-2">
+                                    @if ($problem->code)
+                                    <span class="shrink-0 rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
+                                        {{ $problem->code }}
+                                    </span>
+                                    @endif
+
+                                    <p class="min-w-0 text-sm font-semibold leading-5 text-slate-900">
+                                        {{ $problem->description }}
+                                    </p>
+                                </div>
+
+                                @if ($problem->started_at)
+                                <p class="mt-1.5 text-xs text-slate-500">
+                                    Desde {{ $problem->started_at->format('d/m/Y') }}
+                                </p>
+                                @endif
+
+                                @if ($problem->notes)
+                                <p class="mt-2 line-clamp-3 text-xs leading-5 text-slate-600">
+                                    {{ $problem->notes }}
+                                </p>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
 
                     {{-- CHRONIC CONDITIONS --}}

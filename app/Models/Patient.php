@@ -65,6 +65,11 @@ class Patient extends Model
         return $this->hasOne(PatientMedicalHistory::class);
     }
 
+    public function problems(): HasMany
+    {
+        return $this->hasMany(PatientProblem::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'uuid';
