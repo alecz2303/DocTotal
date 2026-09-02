@@ -16,6 +16,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\AuditEvent;
 
 new
     #[Layout('layouts::app')]
@@ -92,6 +93,10 @@ new
         public string $patient_problem_notes = '';
 
         public Collection $patientProblems;
+
+        public Collection $auditEvents;
+
+        public int $auditEventsPage = 1;
 
         private function collectionPageCount(
             Collection $collection,
@@ -179,6 +184,25 @@ new
             );
         }
 
+        public function previousAuditEventsPage(): void
+        {
+            $this->auditEventsPage = max(
+                1,
+                $this->auditEventsPage - 1
+            );
+        }
+
+        public function nextAuditEventsPage(): void
+        {
+            $this->auditEventsPage = min(
+                $this->collectionPageCount(
+                    $this->auditEvents,
+                    5
+                ),
+                $this->auditEventsPage + 1
+            );
+        }
+
         public function mount(
             string $uuid,
             BuildPatientClinicalTimeline $buildPatientClinicalTimeline
@@ -219,6 +243,19 @@ new
                 ", [PatientProblem::STATUS_ACTIVE])
                 ->orderByDesc('started_at')
                 ->orderByDesc('created_at')
+                ->get();
+
+            $this->auditEvents = AuditEvent::query()
+                ->with('user')
+                ->where(
+                    'auditable_type',
+                    $this->patient->getMorphClass()
+                )
+                ->where(
+                    'auditable_id',
+                    $this->patient->id
+                )
+                ->latest('created_at')
                 ->get();
         }
 
@@ -3202,6 +3239,363 @@ new
                 @endforelse
 
             </div>
+
+        </div>
+
+    </section>
+
+    {{-- HISTORIAL DE ACTIVIDAD --}}
+    @php
+    $auditEventsPerPage = 5;
+
+    $auditEventsPageCount = max(
+    1,
+    (int) ceil(
+    $auditEvents->count() / $auditEventsPerPage
+    )
+    );
+
+    $visibleAuditEvents = $auditEvents
+    ->forPage(
+    $auditEventsPage,
+    $auditEventsPerPage
+    );
+    @endphp
+    <section class="dt-card mt-5 overflow-hidden shadow-doctotal-md">
+
+        <div
+            class="dt-card-header flex flex-col gap-3 bg-white
+                sm:flex-row sm:items-center sm:justify-between">
+
+            <div class="flex items-start gap-3">
+
+                <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center
+                        rounded-xl bg-indigo-50 text-indigo-600">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        class="h-4.5 w-4.5">
+
+                        <path
+                            d="M12 3a9 9 0 1 0 9 9"
+                            stroke-linecap="round" />
+
+                        <path
+                            d="M12 7v5l3 2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round" />
+
+                        <path
+                            d="M16 3h5v5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round" />
+
+                        <path
+                            d="M21 3l-4 4"
+                            stroke-linecap="round" />
+
+                    </svg>
+
+                </div>
+
+                <div>
+
+                    <h2 class="font-semibold text-slate-900">
+                        Historial de actividad
+                    </h2>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Registro de acciones relevantes realizadas sobre este expediente.
+                    </p>
+
+                </div>
+
+            </div>
+
+            @if ($auditEvents->isNotEmpty())
+
+            <span
+                class="inline-flex items-center self-start rounded-full
+                        bg-indigo-50 px-3 py-1.5
+                        text-xs font-semibold text-indigo-700
+                        ring-1 ring-inset ring-indigo-200
+                        sm:self-auto">
+
+                {{ $auditEvents->count() }}
+                {{ $auditEvents->count() === 1 ? 'evento' : 'eventos' }}
+
+            </span>
+
+            @endif
+
+        </div>
+
+        <div class="bg-slate-50/40">
+
+            @forelse ($visibleAuditEvents as $auditEvent)
+
+            @php
+            $auditLabel = match ($auditEvent->action) {
+            'patient.updated' => 'Datos del paciente actualizados',
+            'consultation.completed' => 'Consulta finalizada',
+            'appointment.rescheduled' => 'Cita reprogramada',
+            default => $auditEvent->description
+            ?: 'Actividad registrada',
+            };
+
+            $auditTone = match ($auditEvent->action) {
+            'patient.updated' => [
+            'icon' => 'bg-blue-50 text-blue-600',
+            'dot' => 'bg-blue-500',
+            ],
+
+            'consultation.completed' => [
+            'icon' => 'bg-emerald-50 text-emerald-600',
+            'dot' => 'bg-emerald-500',
+            ],
+
+            'appointment.rescheduled' => [
+            'icon' => 'bg-violet-50 text-violet-600',
+            'dot' => 'bg-violet-500',
+            ],
+
+            default => [
+            'icon' => 'bg-slate-100 text-slate-600',
+            'dot' => 'bg-slate-400',
+            ],
+            };
+            @endphp
+
+            <article
+                class="border-b border-slate-100 bg-white
+                        px-4 py-4 last:border-0
+                        sm:px-5">
+
+                <div class="flex items-start gap-4">
+
+                    {{-- ICONO --}}
+                    <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center
+                                rounded-xl {{ $auditTone['icon'] }}">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-5 w-5">
+
+                            <path
+                                d="M12 3a9 9 0 1 0 9 9"
+                                stroke-linecap="round" />
+
+                            <path
+                                d="M12 7v5l3 2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round" />
+
+                        </svg>
+
+                    </div>
+
+                    {{-- CONTENIDO --}}
+                    <div class="min-w-0 flex-1">
+
+                        <div
+                            class="flex flex-col gap-1
+                                    sm:flex-row sm:items-center
+                                    sm:justify-between sm:gap-4">
+
+                            <div class="flex min-w-0 items-center gap-2">
+
+                                <span
+                                    class="h-2 w-2 shrink-0 rounded-full
+                                            {{ $auditTone['dot'] }}">
+                                </span>
+
+                                <p class="font-semibold text-slate-900">
+                                    {{ $auditLabel }}
+                                </p>
+
+                            </div>
+
+                            <time
+                                datetime="{{ $auditEvent->created_at->toISOString() }}"
+                                class="shrink-0 text-xs font-medium text-slate-400">
+
+                                {{ $auditEvent->created_at->format('d/m/Y H:i') }}
+
+                            </time>
+
+                        </div>
+
+                        <div
+                            class="mt-2 flex flex-wrap items-center gap-x-4
+                                    gap-y-1 text-sm text-slate-500">
+
+                            <span class="inline-flex items-center gap-1.5">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    class="h-4 w-4">
+
+                                    <circle cx="12" cy="8" r="4" />
+
+                                    <path d="M5 21a7 7 0 0 1 14 0" />
+
+                                </svg>
+
+                                {{ $auditEvent->user?->name ?? 'Sistema' }}
+
+                            </span>
+
+                            @if ($auditEvent->description)
+
+                            <span class="hidden text-slate-300 sm:inline">
+                                •
+                            </span>
+
+                            <span>
+                                {{ $auditEvent->description }}
+                            </span>
+
+                            @endif
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+            @empty
+
+            <div class="p-6">
+
+                <div class="dt-empty-state py-7">
+
+                    <div
+                        class="mx-auto flex h-11 w-11 items-center justify-center
+                                rounded-2xl bg-indigo-50 text-indigo-600">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-5 w-5">
+
+                            <path
+                                d="M12 3a9 9 0 1 0 9 9"
+                                stroke-linecap="round" />
+
+                            <path
+                                d="M12 7v5l3 2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round" />
+
+                        </svg>
+
+                    </div>
+
+                    <p class="mt-3 font-medium text-slate-700">
+                        Sin actividad registrada
+                    </p>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Las acciones relevantes realizadas sobre este expediente
+                        aparecerán aquí.
+                    </p>
+
+                </div>
+
+            </div>
+
+            @endforelse
+
+            @if ($auditEvents->isNotEmpty())
+
+            <div
+                class="flex items-center justify-between gap-3
+                        border-t border-slate-100 bg-slate-50/70
+                        px-4 py-3 sm:px-5">
+
+                <p class="text-xs text-slate-500">
+                    Página {{ $auditEventsPage }}
+                    de {{ $auditEventsPageCount }}
+                </p>
+
+                <div class="flex items-center gap-1">
+
+                    <button
+                        type="button"
+                        wire:click="previousAuditEventsPage"
+                        @disabled($auditEventsPage <=1)
+                        aria-label="Página anterior del historial de actividad"
+                        class="inline-flex h-8 w-8 items-center justify-center
+                                rounded-lg border border-slate-200 bg-white
+                                text-slate-500 shadow-sm
+                                hover:border-slate-300 hover:text-slate-900
+                                disabled:pointer-events-none disabled:opacity-40">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-4 w-4">
+
+                            <path
+                                d="m15 18-6-6 6-6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round" />
+
+                        </svg>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        wire:click="nextAuditEventsPage"
+                        @disabled(
+                        $auditEventsPage>= $auditEventsPageCount
+                        )
+                        aria-label="Página siguiente del historial de actividad"
+                        class="inline-flex h-8 w-8 items-center justify-center
+                        rounded-lg border border-slate-200 bg-white
+                        text-slate-500 shadow-sm
+                        hover:border-slate-300 hover:text-slate-900
+                        disabled:pointer-events-none disabled:opacity-40">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            class="h-4 w-4">
+
+                            <path
+                                d="m9 18 6-6-6-6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round" />
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            @endif
 
         </div>
 

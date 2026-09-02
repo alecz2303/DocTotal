@@ -13,6 +13,7 @@ use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
+use App\Models\AuditEvent;
 
 class PatientClinicalTimelineViewTest extends TestCase
 {
@@ -494,6 +495,52 @@ class PatientClinicalTimelineViewTest extends TestCase
             ->assertSee('Paciente en seguimiento.')
             ->assertSee('J18')
             ->assertSee('Neumonía adquirida en la comunidad resuelta');
+    }
+
+    public function test_patient_show_paginates_audit_activity_history(): void
+    {
+        [$tenant, $user, $doctor, $patient] =
+            $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        for ($i = 1; $i <= 6; $i++) {
+            AuditEvent::create([
+                'user_id' => $user->id,
+                'action' => 'patient.updated',
+                'auditable_type' => $patient->getMorphClass(),
+                'auditable_id' => $patient->id,
+                'description' => 'Evento de auditoría ' . $i,
+                'metadata' => [],
+                'created_at' => now()->addSeconds($i),
+                'updated_at' => now()->addSeconds($i),
+            ]);
+        }
+
+        Livewire::actingAs($user)
+            ->test('pages::patients.show', [
+                'uuid' => $patient->uuid,
+            ])
+            ->assertSee('Historial de actividad')
+            ->assertSet('auditEventsPage', 1)
+            ->assertSee('Evento de auditoría 6')
+            ->assertSee('Evento de auditoría 5')
+            ->assertSee('Evento de auditoría 4')
+            ->assertSee('Evento de auditoría 3')
+            ->assertSee('Evento de auditoría 2')
+            ->assertDontSee('Evento de auditoría 1')
+
+            ->call('nextAuditEventsPage')
+
+            ->assertSet('auditEventsPage', 2)
+            ->assertSee('Evento de auditoría 1')
+            ->assertDontSee('Evento de auditoría 6')
+
+            ->call('previousAuditEventsPage')
+
+            ->assertSet('auditEventsPage', 1)
+            ->assertSee('Evento de auditoría 6')
+            ->assertDontSee('Evento de auditoría 1');
     }
 
     private function createContext(): array

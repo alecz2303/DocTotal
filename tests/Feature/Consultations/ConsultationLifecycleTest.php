@@ -13,6 +13,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use LogicException;
 use Tests\TestCase;
+use App\Models\AuditEvent;
+use Livewire\Livewire;
+
 
 class ConsultationLifecycleTest extends TestCase
 {
@@ -227,6 +230,96 @@ class ConsultationLifecycleTest extends TestCase
         $this->assertNotSame(
             '',
             $consultation->uuid
+        );
+    }
+
+    public function test_completing_consultation_creates_audit_event(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::consultations.create', [
+            'uuid' => $patient->uuid,
+        ])
+            ->set(
+                'consultation_at',
+                '2026-09-02T10:00'
+            )
+            ->set(
+                'reason',
+                'Consulta general'
+            )
+            ->set(
+                'subjective',
+                'Paciente refiere malestar general.'
+            )
+            ->call('completeConsultation');
+
+        $consultation = Consultation::query()
+            ->where(
+                'patient_id',
+                $patient->id
+            )
+            ->latest('id')
+            ->firstOrFail();
+
+        $event = AuditEvent::query()
+            ->where(
+                'action',
+                'consultation.completed'
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            $tenant->id,
+            $event->tenant_id
+        );
+
+        $this->assertSame(
+            $user->id,
+            $event->user_id
+        );
+
+        $this->assertSame(
+            Consultation::class,
+            $event->auditable_type
+        );
+
+        $this->assertSame(
+            $consultation->id,
+            $event->auditable_id
+        );
+
+        $this->assertNull(
+            $event->metadata['appointment_id']
+        );
+
+        $this->assertArrayNotHasKey(
+            'subjective',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'objective',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'assessment',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'plan',
+            $event->metadata
         );
     }
 

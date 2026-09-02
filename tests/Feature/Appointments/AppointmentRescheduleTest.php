@@ -3,6 +3,7 @@
 namespace Tests\Feature\Appointments;
 
 use App\Models\Appointment;
+use App\Models\AuditEvent;
 use App\Models\DoctorProfile;
 use App\Models\Patient;
 use App\Models\Schedule;
@@ -383,6 +384,125 @@ class AppointmentRescheduleTest extends TestCase
         $this->assertSame(
             Appointment::STATUS_SCHEDULED,
             $appointment->status
+        );
+    }
+
+    public function test_rescheduling_appointment_creates_audit_event(): void
+    {
+        $this->travelTo(
+            Carbon::parse('2026-08-24 08:00:00')
+        );
+
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $this->createSchedule(
+            $doctor,
+            3,
+            '14:00',
+            '16:00'
+        );
+
+        $appointment = $this->createAppointment(
+            $doctor,
+            $patient,
+            '2026-08-25 09:00:00',
+            '2026-08-25 09:30:00'
+        );
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::appointments.reschedule',
+                [
+                    'uuid' => $appointment->uuid,
+                ]
+            )
+            ->set(
+                'date',
+                '2026-08-26'
+            )
+            ->set(
+                'time',
+                '14:30'
+            )
+            ->call(
+                'rescheduleAppointment'
+            )
+            ->assertHasNoErrors();
+
+        $event = AuditEvent::query()
+            ->where(
+                'action',
+                'appointment.rescheduled'
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            $tenant->id,
+            $event->tenant_id
+        );
+
+        $this->assertSame(
+            $user->id,
+            $event->user_id
+        );
+
+        $this->assertSame(
+            Appointment::class,
+            $event->auditable_type
+        );
+
+        $this->assertSame(
+            $appointment->id,
+            $event->auditable_id
+        );
+
+        $this->assertTrue(
+            Carbon::parse(
+                $event->metadata['previous_starts_at']
+            )->equalTo(
+                Carbon::parse('2026-08-25 09:00:00')
+            )
+        );
+
+        $this->assertTrue(
+            Carbon::parse(
+                $event->metadata['previous_ends_at']
+            )->equalTo(
+                Carbon::parse('2026-08-25 09:30:00')
+            )
+        );
+
+        $this->assertTrue(
+            Carbon::parse(
+                $event->metadata['new_starts_at']
+            )->equalTo(
+                Carbon::parse('2026-08-26 14:30:00')
+            )
+        );
+
+        $this->assertTrue(
+            Carbon::parse(
+                $event->metadata['new_ends_at']
+            )->equalTo(
+                Carbon::parse('2026-08-26 15:00:00')
+            )
+        );
+
+        $this->assertArrayNotHasKey(
+            'patient_id',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'reason',
+            $event->metadata
         );
     }
 
