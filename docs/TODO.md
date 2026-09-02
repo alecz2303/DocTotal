@@ -3921,3 +3921,28 @@ Todo esto debe presentarse mediante una experiencia visual propia,
 profesional, agradable y diseñada específicamente para el trabajo
 
 médico.
+
+
+---
+
+## Cola priorizada de próximos bloques
+
+> Orden acordado después de DT-21. Al cerrar cada bloque se continuará con el siguiente pendiente, salvo que se decida explícitamente cambiar la prioridad.
+
+1. 🏥 **Panel administrativo interno SaaS**
+   Consola interna para operar DocTotal: tenants, usuarios, trials, suscripciones, pagos, incidencias de cobro, cuentas suspendidas, comunicaciones, auditoría y estado general.
+
+2. 📱 **Interacción del paciente con citas**
+   Confirmación, cancelación y solicitud de reprogramación mediante enlaces seguros, integrados con la infraestructura de comunicaciones.
+
+3. 📋 **Plantillas clínicas**
+   Plantillas reutilizables para consultas y base para plantillas por especialidad.
+
+4. 🧪 **Laboratorios estructurados**
+   Estudios, resultados estructurados e historial longitudinal, sin interpretación clínica automática.
+
+5. 🔐 **Seguridad de cuenta**
+   2FA, passkeys, verificación de correo, sesiones activas y revocación de sesiones/dispositivos.
+
+6. 💊 **Repetición de tratamientos/recetas**
+   Crear nuevas recetas a partir de tratamientos anteriores conservando inmutable el historial.
