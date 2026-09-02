@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**74% completado**
+**77% completado**
 
-`███████████████░░░░░` 74%
+`███████████████░░░░░` 77%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -12,9 +12,11 @@ tests.
 
 > Baseline anterior normalizado en DT-18: 72%.
 >
-> Baseline actual al cierre técnico de DT-19: 74%.
+> Baseline al cierre de DT-19: 74%.
 >
-> Suite completa actual: 854 tests verdes / 0 failures.
+> Baseline actual al cierre técnico de DT-20: 77%.
+>
+> Suite completa actual: 910 tests verdes / 0 failures.
 >
 > El porcentaje representa avance global ponderado del producto y no cobertura de tests.
 
@@ -1661,59 +1663,146 @@ promocionales integrada con el lifecycle de billing.
 
 # 19. Comunicaciones
 
-Actualmente no existe infraestructura completa de comunicaciones
+Relacionado principalmente con DT-20.
 
-externas.
+DT-20 construyó la foundation transaccional multi-tenant de comunicaciones
+de DocTotal y el primer flujo operativo de recordatorios de citas.
 
--   [ ] Infraestructura de notificaciones.
+## Foundation implementada
 
--   [ ] Correo transaccional.
+-   [x] Modelo `Communication`.
 
--   [ ] WhatsApp.
+-   [x] Persistencia multi-tenant mediante `BelongsToTenant`.
 
--   [ ] SMS.
+-   [x] Relaciones con Patient y Appointment.
 
-## Citas
+-   [x] Snapshot del destinatario.
 
--   [ ] Confirmación de cita.
+-   [x] Tipo, canal, asunto opcional, cuerpo y metadata.
 
--   [ ] Recordatorio de cita.
+-   [x] Estados `pending`, `sent`, `failed` y `cancelled`.
 
--   [ ] Cancelación.
+-   [x] `scheduled_for`, `sent_at`, `failed_at`, `next_attempt_at` y `cancelled_at`.
 
--   [ ] Reprogramación.
+-   [x] Conteo de intentos, último error y motivo de cancelación.
 
--   [ ] Confirmación por paciente.
+-   [x] `idempotency_key` único por tenant.
 
-## SaaS
+-   [x] Historial persistente y auditable.
 
--   [ ] Bienvenida.
+## Transportes y procesamiento
 
--   [ ] Trial próximo a vencer.
+-   [x] Contrato `CommunicationTransport`.
 
--   [ ] Trial vencido.
+-   [x] `CommunicationTransportManager`.
 
--   [ ] Pago próximo.
+-   [x] Canales preparados: email, WhatsApp y SMS.
 
--   [ ] Pago exitoso.
+-   [x] Configuración independiente por canal.
 
--   [ ] Pago fallido.
+-   [x] Ausencia segura de proveedor configurado.
 
--   [ ] Reintento de pago.
+-   [x] Sin transport no se simula un envío exitoso.
 
--   [ ] Cuenta suspendida.
+-   [x] Sin transport no se consume intento.
 
--   [ ] Cuenta reactivada.
+-   [x] `CommunicationProcessor`.
 
--   [ ] Cancelación de suscripción.
+-   [x] Máximo actual de 3 intentos.
+
+-   [x] Backoff de 5 y 15 minutos.
+
+-   [x] `communications:process-due`.
+
+-   [x] Procesamiento aislado por tenant.
+
+-   [x] Scheduler de procesamiento.
+
+## Recordatorios de citas
+
+-   [x] `AppointmentReminderService`.
+
+-   [x] Recordatorios para citas futuras `scheduled` y `confirmed`.
+
+-   [x] Programación ideal 24 horas antes.
+
+-   [x] Si la ventana ideal ya pasó, queda elegible para envío inmediato.
+
+-   [x] Idempotencia por appointment UUID + canal + timestamp de cita.
+
+-   [x] Una reprogramación genera una nueva identidad de recordatorio.
+
+-   [x] Citas canceladas no generan recordatorio nuevo.
+
+-   [x] Falta de contacto requerido omite la generación.
+
+-   [x] `communications:generate-appointment-reminders`.
+
+-   [x] Canal y ventana futura configurables.
+
+-   [x] Scheduler horario de generación.
+
+## Protección contra recordatorios obsoletos
+
+-   [x] `AppointmentReminderValidator`.
+
+-   [x] Validación antes del procesamiento.
+
+-   [x] Cancelación de recordatorios de citas que dejaron de ser elegibles.
+
+-   [x] Cancelación del recordatorio anterior después de reprogramar.
+
+-   [x] Comparación contra `appointment_starts_at` persistido en metadata.
+
+-   [x] Cancelación sin consumir intento.
+
+-   [x] Conservación del motivo para auditoría.
+
+## Integración visual
+
+-   [x] Historial de comunicaciones dentro del detalle de cita.
+
+-   [x] Estado, canal, destinatario y tipo.
+
+-   [x] Fechas de creación, programación y envío.
+
+-   [x] Intentos y próximo intento.
+
+-   [x] Fecha y motivo de cancelación.
+
+-   [x] Último error.
+
+-   [x] Empty state.
+
+## Pendiente futuro
+
+-   [ ] Proveedor real de correo.
+
+-   [ ] Proveedor real de WhatsApp.
+
+-   [ ] Proveedor real de SMS.
+
+-   [ ] Confirmación externa por paciente.
+
+-   [ ] Avisos automáticos de cancelación y reprogramación.
+
+-   [ ] Comunicaciones de trial y billing.
+
+-   [ ] Preferencias/consentimiento por canal.
+
+-   [!] Evaluar hardening adicional de concurrencia para despliegues distribuidos.
 
 ## Decisiones
 
--   \[!\] Definir proveedor de correo.
+La arquitectura no se acopla a un proveedor específico.
 
--   \[!\] Definir proveedor de WhatsApp.
+La ausencia de proveedor nunca debe marcar una comunicación como enviada.
 
--   \[!\] Definir proveedor de SMS.
+Los recordatorios obsoletos se cancelan y conservan como historial.
+
+Las comunicaciones transaccionales se mantienen separadas de campañas de
+marketing o envíos masivos.
+
 
 # 20. Diseño y experiencia visual
 
@@ -2188,7 +2277,11 @@ de producción.
 
 -   [ ] Procesamiento de eliminaciones.
 
--   [ ] Procesamiento de notificaciones.
+-   [x] Procesamiento programado de comunicaciones transaccionales.
+
+-   [x] Generación programada de recordatorios de citas.
+
+-   [~] Envío real pendiente de transports/proveedores.
 
 -   [ ] Monitoreo de queues.
 
@@ -2274,11 +2367,19 @@ Normalización documental integrada en master.
 
 Baseline heredado: 840 tests verdes / 0 failures.
 
-Cierre técnico DT-19:
+Cierre DT-19:
 
 854 tests verdes.
 
 0 failures.
+
+Cierre técnico DT-20:
+
+910 tests verdes.
+
+0 failures.
+
+Assertions finales de DT-20 no registradas; no se infieren.
 
 ## Cobertura existente
 
@@ -2387,7 +2488,9 @@ paciente.
 
 -   [ ] Tests de webhooks.
 
--   [ ] Tests de notificaciones.
+-   [x] Tests de comunicaciones transaccionales y recordatorios.
+
+-   [x] Tests de idempotencia, transports, reintentos y recordatorios obsoletos.
 
 -   [ ] Tests de seguridad adicionales.
 
@@ -3077,7 +3180,7 @@ Avance global ponderado:
 
 ## DT-19 --- Structured active clinical problem list
 
-Estado: Cierre técnico completado; pendiente commit, merge y cierre Jira.
+Estado: Completado.
 
 Objetivo:
 
@@ -3180,13 +3283,111 @@ Avance global ponderado al cierre técnico:
 
 74%.
 
+Cierre definitivo:
+
+-   [x] Commit final DT-19.
+
+-   [x] Merge a `master`.
+
+-   [x] Cierre Jira DT-19.
+
+Commit principal:
+
+`d6f2678 DT-19 feat: implement structured active clinical problem list`
+
+
+## DT-20 --- Transactional communications and appointment reminders foundation
+
+Estado: Cierre técnico completado; pendiente commit, merge y cierre Jira.
+
+Objetivo:
+
+Construir una foundation multi-tenant, persistente y extensible para
+comunicaciones transaccionales y habilitar el primer flujo real de
+recordatorios de citas sin acoplar DocTotal a un proveedor específico.
+
+Incluye:
+
+-   [x] Modelo `Communication`.
+
+-   [x] Relaciones con Patient y Appointment.
+
+-   [x] Estados `pending`, `sent`, `failed` y `cancelled`.
+
+-   [x] Snapshot de destinatario y contenido.
+
+-   [x] Idempotencia por tenant.
+
+-   [x] `CommunicationTransport`.
+
+-   [x] `CommunicationTransportManager`.
+
+-   [x] Configuración independiente por email, WhatsApp y SMS.
+
+-   [x] `CommunicationProcessor`.
+
+-   [x] Reintentos con backoff y máximo de 3 intentos.
+
+-   [x] Manejo seguro cuando no existe transport configurado.
+
+-   [x] `AppointmentReminderService`.
+
+-   [x] Generación idempotente de recordatorios.
+
+-   [x] Comandos de generación y procesamiento.
+
+-   [x] Scheduler.
+
+-   [x] `AppointmentReminderValidator`.
+
+-   [x] Cancelación auditable de recordatorios obsoletos.
+
+-   [x] Protección ante cancelación, finalización, no-show y reprogramación.
+
+-   [x] Historial visual de comunicaciones en el detalle de la cita.
+
+-   [x] Protección multi-tenant.
+
+-   [x] Cobertura automatizada.
+
+Validación:
+
+56 tests verdes en la regresión específica de DT-20.
+
+148 tests verdes en la regresión de appointments después de la integración
+visual.
+
+Suite completa:
+
+910 tests verdes.
+
+0 failures.
+
+Assertions finales no registradas; no se infieren.
+
+Avance global ponderado al cierre técnico:
+
+77%.
+
+Fuera de alcance:
+
+-   [ ] Campañas de marketing y envíos masivos.
+
+-   [ ] Proveedores reales obligatorios en este DT.
+
+-   [ ] Confirmación externa por paciente.
+
+-   [ ] Alertas clínicas e inferencia médica automática.
+
 Pendiente para cierre definitivo:
 
--   [ ] Commit final DT-19.
+-   [ ] Commit final DT-20.
 
 -   [ ] Merge a `master`.
 
--   [ ] Cierre Jira DT-19.
+-   [ ] Comentario técnico de cierre en Jira.
+
+-   [ ] Transición de DT-20 a `Listo`.
 
 
 # 27. Candidatos para siguientes DT
@@ -3416,20 +3617,22 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual después de DT-19
+# Baseline actual después de DT-20
 
 Avance global ponderado:
 
-74%.
+77%.
 
 Suite completa:
 
-854 tests verdes.
+910 tests verdes.
 
 0 failures.
 
-DT-19 se encuentra técnicamente terminado y pendiente únicamente de su
-commit final, merge a `master` y cierre en Jira.
+Assertions finales no registradas; no se infieren.
+
+DT-20 se encuentra técnicamente terminado y pendiente de su commit final,
+merge a `master` y cierre en Jira.
 
 # 32. Visión de producto
 

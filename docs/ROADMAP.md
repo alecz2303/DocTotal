@@ -1086,15 +1086,7 @@ DT-18 fue integrado en `master`.
 
 ## DT-19 — Structured active clinical problem list
 
-Estado: Cierre técnico completado
-
-Pendiente:
-
-- Commit final.
-
-- Merge a `master`.
-
-- Cierre Jira.
+Estado: Completado
 
 Objetivo:
 
@@ -1356,17 +1348,143 @@ Avance global ponderado al cierre técnico de DT-19:
 
 `74%`
 
+Cierre definitivo:
+
+- Documentación actualizada.
+
+- Commit final realizado.
+
+- Merge a `master`.
+
+- Comentario técnico registrado en Jira.
+
+- DT-19 transicionado a `Listo`.
+
+Commit principal:
+
+`d6f2678 DT-19 feat: implement structured active clinical problem list`
+
+---
+
+## DT-20 — Transactional communications and appointment reminders foundation
+
+Estado: Cierre técnico completado
+
+Pendiente:
+
+- Commit final.
+
+- Merge a `master`.
+
+- Cierre Jira.
+
+Objetivo:
+
+Construir una foundation multi-tenant, persistente, auditable y extensible
+para comunicaciones transaccionales, implementando como primer caso real
+los recordatorios de citas.
+
+Incluye:
+
+- Modelo `Communication`.
+
+- Relaciones con Patient y Appointment.
+
+- Estados `pending`, `sent`, `failed` y `cancelled`.
+
+- Snapshot de destinatario, contenido y metadata.
+
+- Idempotencia por tenant.
+
+- Contrato `CommunicationTransport`.
+
+- `CommunicationTransportManager`.
+
+- Preparación para email, WhatsApp y SMS.
+
+- Ausencia segura de proveedor configurado.
+
+- `CommunicationProcessor`.
+
+- Máximo de 3 intentos.
+
+- Backoff de 5 y 15 minutos.
+
+- `communications:process-due`.
+
+- `AppointmentReminderService`.
+
+- Generación idempotente por cita, canal y horario.
+
+- `communications:generate-appointment-reminders`.
+
+- Scheduler.
+
+- `AppointmentReminderValidator`.
+
+- Cancelación auditable de recordatorios obsoletos.
+
+- Protección ante reprogramación y cambios de estado.
+
+- Historial visual de comunicaciones dentro de la cita.
+
+- Protección multi-tenant.
+
+Decisiones:
+
+DocTotal no utiliza un transport nulo que simule éxito.
+
+Si no existe transport configurado, la comunicación permanece pendiente y
+no consume intento.
+
+Una reprogramación crea una nueva identidad de recordatorio y el anterior
+se conserva como cancelado para auditoría.
+
+La capa de comunicaciones permanece independiente de proveedores concretos.
+
+Fuera de alcance:
+
+- Campañas de marketing.
+
+- Envíos masivos.
+
+- Proveedores reales obligatorios.
+
+- Confirmación externa por paciente.
+
+- Alertas clínicas.
+
+- Inferencia médica automática.
+
+Validación:
+
+`56 tests verdes` en la regresión específica de DT-20.
+
+`148 tests verdes` en appointments después de la integración visual.
+
+Suite completa al cierre técnico:
+
+`910 tests verdes`
+
+`0 failures`
+
+Assertions finales no registradas; no se infieren.
+
+Avance global ponderado al cierre técnico:
+
+`77%`
+
 Cierre pendiente:
 
 - Actualización documental final.
 
-- Commit final DT-19.
+- Commit final DT-20.
 
 - Merge a `master`.
 
 - Comentario técnico de cierre en Jira.
 
-- Transición de DT-19 a `Listo`.
+- Transición de DT-20 a `Listo`.
 
 ---
 
@@ -1604,19 +1722,21 @@ DT completados:
 
 - DT-18.
 
+- DT-19.
+
 DT con cierre técnico completado:
 
-- DT-19.
+- DT-20.
 
 Baseline funcional actual:
 
-`854 tests verdes`
+`910 tests verdes`
 
 `0 failures`
 
 Avance global ponderado:
 
-`74%`
+`77%`
 
 DocTotal cuenta actualmente con una base clínica, operativa, SaaS y visual considerablemente más madura que al inicio del roadmap.
 
