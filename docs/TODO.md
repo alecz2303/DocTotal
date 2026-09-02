@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**77% completado**
+**79% completado**
 
-`███████████████░░░░░` 77%
+`████████████████░░░░` 79%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -14,11 +14,14 @@ tests.
 >
 > Baseline al cierre de DT-19: 74%.
 >
-> Baseline actual al cierre técnico de DT-20: 77%.
+> Baseline al cierre de DT-20: 77%.
 >
-> Suite completa actual: 910 tests verdes / 0 failures.
+> Baseline actual al cierre técnico de DT-21: 79%.
 >
-> El porcentaje representa avance global ponderado del producto y no cobertura de tests.
+> Suite completa actual: 936 tests verdes / 0 failures.
+>
+> El porcentaje representa avance global ponderado del producto y no
+> cobertura de tests.
 
 Este documento representa el estado funcional actual de DocTotal y sirve
 
@@ -751,7 +754,7 @@ Relacionado principalmente con DT-9.
 
 -   [x] Historial reciente accesible sin abandonar consulta.
 
--   [x] Problemas clínicos activos visibles durante consulta — DT-19.
+-   [x] Problemas clínicos activos visibles durante consulta --- DT-19.
 
 -   [x] Problemas resueltos excluidos del contexto activo.
 
@@ -801,7 +804,8 @@ formulario.
 
 -   [x] Historial consolidado de diagnósticos por paciente.
 
--   [x] Problemas clínicos activos estructurados mediante `PatientProblem`.
+-   [x] Problemas clínicos activos estructurados mediante
+    `PatientProblem`.
 
 -   [x] Resolución y reapertura de problemas clínicos.
 
@@ -949,7 +953,7 @@ Relacionado principalmente con DT-15.
 
 -   [ ] Resultados de laboratorio estructurados.
 
--   [!] Definir política de conservación, retención y respaldo.
+-   \[!\] Definir política de conservación, retención y respaldo.
 
 # 12. Dashboard
 
@@ -1665,8 +1669,9 @@ promocionales integrada con el lifecycle de billing.
 
 Relacionado principalmente con DT-20.
 
-DT-20 construyó la foundation transaccional multi-tenant de comunicaciones
-de DocTotal y el primer flujo operativo de recordatorios de citas.
+DT-20 construyó la foundation transaccional multi-tenant de
+comunicaciones de DocTotal y el primer flujo operativo de recordatorios
+de citas.
 
 ## Foundation implementada
 
@@ -1682,7 +1687,8 @@ de DocTotal y el primer flujo operativo de recordatorios de citas.
 
 -   [x] Estados `pending`, `sent`, `failed` y `cancelled`.
 
--   [x] `scheduled_for`, `sent_at`, `failed_at`, `next_attempt_at` y `cancelled_at`.
+-   [x] `scheduled_for`, `sent_at`, `failed_at`, `next_attempt_at` y
+    `cancelled_at`.
 
 -   [x] Conteo de intentos, último error y motivo de cancelación.
 
@@ -1726,7 +1732,8 @@ de DocTotal y el primer flujo operativo de recordatorios de citas.
 
 -   [x] Programación ideal 24 horas antes.
 
--   [x] Si la ventana ideal ya pasó, queda elegible para envío inmediato.
+-   [x] Si la ventana ideal ya pasó, queda elegible para envío
+    inmediato.
 
 -   [x] Idempotencia por appointment UUID + canal + timestamp de cita.
 
@@ -1748,11 +1755,13 @@ de DocTotal y el primer flujo operativo de recordatorios de citas.
 
 -   [x] Validación antes del procesamiento.
 
--   [x] Cancelación de recordatorios de citas que dejaron de ser elegibles.
+-   [x] Cancelación de recordatorios de citas que dejaron de ser
+    elegibles.
 
 -   [x] Cancelación del recordatorio anterior después de reprogramar.
 
--   [x] Comparación contra `appointment_starts_at` persistido en metadata.
+-   [x] Comparación contra `appointment_starts_at` persistido en
+    metadata.
 
 -   [x] Cancelación sin consumir intento.
 
@@ -1790,19 +1799,20 @@ de DocTotal y el primer flujo operativo de recordatorios de citas.
 
 -   [ ] Preferencias/consentimiento por canal.
 
--   [!] Evaluar hardening adicional de concurrencia para despliegues distribuidos.
+-   \[!\] Evaluar hardening adicional de concurrencia para despliegues
+    distribuidos.
 
 ## Decisiones
 
 La arquitectura no se acopla a un proveedor específico.
 
-La ausencia de proveedor nunca debe marcar una comunicación como enviada.
+La ausencia de proveedor nunca debe marcar una comunicación como
+enviada.
 
 Los recordatorios obsoletos se cancelan y conservan como historial.
 
 Las comunicaciones transaccionales se mantienen separadas de campañas de
 marketing o envíos masivos.
-
 
 # 20. Diseño y experiencia visual
 
@@ -2110,11 +2120,59 @@ System.
 
 # 22. Auditoría, privacidad y seguridad
 
--   [ ] Auditoría de acciones sensibles.
+DT-21 incorporó la foundation formal de auditoría sensible de DocTotal.
+El alcance actual es deliberadamente limitado y extensible.
 
--   [ ] Historial de cambios clínicos.
+## Foundation implementada en DT-21
 
--   [ ] Historial de cambios de citas.
+-   [x] Modelo `AuditEvent`.
+
+-   [x] Persistencia multi-tenant mediante `BelongsToTenant`.
+
+-   [x] Actor opcional mediante `user_id`.
+
+-   [x] Asociación polimórfica con el recurso auditado.
+
+-   [x] Acción, descripción, timestamps, IP y user agent.
+
+-   [x] Metadata controlada.
+
+-   [x] Sanitización recursiva de metadata sensible.
+
+-   [x] Redacción de variantes de password, token, authorization,
+    cookie, secret y api_key.
+
+-   [x] `AuditLogger`.
+
+-   [x] `safeLog()` best-effort para no romper la operación principal
+    cuando falla la persistencia de auditoría.
+
+-   [x] Registro técnico de fallos de auditoría mediante logging de
+    Laravel.
+
+-   [x] Protección append-only a nivel Eloquent para update/delete
+    normales.
+
+-   [x] Aislamiento de eventos entre tenants.
+
+-   [x] Tests de integridad, aislamiento, actor, recurso, metadata y
+    fallos.
+
+## Flujos sensibles auditados actualmente
+
+-   [x] Actualización de datos generales del paciente.
+
+-   [x] Finalización de consulta.
+
+-   [x] Reprogramación de cita.
+
+-   [x] Cancelación de cita.
+
+-   \[\~\] Historial de cambios clínicos: foundation disponible; no se
+    auditan todavía todas las mutaciones clínicas.
+
+-   \[\~\] Historial de cambios de citas: reprogramación y cancelación
+    auditadas; otras transiciones pueden incorporarse posteriormente.
 
 -   [ ] Historial de cambios de recetas.
 
@@ -2122,13 +2180,33 @@ System.
 
 -   [ ] Historial de pagos.
 
--   [ ] Eventos administrativos.
+-   [ ] Eventos administrativos internos.
+
+## Integración visual
+
+-   [x] Historial de actividad dentro del expediente del paciente.
+
+-   [x] Actor, descripción y fecha/hora.
+
+-   [x] Paginación de 5 eventos.
+
+-   [x] Empty state.
+
+-   [x] Detalles técnicos y metadata no expuestos en la tarjeta visual.
+
+-   \[!\] La tarjeta del paciente muestra eventos cuyo recurso auditado
+    es Patient; no mezcla automáticamente eventos de Consultation o
+    Appointment.
+
+## Seguridad y privacidad pendiente
 
 -   [x] Protección base de archivos clínicos.
 
--   [ ] Revisión de autorización.
+-   \[\~\] Protección de información sensible en metadata de auditoría.
 
--   [ ] Revisión de validaciones.
+-   [ ] Revisión integral de autorización.
+
+-   [ ] Revisión integral de validaciones.
 
 -   [ ] Rate limiting.
 
@@ -2136,23 +2214,39 @@ System.
 
 -   [ ] Auditoría de 2FA/passkeys.
 
+-   [ ] Administración y revocación de sesiones/dispositivos.
+
 -   [ ] Backups.
 
 -   [ ] Restauración.
 
--   [ ] Logs de producción.
+-   [ ] Logging estructurado de producción.
 
 -   [ ] Monitoreo de errores.
-
--   [ ] Protección de información sensible.
 
 -   [ ] Política de retención.
 
 -   [ ] Política de eliminación.
 
--   \[!\] Revisión integral antes de manejar información real de
+-   [ ] Inmutabilidad de auditoría garantizada a nivel de base de datos.
 
-pacientes.
+-   [ ] Outbox/transacción durable para garantizar persistencia de
+    auditoría ante fallos de infraestructura.
+
+-   \[!\] Revisión integral antes de manejar información real de
+    pacientes.
+
+Decisiones:
+
+La auditoría actual es best-effort. Una falla al persistir un
+`AuditEvent` no debe cambiar el resultado funcional de la operación
+principal.
+
+La protección append-only de DT-21 existe a nivel del modelo Eloquent y
+no debe documentarse como garantía de inmutabilidad de base de datos.
+
+La metadata de auditoría debe mantenerse mínima y evitar secretos,
+tokens, contraseñas y payload clínico innecesario.
 
 # 23. Operación interna de DocTotal
 
@@ -2281,7 +2375,7 @@ de producción.
 
 -   [x] Generación programada de recordatorios de citas.
 
--   [~] Envío real pendiente de transports/proveedores.
+-   \[\~\] Envío real pendiente de transports/proveedores.
 
 -   [ ] Monitoreo de queues.
 
@@ -2380,6 +2474,14 @@ Cierre técnico DT-20:
 0 failures.
 
 Assertions finales de DT-20 no registradas; no se infieren.
+
+Cierre técnico DT-21:
+
+936 tests verdes.
+
+0 failures.
+
+Assertions finales de DT-21 no registradas; no se infieren.
 
 ## Cobertura existente
 
@@ -2490,9 +2592,16 @@ paciente.
 
 -   [x] Tests de comunicaciones transaccionales y recordatorios.
 
--   [x] Tests de idempotencia, transports, reintentos y recordatorios obsoletos.
+-   [x] Tests de idempotencia, transports, reintentos y recordatorios
+    obsoletos.
 
--   [ ] Tests de seguridad adicionales.
+-   [x] Tests de foundation de auditoría, aislamiento, integridad y
+    redacción.
+
+-   [x] Tests de fiabilidad best-effort de auditoría.
+
+-   \[\~\] Tests de seguridad adicionales fuera del alcance inicial de
+    DT-21.
 
 # 26. Estado de los DT
 
@@ -3293,12 +3402,11 @@ Cierre definitivo:
 
 Commit principal:
 
-`d6f2678 DT-19 feat: implement structured active clinical problem list`
-
+`1dd4ad7 DT-19 feat: implement structured active clinical problem list`
 
 ## DT-20 --- Transactional communications and appointment reminders foundation
 
-Estado: Cierre técnico completado; pendiente commit, merge y cierre Jira.
+Estado: Completado.
 
 Objetivo:
 
@@ -3342,7 +3450,8 @@ Incluye:
 
 -   [x] Cancelación auditable de recordatorios obsoletos.
 
--   [x] Protección ante cancelación, finalización, no-show y reprogramación.
+-   [x] Protección ante cancelación, finalización, no-show y
+    reprogramación.
 
 -   [x] Historial visual de comunicaciones en el detalle de la cita.
 
@@ -3354,8 +3463,8 @@ Validación:
 
 56 tests verdes en la regresión específica de DT-20.
 
-148 tests verdes en la regresión de appointments después de la integración
-visual.
+148 tests verdes en la regresión de appointments después de la
+integración visual.
 
 Suite completa:
 
@@ -3379,16 +3488,128 @@ Fuera de alcance:
 
 -   [ ] Alertas clínicas e inferencia médica automática.
 
+Cierre definitivo:
+
+-   [x] Commit final DT-20.
+
+-   [x] Merge a `master`.
+
+-   [x] Comentario técnico de cierre en Jira.
+
+-   [x] Transición de DT-20 a `Listo`.
+
+Commit principal:
+
+`9192020 DT-20 feat: implement transactional communications and appointment reminders`
+
+## DT-21 --- Audit trail and security hardening foundation
+
+Estado: Cierre técnico completado; pendiente commit, merge y cierre
+Jira.
+
+Objetivo:
+
+Construir una foundation reusable de auditoría y hardening para acciones
+sensibles, con aislamiento multi-tenant, trazabilidad y metadata
+controlada, sin acoplar los modelos clínicos a una implementación
+específica de logging.
+
+Incluye:
+
+-   [x] Modelo `AuditEvent`.
+
+-   [x] Migración e índices de auditoría.
+
+-   [x] `BelongsToTenant` y aislamiento por tenant.
+
+-   [x] Actor opcional.
+
+-   [x] Recurso polimórfico auditable.
+
+-   [x] `AuditLogger`.
+
+-   [x] Sanitización recursiva de metadata sensible.
+
+-   [x] `safeLog()` best-effort.
+
+-   [x] Logging técnico cuando la auditoría falla.
+
+-   [x] Protección append-only a nivel Eloquent.
+
+-   [x] Auditoría de `patient.updated`.
+
+-   [x] Auditoría de `consultation.completed`.
+
+-   [x] Auditoría de `appointment.rescheduled`.
+
+-   [x] Auditoría de `appointment.cancelled`.
+
+-   [x] Historial visual de actividad en expediente de paciente.
+
+-   [x] Paginación de 5 eventos.
+
+-   [x] Cobertura automatizada.
+
+Decisiones:
+
+La operación principal no debe fallar únicamente porque no pudo
+persistirse el evento de auditoría.
+
+La protección append-only actual es de modelo Eloquent, no una garantía
+de inmutabilidad a nivel de base de datos.
+
+La metadata debe ser mínima y no duplicar contenido clínico sensible.
+
+Validación:
+
+58 tests verdes en la regresión focalizada de DT-21.
+
+13 tests verdes en la regresión del historial visual/paginación.
+
+11 tests verdes en AppointmentShow después del ajuste final a
+`safeLog()`.
+
+Suite completa final:
+
+936 tests verdes.
+
+0 failures.
+
+Assertions finales no registradas; no se infieren.
+
+Avance global ponderado al cierre técnico:
+
+79%.
+
+Fuera de alcance:
+
+-   [ ] SIEM completo.
+
+-   [ ] Auditoría exhaustiva de lecturas.
+
+-   [ ] Backups/restauración integral.
+
+-   [ ] 2FA obligatorio.
+
+-   [ ] Passkeys.
+
+-   [ ] Gestión avanzada de dispositivos.
+
+-   [ ] Retención legal definitiva.
+
+-   [ ] Inmutabilidad garantizada por base de datos.
+
+-   [ ] Outbox transaccional de auditoría.
+
 Pendiente para cierre definitivo:
 
--   [ ] Commit final DT-20.
+-   [ ] Commit final DT-21.
 
 -   [ ] Merge a `master`.
 
 -   [ ] Comentario técnico de cierre en Jira.
 
--   [ ] Transición de DT-20 a `Listo`.
-
+-   [ ] Transición de DT-21 a `Listo`.
 
 # 27. Candidatos para siguientes DT
 
@@ -3407,8 +3628,8 @@ del commit final de DT-16.
 Objetivo:
 
 Construir alertas clínicas contextuales sobre la foundation longitudinal
-existente y sobre `PatientProblem`, sin inferir automáticamente decisiones
-médicas.
+existente y sobre `PatientProblem`, sin inferir automáticamente
+decisiones médicas.
 
 Base disponible:
 
@@ -3436,7 +3657,8 @@ Pendiente:
 
 -   [ ] Evitar convertir validaciones técnicas en decisión clínica.
 
--   [!] Requiere definición clínica y de producto antes de implementación.
+-   \[!\] Requiere definición clínica y de producto antes de
+    implementación.
 
 # 28. Deuda y decisiones de producto
 
@@ -3617,22 +3839,22 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual después de DT-20
+# Baseline actual después de DT-21
 
 Avance global ponderado:
 
-77%.
+79%.
 
 Suite completa:
 
-910 tests verdes.
+936 tests verdes.
 
 0 failures.
 
 Assertions finales no registradas; no se infieren.
 
-DT-20 se encuentra técnicamente terminado y pendiente de su commit final,
-merge a `master` y cierre en Jira.
+DT-21 se encuentra técnicamente terminado y pendiente de su commit
+final, merge a `master` y cierre en Jira.
 
 # 32. Visión de producto
 

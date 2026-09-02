@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Patients;
 
+use App\Models\AuditEvent;
 use App\Models\Patient;
 use App\Models\Tenant;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
+use Illuminate\Support\Facades\Schema;
 
 class PatientEditTest extends TestCase
 {
@@ -152,5 +154,114 @@ class PatientEditTest extends TestCase
         ]);
 
         return [$tenant, $user];
+    }
+
+    public function test_updating_patient_creates_audit_event_with_changed_fields_only(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Consultorio Test',
+            'slug' => 'consultorio-test',
+            'onboarding_completed_at' => now(),
+        ]);
+
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Dr. Test',
+            'email' => 'doctor@example.com',
+            'password' => 'password123',
+            'role' => 'owner',
+        ]);
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = Patient::create([
+            'first_name' => 'Paciente',
+            'last_name' => 'Prueba',
+            'second_last_name' => 'Test',
+            'birth_date' => '1990-01-15',
+            'phone' => '9611111111',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::patients.edit', [
+            'uuid' => $patient->uuid,
+        ])
+            ->set('phone', '9612222222')
+            ->call('updatePatient');
+
+        $event = AuditEvent::query()
+            ->where('action', 'patient.updated')
+            ->firstOrFail();
+
+        $this->assertSame(
+            $tenant->id,
+            $event->tenant_id
+        );
+
+        $this->assertSame(
+            $user->id,
+            $event->user_id
+        );
+
+        $this->assertSame(
+            Patient::class,
+            $event->auditable_type
+        );
+
+        $this->assertSame(
+            $patient->id,
+            $event->auditable_id
+        );
+
+        $this->assertSame(
+            ['phone'],
+            $event->metadata['changed_fields']
+        );
+
+        $this->assertArrayNotHasKey(
+            'old',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'new',
+            $event->metadata
+        );
+    }
+
+    public function test_patient_update_succeeds_even_when_audit_persistence_fails(): void
+    {
+        [$tenant, $user] = $this->createUser();
+
+        app(TenantContext::class)->set($tenant);
+
+        $patient = Patient::create([
+            'first_name' => 'Juan',
+            'last_name' => 'Pérez',
+            'email' => 'juan@example.com',
+            'phone' => '9611111111',
+        ]);
+
+        Schema::drop('audit_events');
+
+        Livewire::actingAs($user)
+            ->test('pages::patients.edit', [
+                'uuid' => $patient->uuid,
+            ])
+            ->set('phone', '9619999999')
+            ->call('updatePatient')
+            ->assertRedirect(
+                route('patients.show', [
+                    'uuid' => $patient->uuid,
+                ])
+            );
+
+        $patient->refresh();
+
+        $this->assertSame(
+            '9619999999',
+            $patient->phone
+        );
     }
 }

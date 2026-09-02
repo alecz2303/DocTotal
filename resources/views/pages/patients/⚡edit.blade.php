@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Patient;
+use App\Services\AuditLogger;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -56,7 +57,7 @@ new
                 ],
             ]);
 
-            $this->patient->update([
+            $this->patient->fill([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'second_last_name' => $validated['second_last_name'] ?: null,
@@ -67,6 +68,23 @@ new
                 'whatsapp' => $validated['whatsapp'] ?: null,
                 'blood_type' => $validated['blood_type'] ?: null,
             ]);
+
+            $changedFields = array_keys(
+                $this->patient->getDirty()
+            );
+
+            $this->patient->save();
+
+            if ($changedFields !== []) {
+                app(AuditLogger::class)->safeLog(
+                    action: 'patient.updated',
+                    auditable: $this->patient,
+                    description: 'Datos generales del paciente actualizados.',
+                    metadata: [
+                        'changed_fields' => $changedFields,
+                    ],
+                );
+            }
 
             session()->flash(
                 'success',

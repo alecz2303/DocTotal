@@ -6,6 +6,7 @@ use App\Models\ConsultationDiagnosis;
 use App\Models\DiagnosisCatalog;
 use App\Models\DoctorProfile;
 use App\Models\Patient;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -297,6 +298,16 @@ new
                     if ($this->appointment) {
                         $this->appointment->complete();
                     }
+
+                    app(AuditLogger::class)->safeLog(
+                        action: 'consultation.completed',
+                        auditable: $consultation,
+                        description: 'Consulta clínica finalizada.',
+                        metadata: [
+                            'appointment_id' =>
+                            $this->appointment?->id,
+                        ],
+                    );
 
                     return $consultation;
                 }

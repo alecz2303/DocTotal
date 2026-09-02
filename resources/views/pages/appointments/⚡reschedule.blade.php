@@ -2,6 +2,7 @@
 
 use App\Models\Appointment;
 use App\Services\AppointmentAvailabilityService;
+use App\Services\AuditLogger;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -161,9 +162,36 @@ new
                 ->copy()
                 ->addMinutes($duration);
 
+            $previousStartsAt = $this->appointment
+                ->starts_at
+                ->copy();
+
+            $previousEndsAt = $this->appointment
+                ->ends_at
+                ->copy();
+
             $this->appointment->reschedule(
                 $startsAt,
                 $endsAt
+            );
+
+            app(AuditLogger::class)->safeLog(
+                action: 'appointment.rescheduled',
+                auditable: $this->appointment,
+                description: 'Cita reprogramada.',
+                metadata: [
+                    'previous_starts_at' =>
+                    $previousStartsAt->toISOString(),
+
+                    'previous_ends_at' =>
+                    $previousEndsAt->toISOString(),
+
+                    'new_starts_at' =>
+                    $startsAt->toISOString(),
+
+                    'new_ends_at' =>
+                    $endsAt->toISOString(),
+                ],
             );
 
             session()->flash(

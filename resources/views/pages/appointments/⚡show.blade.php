@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\AuditLogger;
 use App\Models\Appointment;
 use App\Models\Consultation;
 use Livewire\Attributes\Layout;
@@ -105,8 +106,20 @@ new
                 ],
             ]);
 
+            $reason = $validated['cancellationReason']
+                ?: null;
+
             $this->appointment->cancel(
-                $validated['cancellationReason'] ?: null
+                $reason
+            );
+
+            app(AuditLogger::class)->safeLog(
+                action: 'appointment.cancelled',
+                auditable: $this->appointment,
+                description: 'Cita cancelada.',
+                metadata: [
+                    'had_reason' => $reason !== null,
+                ],
             );
 
             $this->showCancelModal = false;

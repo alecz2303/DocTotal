@@ -3,6 +3,7 @@
 namespace Tests\Feature\Appointments;
 
 use App\Models\Appointment;
+use App\Models\AuditEvent;
 use App\Models\Consultation;
 use App\Models\DoctorProfile;
 use App\Models\Patient;
@@ -383,6 +384,93 @@ class AppointmentShowTest extends TestCase
             ->assertSee('Completada')
             ->assertDontSee('Continuar consulta')
             ->assertDontSee('Iniciar consulta');
+    }
+
+    public function test_cancelling_appointment_creates_audit_event_without_exposing_reason(): void
+    {
+        [
+            $tenant,
+            $user,
+            $doctor,
+            $patient,
+        ] = $this->createContext();
+
+        app(TenantContext::class)->set($tenant);
+
+        $appointment = $this->createAppointment(
+            $doctor,
+            $patient
+        );
+
+        Livewire::actingAs($user)
+            ->test(
+                'pages::appointments.show',
+                [
+                    'uuid' => $appointment->uuid,
+                ]
+            )
+            ->set(
+                'cancellationReason',
+                'El paciente presenta una situación médica privada.'
+            )
+            ->call('cancelAppointment')
+            ->assertHasNoErrors();
+
+        $appointment->refresh();
+
+        $this->assertSame(
+            Appointment::STATUS_CANCELLED,
+            $appointment->status
+        );
+
+        $event = AuditEvent::query()
+            ->where(
+                'action',
+                'appointment.cancelled'
+            )
+            ->firstOrFail();
+
+        $this->assertSame(
+            $tenant->id,
+            $event->tenant_id
+        );
+
+        $this->assertSame(
+            $user->id,
+            $event->user_id
+        );
+
+        $this->assertSame(
+            Appointment::class,
+            $event->auditable_type
+        );
+
+        $this->assertSame(
+            $appointment->id,
+            $event->auditable_id
+        );
+
+        $this->assertTrue(
+            $event->metadata['had_reason']
+        );
+
+        $this->assertArrayNotHasKey(
+            'reason',
+            $event->metadata
+        );
+
+        $this->assertArrayNotHasKey(
+            'cancellation_reason',
+            $event->metadata
+        );
+
+        $this->assertStringNotContainsString(
+            'situación médica privada',
+            json_encode(
+                $event->metadata,
+                JSON_UNESCAPED_UNICODE
+            )
+        );
     }
 
     public function test_user_cannot_open_appointment_show_from_another_tenant(): void
