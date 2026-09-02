@@ -78,3 +78,46 @@ if (
         ->everyMinute()
         ->withoutOverlapping();
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| Transactional communications
+|--------------------------------------------------------------------------
+|
+| Genera las comunicaciones pendientes correspondientes a recordatorios
+| de citas próximas.
+|
+| Este proceso únicamente genera registros de Communication.
+| El envío efectivo se procesa de forma independiente mediante el
+| transport correspondiente.
+|
+| La idempotencia evita generar recordatorios duplicados cuando el
+| scheduler ejecuta nuevamente este comando.
+|
+*/
+
+Schedule::command(
+    'communications:generate-appointment-reminders',
+    [
+        '--channel' => 'whatsapp',
+        '--days' => 7,
+    ]
+)
+    ->hourly()
+    ->withoutOverlapping();
+
+
+/*
+ * Procesa las comunicaciones cuyo momento de envío
+ * o reintento ya llegó.
+ *
+ * El transport concreto determina cómo se realiza el envío.
+ * Actualmente puede operar con el transport de infraestructura
+ * sin depender todavía de un proveedor externo.
+ */
+Schedule::command(
+    'communications:process-due'
+)
+    ->everyMinute()
+    ->withoutOverlapping();

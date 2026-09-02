@@ -144,6 +144,8 @@ new
                     'patient',
                     'doctorProfile.specialty',
                     'consultation',
+                    'communications' => fn($query) => $query
+                        ->latest('created_at'),
                 ])
                 ->where('uuid', $uuid)
                 ->firstOrFail();
@@ -157,6 +159,8 @@ new
                 'patient',
                 'doctorProfile.specialty',
                 'consultation',
+                'communications' => fn($query) => $query
+                    ->latest('created_at'),
             ]);
         }
 
@@ -539,6 +543,239 @@ $statusGradient = $statusAccent[$appointment->status] ?? 'from-blue-500 to-viole
             </div>
             @endforeach
         </div>
+    </section>
+
+    {{-- COMMUNICATIONS --}}
+    <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    class="h-4.5 w-4.5">
+                    <path
+                        d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+                    <path
+                        d="m4 7 8 6 8-6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="font-semibold text-slate-950">
+                    Comunicaciones
+                </h2>
+
+                <p class="text-xs text-slate-500">
+                    Historial de recordatorios y comunicaciones de esta cita.
+                </p>
+            </div>
+        </div>
+
+        @if ($appointment->communications->isEmpty())
+        <div class="px-5 py-10 text-center sm:px-6">
+            <div class="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    class="h-5 w-5">
+                    <path
+                        d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+                    <path
+                        d="m4 7 8 6 8-6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <p class="mt-3 text-sm font-semibold text-slate-700">
+                Sin comunicaciones registradas
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+                Los recordatorios generados para esta cita aparecerán aquí.
+            </p>
+        </div>
+        @else
+        @php
+        $communicationStatusLabels = [
+        'pending' => 'Pendiente',
+        'sent' => 'Enviada',
+        'failed' => 'Fallida',
+        'cancelled' => 'Cancelada',
+        ];
+
+        $communicationStatusClasses = [
+        'pending' => 'bg-amber-50 text-amber-700 ring-amber-200',
+        'sent' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+        'failed' => 'bg-rose-50 text-rose-700 ring-rose-200',
+        'cancelled' => 'bg-slate-100 text-slate-600 ring-slate-200',
+        ];
+
+        $channelLabels = [
+        'whatsapp' => 'WhatsApp',
+        'email' => 'Correo',
+        'sms' => 'SMS',
+        ];
+
+        $typeLabels = [
+        'appointment_reminder' => 'Recordatorio de cita',
+        'appointment_confirmation' => 'Confirmación de cita',
+        ];
+        @endphp
+
+        <div class="divide-y divide-slate-100">
+            @foreach ($appointment->communications as $communication)
+            @php
+            $communicationStatusLabel =
+            $communicationStatusLabels[$communication->status]
+            ?? ucfirst($communication->status);
+
+            $communicationStatusClass =
+            $communicationStatusClasses[$communication->status]
+            ?? 'bg-slate-50 text-slate-700 ring-slate-200';
+
+            $channelLabel =
+            $channelLabels[$communication->channel]
+            ?? ucfirst($communication->channel);
+
+            $typeLabel =
+            $typeLabels[$communication->type]
+            ?? ucfirst(
+            str_replace(
+            '_',
+            ' ',
+            $communication->type
+            )
+            );
+            @endphp
+
+            <article class="p-5 sm:p-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-semibold text-slate-900">
+                                {{ $typeLabel }}
+                            </p>
+
+                            <span
+                                class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ $communicationStatusClass }}">
+                                {{ $communicationStatusLabel }}
+                            </span>
+                        </div>
+
+                        <div class="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
+                            <span>
+                                <span class="font-medium text-slate-700">
+                                    Canal:
+                                </span>
+
+                                {{ $channelLabel }}
+                            </span>
+
+                            <span>
+                                <span class="font-medium text-slate-700">
+                                    Destinatario:
+                                </span>
+
+                                {{ $communication->recipient }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="shrink-0 text-left lg:text-right">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Creada
+                        </p>
+
+                        <p class="mt-1 text-sm font-medium tabular-nums text-slate-700">
+                            {{ $communication->created_at->format('d/m/Y H:i') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-xl bg-slate-50 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Programada
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold tabular-nums text-slate-700">
+                            {{ $communication->scheduled_for?->format('d/m/Y H:i') ?? '—' }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl bg-slate-50 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Enviada
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold tabular-nums text-slate-700">
+                            {{ $communication->sent_at?->format('d/m/Y H:i') ?? '—' }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl bg-slate-50 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Intentos
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-slate-700">
+                            {{ $communication->attempt_count }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl bg-slate-50 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Próximo intento
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold tabular-nums text-slate-700">
+                            {{ $communication->next_attempt_at?->format('d/m/Y H:i') ?? '—' }}
+                        </p>
+                    </div>
+                </div>
+
+                @if ($communication->isCancelled())
+                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Cancelada
+                        </p>
+
+                        @if ($communication->cancelled_at)
+                        <p class="text-xs font-medium tabular-nums text-slate-500">
+                            {{ $communication->cancelled_at->format('d/m/Y H:i') }}
+                        </p>
+                        @endif
+                    </div>
+
+                    <p class="mt-2 text-sm text-slate-600">
+                        {{ $communication->cancellation_reason ?: 'Sin motivo registrado.' }}
+                    </p>
+                </div>
+                @endif
+
+                @if ($communication->isFailed() && $communication->last_error)
+                <div class="mt-4 rounded-xl border border-rose-100 bg-rose-50 p-4">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-rose-500">
+                        Último error
+                    </p>
+
+                    <p class="mt-2 break-words text-sm text-rose-700">
+                        {{ $communication->last_error }}
+                    </p>
+                </div>
+                @endif
+            </article>
+            @endforeach
+        </div>
+        @endif
     </section>
 
     {{-- CANCEL MODAL --}}
