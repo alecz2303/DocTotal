@@ -4,6 +4,7 @@ namespace App\Services\Communications;
 
 use App\Models\Appointment;
 use App\Models\Communication;
+use Illuminate\Support\Facades\DB;
 
 class AppointmentReminderService
 {
@@ -11,39 +12,51 @@ class AppointmentReminderService
         Appointment $appointment,
         string $channel = Communication::CHANNEL_WHATSAPP,
     ): ?Communication {
-        $appointment->loadMissing('patient');
+        return DB::transaction(function () use ($appointment, $channel) {
+            $appointment = Appointment::query()
+                ->whereKey($appointment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (! $this->isEligible($appointment)) {
-            return null;
-        }
+            $appointment->loadMissing('patient');
 
-        $recipient = $this->resolveRecipient(
-            $appointment,
-            $channel
-        );
+            if (! $this->isEligible($appointment)) {
+                return null;
+            }
 
-        if (! $recipient) {
-            return null;
-        }
+            $recipient = $this->resolveRecipient(
+                $appointment,
+                $channel
+            );
 
-        $scheduledFor = $appointment->starts_at
-            ->copy()
-            ->subDay();
+            if (! $recipient) {
+                return null;
+            }
 
-        if ($scheduledFor->lessThanOrEqualTo(now())) {
-            $scheduledFor = now();
-        }
+            $idempotencyKey = $this->idempotencyKey(
+                $appointment,
+                $channel
+            );
 
-        $idempotencyKey = $this->idempotencyKey(
-            $appointment,
-            $channel
-        );
+            $existing = Communication::query()
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
 
-        return Communication::firstOrCreate(
-            [
-                'idempotency_key' => $idempotencyKey,
-            ],
-            [
+            if ($existing) {
+                return $existing;
+            }
+
+            $scheduledFor = $appointment->starts_at
+                ->copy()
+                ->subDay();
+
+            if ($scheduledFor->lessThanOrEqualTo(now())) {
+                $scheduledFor = now();
+            }
+
+            $publicToken = $appointment->issuePublicAccessToken();
+
+            return Communication::create([
                 'patient_id' => $appointment->patient_id,
                 'appointment_id' => $appointment->id,
                 'type' => Communication::TYPE_APPOINTMENT_REMINDER,
@@ -52,16 +65,20 @@ class AppointmentReminderService
                 'subject' => $channel === Communication::CHANNEL_EMAIL
                     ? 'Recordatorio de cita'
                     : null,
-                'body' => $this->buildBody($appointment),
+                'body' => $this->buildBody(
+                    $appointment,
+                    $publicToken
+                ),
                 'status' => Communication::STATUS_PENDING,
+                'idempotency_key' => $idempotencyKey,
                 'scheduled_for' => $scheduledFor,
                 'metadata' => [
                     'appointment_uuid' => $appointment->uuid,
                     'appointment_starts_at' => $appointment->starts_at
                         ->toIso8601String(),
                 ],
-            ]
-        );
+            ]);
+        });
     }
 
     private function isEligible(
@@ -116,11 +133,16 @@ class AppointmentReminderService
     }
 
     private function buildBody(
-        Appointment $appointment
+        Appointment $appointment,
+        string $publicToken,
     ): string {
         return sprintf(
-            'Recordatorio: tiene una cita programada para el %s.',
-            $appointment->starts_at->format('d/m/Y H:i')
+            "Recordatorio: tiene una cita programada para el %s.\n\nConfirme o gestione su cita:\n%s",
+            $appointment->starts_at->format('d/m/Y H:i'),
+            route(
+                'public.appointments.show',
+                ['token' => $publicToken]
+            )
         );
     }
 }
