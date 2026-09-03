@@ -944,6 +944,8 @@ class ConsultationFlowTest extends TestCase
         $tenant = Tenant::create([
             'name' => $tenantName,
             'slug' => $tenantSlug,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

@@ -58,6 +58,8 @@ class OnboardingMiddlewareTest extends TestCase
         $tenant = Tenant::create([
             'name' => 'Consultorio Test',
             'slug' => 'consultorio-test',
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
         ]);
 
         $user = User::create([

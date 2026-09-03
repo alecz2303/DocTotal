@@ -37,16 +37,16 @@ class PrescriptionFlowTest extends TestCase
             ->set('prescribed_at', '2026-08-23T01:03')
             ->set(
                 'general_instructions',
-                'Mantener buena hidratación y reposo.'
+                'Mantener buena hidrataci├│n y reposo.'
             )
             ->set('items.0.medication_name', 'Paracetamol')
             ->set('items.0.presentation', 'Tabletas 500 mg')
             ->set('items.0.dose', '1 tableta')
             ->set('items.0.frequency', 'Cada 8 horas')
-            ->set('items.0.duration', '3 días')
+            ->set('items.0.duration', '3 d├¡as')
             ->set(
                 'items.0.instructions',
-                'Tomar después de los alimentos.'
+                'Tomar despu├®s de los alimentos.'
             )
             ->call('savePrescription');
 
@@ -82,7 +82,7 @@ class PrescriptionFlowTest extends TestCase
         );
 
         $this->assertSame(
-            'Mantener buena hidratación y reposo.',
+            'Mantener buena hidrataci├│n y reposo.',
             $prescription->general_instructions
         );
     }
@@ -105,13 +105,13 @@ class PrescriptionFlowTest extends TestCase
             ->set('items.0.presentation', 'Tabletas 500 mg')
             ->set('items.0.dose', '1 tableta')
             ->set('items.0.frequency', 'Cada 8 horas')
-            ->set('items.0.duration', '3 días')
+            ->set('items.0.duration', '3 d├¡as')
             ->call('addMedication')
             ->set('items.1.medication_name', 'Ibuprofeno')
             ->set('items.1.presentation', 'Tabletas 400 mg')
             ->set('items.1.dose', '1 tableta')
             ->set('items.1.frequency', 'Cada 12 horas')
-            ->set('items.1.duration', '3 días')
+            ->set('items.1.duration', '3 d├¡as')
             ->call('savePrescription');
 
         $prescription = Prescription::firstOrFail();
@@ -284,7 +284,7 @@ class PrescriptionFlowTest extends TestCase
             'doctor_profile_id' => $doctor->id,
             'consultation_id' => $consultation->id,
             'prescribed_at' => now(),
-            'general_instructions' => 'Mantener hidratación.',
+            'general_instructions' => 'Mantener hidrataci├│n.',
         ]);
 
         PrescriptionItem::create([
@@ -293,8 +293,8 @@ class PrescriptionFlowTest extends TestCase
             'presentation' => 'Tabletas 500 mg',
             'dose' => '1 tableta',
             'frequency' => 'Cada 8 horas',
-            'duration' => '3 días',
-            'instructions' => 'Tomar después de alimentos.',
+            'duration' => '3 d├¡as',
+            'instructions' => 'Tomar despu├®s de alimentos.',
             'sort_order' => 1,
         ]);
 
@@ -310,8 +310,8 @@ class PrescriptionFlowTest extends TestCase
             ->assertSee('Tabletas 500 mg')
             ->assertSee('1 tableta')
             ->assertSee('Cada 8 horas')
-            ->assertSee('3 días')
-            ->assertSee('Mantener hidratación.');
+            ->assertSee('3 d├¡as')
+            ->assertSee('Mantener hidrataci├│n.');
     }
 
     public function test_consultation_page_displays_prescriptions(): void
@@ -559,6 +559,8 @@ class PrescriptionFlowTest extends TestCase
         $tenant = Tenant::create([
             'name' => $tenantName,
             'slug' => $tenantSlug,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

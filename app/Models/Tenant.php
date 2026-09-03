@@ -46,6 +46,7 @@ class Tenant extends Model
             'onboarding_completed_at' => 'datetime',
         ];
     }
+
     protected static function booted(): void
     {
         static::creating(function (Tenant $tenant): void {
@@ -64,8 +65,8 @@ class Tenant extends Model
             );
         } while (
             self::query()
-            ->where('referral_code', $code)
-            ->exists()
+                ->where('referral_code', $code)
+                ->exists()
         );
 
         return $code;
@@ -108,16 +109,12 @@ class Tenant extends Model
 
     public function paymentMethods(): HasMany
     {
-        return $this->hasMany(
-            PaymentMethod::class
-        );
+        return $this->hasMany(PaymentMethod::class);
     }
 
     public function billingCustomers(): HasMany
     {
-        return $this->hasMany(
-            BillingCustomer::class
-        );
+        return $this->hasMany(BillingCustomer::class);
     }
 
     public function referralsGiven(): HasMany
@@ -138,46 +135,25 @@ class Tenant extends Model
 
     public function promotionalCredits(): HasMany
     {
-        return $this->hasMany(
-            PromotionalCredit::class
-        );
+        return $this->hasMany(PromotionalCredit::class);
     }
 
     public function stripeBillingCustomer(): ?BillingCustomer
     {
         return BillingCustomer::query()
-            ->withoutGlobalScope(
-                TenantScope::class
-            )
-            ->where(
-                'tenant_id',
-                $this->id
-            )
-            ->where(
-                'provider',
-                BillingCustomer::PROVIDER_STRIPE
-            )
+            ->withoutGlobalScope(TenantScope::class)
+            ->where('tenant_id', $this->id)
+            ->where('provider', BillingCustomer::PROVIDER_STRIPE)
             ->first();
     }
 
     public function defaultPaymentMethod(): ?PaymentMethod
     {
         return PaymentMethod::query()
-            ->withoutGlobalScope(
-                TenantScope::class
-            )
-            ->where(
-                'tenant_id',
-                $this->id
-            )
-            ->where(
-                'is_active',
-                true
-            )
-            ->where(
-                'is_default',
-                true
-            )
+            ->withoutGlobalScope(TenantScope::class)
+            ->where('tenant_id', $this->id)
+            ->where('is_active', true)
+            ->where('is_default', true)
             ->first();
     }
 
@@ -195,6 +171,58 @@ class Tenant extends Model
             && $this->trial_ends_at->isPast();
     }
 
+    public function trialDurationInDays(): ?int
+    {
+        if (! $this->trial_started_at || ! $this->trial_ends_at) {
+            return null;
+        }
+
+        return (int) $this->trial_started_at
+            ->copy()
+            ->startOfDay()
+            ->diffInDays(
+                $this->trial_ends_at
+                    ->copy()
+                    ->startOfDay()
+            );
+    }
+
+    public function trialDaysRemaining(): ?int
+    {
+        if (! $this->trial_ends_at) {
+            return null;
+        }
+
+        if ($this->trial_ends_at->isPast()) {
+            return 0;
+        }
+
+        return (int) now()
+            ->startOfDay()
+            ->diffInDays(
+                $this->trial_ends_at
+                    ->copy()
+                    ->startOfDay()
+            );
+    }
+
+    public function trialDaysExpired(): ?int
+    {
+        if (
+            ! $this->trial_ends_at
+            || ! $this->trial_ends_at->isPast()
+        ) {
+            return null;
+        }
+
+        return (int) $this->trial_ends_at
+            ->copy()
+            ->startOfDay()
+            ->diffInDays(
+                now()->startOfDay()
+            );
+    }
+
     public function hasCompletedOnboarding(): bool
     {
         return $this->onboarding_completed_at !== null;
@@ -203,13 +231,8 @@ class Tenant extends Model
     public function currentSubscription(): ?Subscription
     {
         return Subscription::query()
-            ->withoutGlobalScope(
-                TenantScope::class
-            )
-            ->where(
-                'tenant_id',
-                $this->id
-            )
+            ->withoutGlobalScope(TenantScope::class)
+            ->where('tenant_id', $this->id)
             ->where(function ($query): void {
                 $query
                     ->where(function ($query): void {
@@ -235,19 +258,11 @@ class Tenant extends Model
                                 'status',
                                 Subscription::STATUS_PAST_DUE
                             )
-                            ->whereNotNull(
-                                'grace_ends_at'
-                            )
-                            ->where(
-                                'grace_ends_at',
-                                '>',
-                                now()
-                            );
+                            ->whereNotNull('grace_ends_at')
+                            ->where('grace_ends_at', '>', now());
                     });
             })
-            ->latest(
-                'current_period_ends_at'
-            )
+            ->latest('current_period_ends_at')
             ->first();
     }
 
@@ -261,10 +276,7 @@ class Tenant extends Model
         if (
             in_array(
                 $this->status,
-                [
-                    'suspended',
-                    'cancelled',
-                ],
+                ['suspended', 'cancelled'],
                 true
             )
         ) {
@@ -278,10 +290,52 @@ class Tenant extends Model
         return $this->hasCurrentSubscription();
     }
 
+    public function effectiveServiceStatus(): string
+    {
+        if ($this->status === 'cancelled') {
+            return 'cancelled';
+        }
+
+        if ($this->status === 'suspended' || $this->suspended_at) {
+            return 'suspended';
+        }
+
+        if ($this->isOnTrial()) {
+            return 'trial_active';
+        }
+
+        if ($this->hasCurrentSubscription()) {
+            $subscription = $this->currentSubscription();
+
+            if ($subscription?->isPastDue()) {
+                return 'grace_period';
+            }
+
+            return 'active';
+        }
+
+        if ($this->trialHasExpired()) {
+            return 'trial_expired';
+        }
+
+        return 'no_access';
+    }
+
+    public function effectiveServiceStatusLabel(): string
+    {
+        return match ($this->effectiveServiceStatus()) {
+            'active' => 'Activo',
+            'trial_active' => 'Trial activo',
+            'grace_period' => 'Periodo de gracia',
+            'trial_expired' => 'Trial vencido',
+            'suspended' => 'Suspendido',
+            'cancelled' => 'Cancelado',
+            default => 'Sin acceso',
+        };
+    }
+
     public function payments(): HasMany
     {
-        return $this->hasMany(
-            Payment::class
-        );
+        return $this->hasMany(Payment::class);
     }
 }

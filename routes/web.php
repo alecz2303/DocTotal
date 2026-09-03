@@ -1,6 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Internal\InternalDashboardController;
+use App\Http\Controllers\Internal\InternalTenantController;
+use App\Http\Controllers\Internal\InternalBillingController;
+use App\Http\Controllers\Internal\InternalCommunicationController;
+use App\Http\Controllers\Internal\InternalAuditController;
+use App\Http\Controllers\ServiceSuspendedController;
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,7 +24,39 @@ Route::middleware('auth')->group(function () {
         ->middleware('auth')
         ->name('onboarding');
 
-    Route::middleware('onboarding')->group(function () {
+    Route::get('/service/suspended', ServiceSuspendedController::class)
+        ->name('service.suspended');
+
+    Route::livewire(
+        '/settings/billing',
+        'pages::settings.billing'
+    )->name('settings.billing');
+
+    Route::middleware('internal.admin')->group(function () {
+        Route::get('/internal', InternalDashboardController::class)
+            ->name('internal.dashboard');
+
+        Route::get('/internal/tenants', [InternalTenantController::class, 'index'])
+            ->name('internal.tenants.index');
+
+        Route::get('/internal/tenants/{tenant}', [InternalTenantController::class, 'show'])
+            ->name('internal.tenants.show');
+
+        Route::get('/internal/billing', [InternalBillingController::class, 'index'])
+            ->name('internal.billing.index');
+
+        Route::get('/internal/communications', [InternalCommunicationController::class, 'index'])
+            ->name('internal.communications.index');
+
+        Route::get('/internal/audit', [InternalAuditController::class, 'index'])
+            ->name('internal.audit.index');
+    });
+
+
+    Route::middleware([
+        'onboarding',
+        'service.access',
+    ])->group(function () {
 
         Route::get('/dashboard', function () {
             $today = now()->startOfDay();
@@ -401,10 +441,10 @@ Route::middleware('auth')->group(function () {
             'pages::settings.profile'
         )->name('settings.profile');
 
-        Route::livewire(
-            '/settings/billing',
-            'pages::settings.billing'
-        )->name('settings.billing');
+        // Route::livewire(
+        //     '/settings/billing',
+        //     'pages::settings.billing'
+        // )->name('settings.billing');
 
         Route::livewire(
             '/appointments',

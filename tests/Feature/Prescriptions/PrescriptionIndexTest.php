@@ -75,8 +75,8 @@ class PrescriptionIndexTest extends TestCase
         ]);
 
         $patientB = Patient::create([
-            'first_name' => 'María',
-            'last_name' => 'López',
+            'first_name' => 'Mar├¡a',
+            'last_name' => 'L├│pez',
         ]);
 
         $this->createPrescription(
@@ -95,7 +95,7 @@ class PrescriptionIndexTest extends TestCase
             ->test('pages::prescriptions.index')
             ->set('search', 'Alejandro')
             ->assertSee('Alejandro')
-            ->assertDontSee('María');
+            ->assertDontSee('Mar├¡a');
     }
 
     public function test_prescription_index_searches_by_patient_last_name(): void
@@ -110,8 +110,8 @@ class PrescriptionIndexTest extends TestCase
         ]);
 
         $patientB = Patient::create([
-            'first_name' => 'María',
-            'last_name' => 'López',
+            'first_name' => 'Mar├¡a',
+            'last_name' => 'L├│pez',
         ]);
 
         $this->createPrescription(
@@ -128,9 +128,9 @@ class PrescriptionIndexTest extends TestCase
 
         Livewire::actingAs($user)
             ->test('pages::prescriptions.index')
-            ->set('search', 'López')
-            ->assertSee('María')
-            ->assertSee('López')
+            ->set('search', 'L├│pez')
+            ->assertSee('Mar├¡a')
+            ->assertSee('L├│pez')
             ->assertDontSee('Alejandro');
     }
 
@@ -147,8 +147,8 @@ class PrescriptionIndexTest extends TestCase
         ]);
 
         $patientB = Patient::create([
-            'first_name' => 'María',
-            'last_name' => 'López',
+            'first_name' => 'Mar├¡a',
+            'last_name' => 'L├│pez',
             'email' => 'maria@example.com',
         ]);
 
@@ -167,7 +167,7 @@ class PrescriptionIndexTest extends TestCase
         Livewire::actingAs($user)
             ->test('pages::prescriptions.index')
             ->set('search', 'maria@example.com')
-            ->assertSee('María')
+            ->assertSee('Mar├¡a')
             ->assertDontSee('Alejandro');
     }
 
@@ -259,7 +259,7 @@ class PrescriptionIndexTest extends TestCase
 
         $patientC = Patient::create([
             'first_name' => 'Paciente',
-            'last_name' => 'Último',
+            'last_name' => '├Ültimo',
         ]);
 
         $this->createPrescription(
@@ -286,7 +286,7 @@ class PrescriptionIndexTest extends TestCase
             ->set('dateTo', '2026-08-20')
             ->assertSee('Medio')
             ->assertDontSee('Primero')
-            ->assertDontSee('Último');
+            ->assertDontSee('├Ültimo');
     }
 
     public function test_user_can_clear_prescription_filters(): void
@@ -539,6 +539,8 @@ class PrescriptionIndexTest extends TestCase
         $tenant = Tenant::create([
             'name' => $tenantName,
             'slug' => $tenantSlug,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

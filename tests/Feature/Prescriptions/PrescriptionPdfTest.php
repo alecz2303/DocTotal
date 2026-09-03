@@ -147,8 +147,8 @@ class PrescriptionPdfTest extends TestCase
             'presentation' => 'Tabletas 500 mg',
             'dose' => '1 tableta',
             'frequency' => 'Cada 8 horas',
-            'duration' => '3 días',
-            'instructions' => 'Tomar después de alimentos.',
+            'duration' => '3 d├¡as',
+            'instructions' => 'Tomar despu├®s de alimentos.',
             'sort_order' => 1,
         ]);
 
@@ -158,7 +158,7 @@ class PrescriptionPdfTest extends TestCase
             'presentation' => 'Tabletas 400 mg',
             'dose' => '1 tableta',
             'frequency' => 'Cada 12 horas',
-            'duration' => '3 días',
+            'duration' => '3 d├¡as',
             'instructions' => 'Tomar con alimentos.',
             'sort_order' => 2,
         ]);
@@ -328,7 +328,7 @@ class PrescriptionPdfTest extends TestCase
             'consultation_id' => $consultation->id,
             'prescribed_at' => $prescribedAt,
             'general_instructions' =>
-            'Mantener hidratación y acudir a revisión si los síntomas empeoran.',
+            'Mantener hidrataci├│n y acudir a revisi├│n si los s├¡ntomas empeoran.',
             'status' => 'active',
         ]);
     }
@@ -372,7 +372,7 @@ class PrescriptionPdfTest extends TestCase
             'email' => 'consultorio@example.com',
             'address_line_1' => 'Calle Prueba 123',
             'neighborhood' => 'Centro',
-            'city' => 'Tuxtla Gutiérrez',
+            'city' => 'Tuxtla Guti├®rrez',
             'state' => 'Chiapas',
             'postal_code' => '29000',
             'country' => 'MX',
@@ -409,6 +409,8 @@ class PrescriptionPdfTest extends TestCase
         $tenant = Tenant::create([
             'name' => $tenantName,
             'slug' => $tenantSlug,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

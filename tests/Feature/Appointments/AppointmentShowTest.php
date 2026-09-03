@@ -514,6 +514,8 @@ class AppointmentShowTest extends TestCase
             'name' => 'Consultorio Test',
             'slug' =>
             'consultorio-' . str()->random(10),
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 
