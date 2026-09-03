@@ -7,12 +7,24 @@ use App\Http\Controllers\Internal\InternalBillingController;
 use App\Http\Controllers\Internal\InternalCommunicationController;
 use App\Http\Controllers\Internal\InternalAuditController;
 use App\Http\Controllers\ServiceSuspendedController;
+use App\Http\Controllers\PublicAppointmentController;
 
 
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+Route::prefix('appointment')->name('public.appointments.')->group(function () {
+    Route::get('/{token}', [PublicAppointmentController::class, 'show'])
+        ->name('show');
+
+    Route::post('/{token}/confirm', [PublicAppointmentController::class, 'confirm'])
+        ->name('confirm');
+
+    Route::post('/{token}/cancel', [PublicAppointmentController::class, 'cancel'])
+        ->name('cancel');
+});
 
 // Route::get('/', function () {
 //     return redirect()->route('dashboard');

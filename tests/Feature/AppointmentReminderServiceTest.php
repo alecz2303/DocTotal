@@ -61,6 +61,17 @@ class AppointmentReminderServiceTest extends TestCase
         $this->assertNotNull(
             $communication->scheduled_for
         );
+
+        $this->assertStringContainsString(
+            '/appointment/',
+            $communication->body
+        );
+
+        $appointment->refresh();
+
+        $this->assertNotNull(
+            $appointment->public_access_token_hash
+        );
     }
 
     public function test_same_reminder_is_not_created_twice(): void
@@ -96,6 +107,9 @@ class AppointmentReminderServiceTest extends TestCase
 
         $original = $service->create($appointment);
 
+        $appointment->refresh();
+        $originalTokenHash = $appointment->public_access_token_hash;
+
         $appointment->reschedule(
             now()->addDays(4),
             now()->addDays(4)->addMinutes(30),
@@ -121,6 +135,14 @@ class AppointmentReminderServiceTest extends TestCase
         $this->assertSame(
             2,
             Communication::query()->count()
+        );
+
+        $appointment->refresh();
+
+        $this->assertNotNull($appointment->public_access_token_hash);
+        $this->assertNotSame(
+            $originalTokenHash,
+            $appointment->public_access_token_hash
         );
     }
 

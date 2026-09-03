@@ -43,6 +43,8 @@ class Appointment extends Model
         'completed_at',
         'cancelled_at',
         'no_show_at',
+        'public_access_token_hash',
+        'public_access_token_generated_at',
     ];
 
     protected function casts(): array
@@ -56,6 +58,7 @@ class Appointment extends Model
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'no_show_at' => 'datetime',
+            'public_access_token_generated_at' => 'datetime',
         ];
     }
 
@@ -200,6 +203,28 @@ class Appointment extends Model
              */
             'status' => self::STATUS_SCHEDULED,
             'confirmed_at' => null,
+            'public_access_token_hash' => null,
+            'public_access_token_generated_at' => null,
+        ]);
+    }
+
+    public function issuePublicAccessToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+
+        $this->update([
+            'public_access_token_hash' => hash('sha256', $token),
+            'public_access_token_generated_at' => now(),
+        ]);
+
+        return $token;
+    }
+
+    public function revokePublicAccessToken(): void
+    {
+        $this->update([
+            'public_access_token_hash' => null,
+            'public_access_token_generated_at' => null,
         ]);
     }
 

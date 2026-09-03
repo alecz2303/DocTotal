@@ -74,22 +74,20 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-21 --- Audit trail and security hardening foundation.
+-   DT-23 --- Billing recovery must honor plan change for unpaid past-due subscription.
 -   Commit:
-    `c3c70d9 DT-21 feat: implement audit trail and security hardening foundation`.
+    `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`.
 
 DT activo con cierre técnico completado:
 
--   DT-22 --- Internal SaaS administration panel foundation.
--   Jira: DT-22.
--   Commit funcional más reciente:
-    `228c9b2 DT-22 feat: complete operational dashboard and enforce tenant service access`.
--   Pendiente: commit documental final, push, PR, merge a `master` y
-    cierre Jira.
+-   DT-24 --- Patient self-service for appointment confirmation and cancellation.
+-   Jira: DT-24.
+-   Suite completa validada: `1002 tests verdes`, `0 failures`.
+-   Pendiente: documentación final, commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-22:
+Suite completa validada al cierre técnico de DT-24:
 
-`988 tests verdes`
+`1002 tests verdes`
 
 `0 failures`
 
@@ -103,18 +101,14 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
--   `228c9b2 DT-22 feat: complete operational dashboard and enforce tenant service access`
--   `1085ba1 DT-22 feat: add internal audit monitoring`
--   `5d1387e DT-22 feat: add internal communications monitoring`
--   `239b92f DT-22 feat: add internal billing incidents monitoring`
--   `fd3ad05 DT-22 feat: implement internal SaaS administration foundation`
+-   `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
+-   `c8fdd7f DT-22 feat: complete internal SaaS administration panel`
+-   `43901d0 docs: define prioritized development queue`
 -   `c3c70d9 DT-21 feat: implement audit trail and security hardening foundation`
 -   `9192020 DT-20 feat: implement transactional communications and appointment reminders`
 -   `1dd4ad7 DT-19 feat: implement structured active clinical problem list`
 -   `b529ed5 DT-18 docs: normalize project baseline after DT-17`
 -   `ff7aee4 DT-17 feat: implement advanced clinical consultation workspace`
-
-## No reutilizar hashes históricos u obsoletos para DT-19.
 
 # Foundation clínica actual
 
@@ -428,6 +422,67 @@ Calidad final DT-22:
 El cierre funcional no introduce bypasses especiales para testing; los
 fixtures clínicos históricos fueron actualizados para representar
 explícitamente tenants con acceso vigente.
+
+------------------------------------------------------------------------
+
+# Billing recovery y cambio de plan --- DT-23
+
+DT-23 corrigió la transición crítica de recuperación de una suscripción `past_due` cuando el tenant cambia de ciclo antes de pagar.
+
+Reglas consolidadas:
+
+-   una suscripción anual pagada y vigente que cambia a mensual conserva el anual hasta el fin del periodo y programa el cambio futuro;
+-   una suscripción anual no pagada o `past_due` puede elegir mensual como plan de recuperación;
+-   el checkout de recuperación utiliza el importe y moneda del ciclo elegido;
+-   el cambio de ciclo se vuelve contractual únicamente después de un pago exitoso;
+-   un pago fallido o checkout abandonado no reactiva falsamente la suscripción;
+-   no se reutilizan PaymentIntents ni claves de idempotencia incompatibles con el nuevo importe/ciclo;
+-   pagos históricos sin snapshot de ciclo conservan compatibilidad;
+-   `recoverableSubscription()` permite recuperar una suscripción `past_due` aun después de vencer el grace period sin conceder acceso clínico.
+
+Calidad final DT-23:
+
+`995 tests verdes`
+
+`0 failures`
+
+Commit canónico:
+
+`bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
+
+------------------------------------------------------------------------
+
+# Interacción pública del paciente con citas --- DT-24
+
+DT-24 agrega autoservicio público de citas sin requerir cuenta ni sesión del paciente.
+
+Implementado:
+
+-   enlace público seguro por cita mediante token aleatorio de alta entropía;
+-   persistencia únicamente del hash del token;
+-   resolución pública sin enumeración por UUID;
+-   vista mínima de la cita sin expediente, motivo, notas ni información clínica sensible;
+-   confirmación pública de citas `scheduled`;
+-   cancelación pública de citas `scheduled` o `confirmed`;
+-   confirmación idempotente;
+-   bloqueo de acciones públicas para estados clínicos o terminales;
+-   invalidación del enlace anterior al reprogramar la cita;
+-   generación de un nuevo enlace en el siguiente recordatorio;
+-   integración del enlace seguro con `AppointmentReminderService`;
+-   auditoría de confirmación/cancelación pública sin persistir el token;
+-   cobertura multi-tenant y funcionamiento sin sesión ni `TenantContext` previo.
+
+Fuera de alcance de DT-24:
+
+-   selección pública de nuevos horarios;
+-   solicitud/ejecución pública de reprogramación;
+-   portal completo del paciente.
+
+Calidad final DT-24:
+
+`1002 tests verdes`
+
+`0 failures`
 
 ------------------------------------------------------------------------
 
