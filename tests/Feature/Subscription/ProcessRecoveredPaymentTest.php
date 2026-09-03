@@ -149,6 +149,90 @@ class ProcessRecoveredPaymentTest extends TestCase
         );
     }
 
+    public function test_recovery_applies_the_plan_that_was_actually_paid(): void
+    {
+        [$subscription, $payment] =
+            $this->createRecoveryPayment();
+
+        $subscription->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+
+            'billing_amount' =>
+            600000,
+
+            'billing_currency' =>
+            'MXN',
+
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+        ]);
+
+        $payment->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+
+            'gross_amount' =>
+            60000,
+
+            'amount' =>
+            60000,
+
+            'currency' =>
+            'MXN',
+        ]);
+
+        app(
+            ProcessRecoveredPayment::class
+        )->execute(
+            $payment,
+            Carbon::parse(
+                '2026-09-29 18:42:15'
+            )
+        );
+
+        $subscription->refresh();
+
+        $this->assertTrue(
+            $subscription->isActive()
+        );
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_MONTHLY,
+            $subscription->billing_cycle
+        );
+
+        $this->assertSame(
+            60000,
+            $subscription->billing_amount
+        );
+
+        $this->assertSame(
+            'MXN',
+            $subscription->billing_currency
+        );
+
+        $this->assertNull(
+            $subscription->pending_billing_cycle
+        );
+
+        $this->assertTrue(
+            $subscription
+                ->current_period_starts_at
+                ->equalTo(
+                    '2026-09-26 16:37:22'
+                )
+        );
+
+        $this->assertTrue(
+            $subscription
+                ->current_period_ends_at
+                ->equalTo(
+                    '2026-10-26 16:37:22'
+                )
+        );
+    }
+
     public function test_recovery_reactivates_suspended_tenant(): void
     {
         [$subscription, $payment] =

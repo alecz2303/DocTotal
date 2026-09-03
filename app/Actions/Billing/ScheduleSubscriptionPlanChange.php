@@ -57,6 +57,15 @@ class ScheduleSubscriptionPlanChange
                 );
             }
 
+            /*
+             * ACTIVE: el ciclo pendiente se aplicará en la próxima
+             * renovación, después de terminar el periodo ya pagado.
+             *
+             * PAST_DUE: el ciclo pendiente representa la elección de
+             * recuperación. No cambiamos todavía billing_cycle ni
+             * billing_amount: el cambio definitivo sólo ocurre cuando
+             * se confirma un pago exitoso de ese plan.
+             */
             $subscription->update([
                 'pending_billing_cycle' => $billingCycle,
             ]);

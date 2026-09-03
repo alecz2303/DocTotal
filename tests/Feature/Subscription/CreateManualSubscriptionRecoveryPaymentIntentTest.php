@@ -90,6 +90,145 @@ class CreateManualSubscriptionRecoveryPaymentIntentTest extends TestCase
         );
     }
 
+    public function test_past_due_yearly_subscription_can_recover_with_monthly_plan(): void
+    {
+        [$tenant, $subscription] =
+            $this->scenario();
+
+        $subscription->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+
+            'billing_amount' =>
+            600000,
+
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+        ]);
+
+        $this->prepareStripe();
+
+        $result = $this->action()->execute(
+            $tenant,
+            $subscription,
+            now(),
+            'manual-recovery-yearly-to-monthly',
+        );
+
+        $payment = $result->payment;
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_MONTHLY,
+            $payment->billing_cycle
+        );
+
+        $this->assertSame(
+            60000,
+            $payment->gross_amount
+        );
+
+        $this->assertSame(
+            60000,
+            $payment->amount
+        );
+
+        $this->assertSame(
+            60000,
+            $this->paymentIntents
+                ->receivedParams['amount']
+        );
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_MONTHLY,
+            $this->paymentIntents
+                ->receivedParams['metadata']['billing_cycle']
+        );
+
+        $subscription->refresh();
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_YEARLY,
+            $subscription->billing_cycle
+        );
+
+        $this->assertSame(
+            600000,
+            $subscription->billing_amount
+        );
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_MONTHLY,
+            $subscription->pending_billing_cycle
+        );
+
+        $this->assertTrue(
+            $subscription->isPastDue()
+        );
+    }
+
+    public function test_incompatible_recovery_idempotency_key_is_not_reused_after_plan_change(): void
+    {
+        [$tenant, $subscription] =
+            $this->scenario();
+
+        $subscription->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+
+            'billing_amount' =>
+            600000,
+
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+        ]);
+
+        Payment::withoutGlobalScopes()
+            ->create([
+                'tenant_id' =>
+                $tenant->id,
+
+                'subscription_id' =>
+                $subscription->id,
+
+                'billing_cycle' =>
+                Subscription::BILLING_CYCLE_YEARLY,
+
+                'gross_amount' =>
+                600000,
+
+                'amount' =>
+                600000,
+
+                'currency' =>
+                'MXN',
+
+                'status' =>
+                Payment::STATUS_PENDING,
+
+                'attempted_at' =>
+                now(),
+
+                'provider' =>
+                'stripe',
+
+                'idempotency_key' =>
+                'manual-recovery-incompatible',
+            ]);
+
+        $this->prepareStripe();
+
+        $this->expectException(
+            LogicException::class
+        );
+
+        $this->action()->execute(
+            $tenant,
+            $subscription,
+            now(),
+            'manual-recovery-incompatible',
+        );
+    }
+
     public function test_creates_manual_recovery_payment_intent_payload(): void
     {
         [$tenant, $subscription] =

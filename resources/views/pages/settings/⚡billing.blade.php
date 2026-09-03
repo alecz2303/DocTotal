@@ -284,6 +284,10 @@ new
             }
 
             try {
+                if ($this->subscription->isPastDue()) {
+                    $this->abandonPendingRecoveryCheckouts();
+                }
+
                 $subscription = app(
                     ScheduleSubscriptionPlanChange::class
                 )->execute(
@@ -301,6 +305,20 @@ new
                         ? 'DocTotal Anual'
                         : 'DocTotal Mensual';
 
+                    if ($subscription->isPastDue()) {
+                        $this->dispatch(
+                            'swal',
+                            title: 'Plan de recuperación actualizado',
+                            text: sprintf(
+                                'Tu próximo pago para reactivar DocTotal será con %s.',
+                                $planName
+                            ),
+                            icon: 'success'
+                        );
+
+                        return;
+                    }
+
                     $this->dispatch(
                         'swal',
                         title: 'Cambio de plan programado',
@@ -316,8 +334,12 @@ new
 
                 $this->dispatch(
                     'swal',
-                    title: 'Cambio cancelado',
-                    text: 'Mantendrás tu plan actual.',
+                    title: $subscription->isPastDue()
+                        ? 'Plan de recuperación restablecido'
+                        : 'Cambio cancelado',
+                    text: $subscription->isPastDue()
+                        ? 'El próximo pago de recuperación usará tu plan actual.'
+                        : 'Mantendrás tu plan actual.',
                     icon: 'success'
                 );
             } catch (\Throwable $exception) {
@@ -441,17 +463,6 @@ new
                 return;
             }
 
-            if ($this->manualRecoveryPayment) {
-                $this->dispatch(
-                    'swal',
-                    title: 'Este pago no puede cambiar de plan',
-                    text: 'Primero debes regularizar el periodo pendiente con su ciclo actual.',
-                    icon: 'info'
-                );
-
-                return;
-            }
-
             try {
                 $payment =
                     Payment::withoutGlobalScopes()
@@ -553,7 +564,8 @@ new
             }
 
             $this->billingCycle =
-                $this->subscription->billing_cycle;
+                $this->subscription->pending_billing_cycle
+                ?? $this->subscription->billing_cycle;
 
             $this->manualSaveForFuture = false;
             $this->manualRecoveryPayment = true;
@@ -570,6 +582,7 @@ new
                     ->where('subscription_id', $this->subscription->id)
                     ->where('provider', 'stripe')
                     ->where('status', Payment::STATUS_PENDING)
+                    ->where('billing_cycle', $this->billingCycle)
                     ->where(
                         'idempotency_key',
                         'like',
@@ -581,9 +594,10 @@ new
                 $idempotencyKey =
                     $pendingRecoveryPayment?->idempotency_key
                     ?? sprintf(
-                        'doctotal:recovery:%s:%s:%s',
+                        'doctotal:recovery:%s:%s:%s:%s',
                         $this->tenant->uuid,
                         $this->subscription->uuid,
+                        $this->billingCycle,
                         Str::uuid()
                     );
 
@@ -848,6 +862,57 @@ new
             }
         }
 
+        private function abandonPendingRecoveryCheckouts(): void
+        {
+            if (! $this->subscription?->isPastDue()) {
+                return;
+            }
+
+            $payments =
+                Payment::withoutGlobalScopes()
+                ->where('tenant_id', $this->tenant->id)
+                ->where('subscription_id', $this->subscription->id)
+                ->where('provider', 'stripe')
+                ->where('status', Payment::STATUS_PENDING)
+                ->where(
+                    'idempotency_key',
+                    'like',
+                    'doctotal:recovery:%'
+                )
+                ->get();
+
+            foreach ($payments as $payment) {
+                app(
+                    AbandonManualSubscriptionPayment::class
+                )->execute(
+                    $this->tenant,
+                    $payment,
+                    now()
+                );
+            }
+
+            if ($payments->isEmpty()) {
+                return;
+            }
+
+            $this->manualPaymentFormVisible = false;
+            $this->manualPaymentUuid = null;
+            $this->manualPaymentAmount = null;
+            $this->manualPaymentGrossAmount = null;
+            $this->manualReferralDiscountAmount = null;
+            $this->manualPromotionalCreditAmount = null;
+            $this->manualPaymentCurrency = 'MXN';
+            $this->manualSaveForFuture = false;
+            $this->manualRecoveryPayment = false;
+
+            $this->refreshBillingHistory();
+            $this->refreshReferralSummary();
+
+            $this->dispatch(
+                'stripe-manual-payment-abandoned'
+            );
+        }
+
         private function refreshPaymentMethod(): void
         {
             $this->paymentMethod =
@@ -859,7 +924,9 @@ new
         {
             $this->subscription =
                 $this->tenant
-                ->currentSubscription();
+                ->currentSubscription()
+                ?? $this->tenant
+                    ->recoverableSubscription();
         }
 
         private function refreshBillingHistory(): void
@@ -1433,6 +1500,28 @@ new
 
                 @elseif ($subscription->isPastDue())
 
+                @php
+                $recoveryCycle =
+                $subscription->pending_billing_cycle
+                ?? $subscription->billing_cycle;
+
+                $recoveryPlan =
+                $subscription->pending_billing_cycle
+                ? config('billing.plans.' . $recoveryCycle)
+                : [
+                    'amount' => $subscription->billing_amount,
+                    'currency' => $subscription->billing_currency,
+                ];
+
+                $recoveryAmount =
+                (int) ($recoveryPlan['amount'] ?? 0);
+
+                $recoveryCurrency =
+                strtoupper(
+                    (string) ($recoveryPlan['currency'] ?? 'MXN')
+                );
+                @endphp
+
                 <div class="mt-6 space-y-3">
 
                     <div
@@ -1442,8 +1531,10 @@ new
                             Este periodo tiene un pago pendiente
                         </p>
                         <p class="mt-1 text-sm leading-6 text-amber-700">
-                            Regulariza ${{ number_format($subscription->billing_amount / 100, 2) }}
-                            {{ $subscription->billing_currency }} para recuperar tu suscripción.
+                            Regulariza ${{ number_format($recoveryAmount / 100, 2) }}
+                            {{ $recoveryCurrency }} con
+                            {{ $recoveryCycle === Subscription::BILLING_CYCLE_YEARLY ? 'DocTotal Anual' : 'DocTotal Mensual' }}
+                            para recuperar tu suscripción.
                         </p>
                     </div>
 
@@ -1586,12 +1677,29 @@ new
                         <p
                             class="text-sm font-semibold
                                    text-sky-900">
-                            Cambio programado
+                            {{ $subscription->isPastDue() ? 'Plan de recuperación seleccionado' : 'Cambio programado' }}
                         </p>
 
                         <p
                             class="mt-1 text-sm leading-6
                                    text-sky-700">
+                            @if ($subscription->isPastDue())
+
+                            Reactivarás DocTotal pagando
+
+                            <strong>
+                                {{
+                                    $subscription
+                                        ->pending_billing_cycle ===
+                                    Subscription::BILLING_CYCLE_YEARLY
+                                        ? 'DocTotal Anual'
+                                        : 'DocTotal Mensual'
+                                }}
+                            </strong>.
+                            El cambio sólo será definitivo cuando el pago se confirme.
+
+                            @else
+
                             Cambiarás a
 
                             <strong>
@@ -1605,6 +1713,8 @@ new
                             </strong>
 
                             al finalizar el periodo que corresponda.
+
+                            @endif
                         </p>
 
                     </div>
@@ -1632,10 +1742,11 @@ new
                                text-slate-500">
                         @if ($subscription->isPastDue())
 
-                        Puedes programar el siguiente plan ahora.
-                        El pago pendiente actual conserva su importe y,
-                        después de regularizarlo, el cambio se aplicará
-                        cuando termine el periodo que quede cubierto.
+                        Puedes elegir con qué plan recuperar tu suscripción.
+                        Si cambias de plan, cualquier checkout de recuperación
+                        pendiente se cancelará y se generará uno nuevo con el
+                        importe del plan seleccionado. El cambio sólo se vuelve
+                        definitivo después de un pago exitoso.
 
                         @else
 

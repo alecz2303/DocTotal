@@ -65,7 +65,8 @@ class ProcessRecoveredPayment
                     RecoverSubscription::class
                 )->execute(
                     $subscription,
-                    $paidAt
+                    $paidAt,
+                    $payment
                 );
 
                 return $payment->refresh();
