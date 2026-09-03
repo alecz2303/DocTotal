@@ -188,6 +188,19 @@ class ConfirmManualSubscriptionRecoveryPayment
                 }
 
                 if (
+                    (string) (
+                        $metadata
+                        ?->billing_cycle
+                        ?? ''
+                    ) !==
+                    (string) $payment->billing_cycle
+                ) {
+                    throw new LogicException(
+                        'El ciclo del PaymentIntent no coincide con el plan de recuperación pagado.'
+                    );
+                }
+
+                if (
                     $paymentIntent->status !==
                     'succeeded'
                 ) {

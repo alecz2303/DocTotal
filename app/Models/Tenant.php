@@ -266,6 +266,20 @@ class Tenant extends Model
             ->first();
     }
 
+    public function recoverableSubscription(): ?Subscription
+    {
+        return Subscription::query()
+            ->withoutGlobalScope(TenantScope::class)
+            ->where('tenant_id', $this->id)
+            ->where(
+                'status',
+                Subscription::STATUS_PAST_DUE
+            )
+            ->latest('current_period_ends_at')
+            ->latest('id')
+            ->first();
+    }
+
     public function hasCurrentSubscription(): bool
     {
         return $this->currentSubscription() !== null;

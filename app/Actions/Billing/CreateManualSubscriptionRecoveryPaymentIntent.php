@@ -16,6 +16,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         private readonly EnsureStripeBillingCustomer $ensureCustomer,
         private readonly StripePaymentIntentApi $paymentIntents,
         private readonly ReservePromotionalCredits $reservePromotionalCredits,
+        private readonly ResolveSubscriptionRecoveryPlan $resolveRecoveryPlan,
     ) {}
 
     public function execute(
@@ -42,20 +43,11 @@ class CreateManualSubscriptionRecoveryPaymentIntent
             );
         }
 
-        if (
-            ! $subscription->billing_amount
-            || $subscription->billing_amount <= 0
-        ) {
-            throw new LogicException(
-                'La suscripción no tiene un importe de facturación válido.'
+        $recoveryPlan =
+            $this->resolveRecoveryPlan
+            ->execute(
+                $subscription
             );
-        }
-
-        if (! $subscription->billing_currency) {
-            throw new LogicException(
-                'La suscripción no tiene una moneda de facturación válida.'
-            );
-        }
 
         $billingCustomer =
             $this->ensureCustomer->execute(
@@ -76,7 +68,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                     CalculatePaymentAmount::class
                 )->execute(
                     $tenant,
-                    $subscription->billing_amount
+                    $recoveryPlan['amount']
                 );
 
             $payment =
@@ -89,7 +81,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                     $subscription->id,
 
                     'billing_cycle' =>
-                    $subscription->billing_cycle,
+                    $recoveryPlan['billing_cycle'],
 
                     'gross_amount' =>
                     $amountBreakdown['gross_amount'],
@@ -104,7 +96,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                     $amountBreakdown['amount'],
 
                     'currency' =>
-                    $subscription->billing_currency,
+                    $recoveryPlan['currency'],
 
                     'status' =>
                     Payment::STATUS_PENDING,
@@ -149,25 +141,23 @@ class CreateManualSubscriptionRecoveryPaymentIntent
         }
 
         if (
-            $payment->contractualAmount() !==
-            $subscription->billing_amount
+            $payment->billing_cycle !==
+            $recoveryPlan['billing_cycle']
+            || $payment->contractualAmount() !==
+            $recoveryPlan['amount']
             || strtoupper(
                 $payment->currency
             ) !==
-            strtoupper(
-                $subscription->billing_currency
-            )
+            $recoveryPlan['currency']
         ) {
             throw new LogicException(
-                'El pago pendiente ya no coincide con el importe contractual de la suscripción.'
+                'El pago pendiente ya no coincide con el plan de recuperación seleccionado.'
             );
         }
 
         /*
-         * Reutilizamos el PaymentIntent si este checkout ya había
-         * sido abierto. No recalculamos ni reservamos créditos:
-         * el Payment conserva exactamente el importe con el que
-         * se creó originalmente el PaymentIntent.
+         * Reutilizamos el PaymentIntent únicamente si el checkout
+         * sigue representando el mismo plan, importe y moneda.
          */
         if ($payment->provider_payment_id) {
             $paymentIntent =
@@ -233,7 +223,7 @@ class CreateManualSubscriptionRecoveryPaymentIntent
                 (string) $subscription->id,
 
                 'billing_cycle' =>
-                $subscription->billing_cycle,
+                $payment->billing_cycle,
 
                 'payment_mode' =>
                 'manual_recovery',

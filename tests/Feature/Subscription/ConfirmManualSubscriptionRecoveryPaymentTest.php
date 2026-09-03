@@ -95,6 +95,71 @@ class ConfirmManualSubscriptionRecoveryPaymentTest extends TestCase
         );
     }
 
+    public function test_successful_monthly_recovery_changes_unpaid_yearly_subscription_to_monthly(): void
+    {
+        [$tenant, $subscription, $payment] =
+            $this->scenario();
+
+        $subscription->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_YEARLY,
+
+            'billing_amount' =>
+            600000,
+
+            'pending_billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+        ]);
+
+        $payment->update([
+            'billing_cycle' =>
+            Subscription::BILLING_CYCLE_MONTHLY,
+
+            'gross_amount' =>
+            60000,
+
+            'amount' =>
+            60000,
+        ]);
+
+        $this->stripe
+            ->returnRetrievedPaymentIntent(
+                $this->successfulIntent(
+                    $tenant,
+                    $subscription,
+                    $payment->refresh()
+                )
+            );
+
+        $this->action()->execute(
+            $tenant,
+            $payment,
+            Carbon::parse(
+                '2026-08-28 13:00:00'
+            )
+        );
+
+        $subscription->refresh();
+
+        $this->assertTrue(
+            $subscription->isActive()
+        );
+
+        $this->assertSame(
+            Subscription::BILLING_CYCLE_MONTHLY,
+            $subscription->billing_cycle
+        );
+
+        $this->assertSame(
+            60000,
+            $subscription->billing_amount
+        );
+
+        $this->assertNull(
+            $subscription->pending_billing_cycle
+        );
+    }
+
     public function test_successful_manual_recovery_reactivates_suspended_tenant(): void
     {
         [$tenant, $subscription, $payment] =

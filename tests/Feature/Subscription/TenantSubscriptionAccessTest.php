@@ -300,6 +300,49 @@ class TenantSubscriptionAccessTest extends TestCase
         );
     }
 
+    public function test_expired_grace_subscription_remains_recoverable_without_restoring_service_access(): void
+    {
+        Carbon::setTestNow(
+            '2026-10-10 10:30:00'
+        );
+
+        $tenant = $this->createTenant([
+            'status' => 'suspended',
+            'suspended_at' => now()->subDay(),
+            'trial_started_at' => now()->subMonths(2),
+            'trial_ends_at' => now()->subMonth(),
+        ]);
+
+        $subscription =
+            $this->createSubscription(
+                $tenant,
+                status: Subscription::STATUS_PAST_DUE,
+                periodStartsAt: now()->subMonths(2),
+                periodEndsAt: now()->subMonth(),
+                pastDueSince: now()->subMonth(),
+                graceEndsAt: now()->subDays(20),
+            );
+
+        $this->assertNull(
+            $tenant->currentSubscription()
+        );
+
+        $recoverable =
+            $tenant->recoverableSubscription();
+
+        $this->assertNotNull(
+            $recoverable
+        );
+
+        $this->assertTrue(
+            $recoverable->is($subscription)
+        );
+
+        $this->assertFalse(
+            $tenant->hasAccessToService()
+        );
+    }
+
     public function test_subscription_expiring_at_exact_current_instant_is_not_current(): void
     {
         Carbon::setTestNow(
