@@ -14,6 +14,9 @@ class User extends Authenticatable
 {
     use HasFactory, HasUuid, Notifiable, SoftDeletes;
 
+    public const ROLE_OWNER = 'owner';
+    public const ROLE_INTERNAL_ADMIN = 'internal_admin';
+
     protected $fillable = [
         'tenant_id',
         'name',
@@ -54,5 +57,16 @@ class User extends Authenticatable
         $this->notify(
             new \App\Notifications\ResetPasswordNotification($token)
         );
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_OWNER;
+    }
+
+    public function isInternalAdmin(): bool
+    {
+        return $this->role === self::ROLE_INTERNAL_ADMIN
+            && $this->tenant_id === null;
     }
 }

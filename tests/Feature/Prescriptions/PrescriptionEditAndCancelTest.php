@@ -44,8 +44,8 @@ class PrescriptionEditAndCancelTest extends TestCase
             'presentation' => 'Tabletas 500 mg',
             'dose' => '1 tableta',
             'frequency' => 'Cada 8 horas',
-            'duration' => '3 días',
-            'instructions' => 'Después de alimentos.',
+            'duration' => '3 d├¡as',
+            'instructions' => 'Despu├®s de alimentos.',
             'sort_order' => 1,
         ]);
 
@@ -55,7 +55,7 @@ class PrescriptionEditAndCancelTest extends TestCase
             ])
             ->set(
                 'general_instructions',
-                'Nueva indicación general.'
+                'Nueva indicaci├│n general.'
             )
             ->set(
                 'items.0.medication_name',
@@ -75,7 +75,7 @@ class PrescriptionEditAndCancelTest extends TestCase
             )
             ->set(
                 'items.0.duration',
-                '5 días'
+                '5 d├¡as'
             )
             ->set(
                 'items.0.instructions',
@@ -86,7 +86,7 @@ class PrescriptionEditAndCancelTest extends TestCase
         $prescription->refresh();
 
         $this->assertSame(
-            'Nueva indicación general.',
+            'Nueva indicaci├│n general.',
             $prescription->general_instructions
         );
 
@@ -113,7 +113,7 @@ class PrescriptionEditAndCancelTest extends TestCase
         );
 
         $this->assertSame(
-            '5 días',
+            '5 d├¡as',
             $item->duration
         );
     }
@@ -632,7 +632,7 @@ class PrescriptionEditAndCancelTest extends TestCase
             'email' => 'consultorio@example.com',
             'address_line_1' => 'Calle Prueba 123',
             'neighborhood' => 'Centro',
-            'city' => 'Tuxtla Gutiérrez',
+            'city' => 'Tuxtla Guti├®rrez',
             'state' => 'Chiapas',
             'postal_code' => '29000',
             'country' => 'MX',
@@ -668,6 +668,8 @@ class PrescriptionEditAndCancelTest extends TestCase
         $tenant = Tenant::create([
             'name' => $tenantName,
             'slug' => $tenantSlug,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

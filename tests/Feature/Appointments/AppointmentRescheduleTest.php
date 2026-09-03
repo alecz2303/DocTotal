@@ -692,7 +692,7 @@ class AppointmentRescheduleTest extends TestCase
 
         /*
          * El horario estaba disponible cuando el usuario
-         * abrió la pantalla, pero otra cita lo ocupa antes
+         * abri├│ la pantalla, pero otra cita lo ocupa antes
          * de guardar.
          */
         $otherPatient = Patient::create([
@@ -769,6 +769,8 @@ class AppointmentRescheduleTest extends TestCase
             'name' => 'Consultorio Test',
             'slug' =>
             'consultorio-' . str()->random(10),
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 

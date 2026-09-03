@@ -77,9 +77,8 @@ class AuthenticationTest extends TestCase
         $tenant = Tenant::create([
             'name' => 'Consultorio Test',
             'slug' => 'consultorio-test',
-        ]);
-
-        $tenant->update([
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(30),
             'onboarding_completed_at' => now(),
         ]);
 
