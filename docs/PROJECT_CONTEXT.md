@@ -74,20 +74,20 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-24 --- Patient self-service for appointment confirmation and cancellation.
+-   DT-25 --- Manual sharing of patient appointment management link.
 -   Commit:
-    `12d573b DT-24 feat: add patient appointment self-service`.
+    `240bcf6 DT-25 feat: add manual patient appointment link sharing`.
 
 DT activo con cierre técnico completado:
 
--   DT-25 --- Manual sharing of patient appointment management link.
--   Jira: DT-25.
--   Suite completa validada: `1005 tests verdes`, `0 failures`.
+-   DT-26 --- Clinical templates for medical records.
+-   Jira: DT-26.
+-   Suite completa validada: `1011 tests verdes`, `0 failures`.
 -   Pendiente: documentación final, commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-25:
+Suite completa validada al cierre técnico de DT-26:
 
-`1005 tests verdes`
+`1011 tests verdes`
 
 `0 failures`
 
@@ -101,6 +101,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `240bcf6 DT-25 feat: add manual patient appointment link sharing`
 -   `12d573b DT-24 feat: add patient appointment self-service`
 -   `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
 -   `c8fdd7f DT-22 feat: complete internal SaaS administration panel`
@@ -516,6 +517,37 @@ Calidad final DT-25:
 `0 failures`
 
 ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# Plantillas clínicas --- DT-26
+
+DT-26 agrega plantillas clínicas reutilizables para acelerar la captura de consultas sin crear dependencias mutables con el registro clínico.
+
+Implementado:
+
+-   administración de plantillas clínicas aisladas por tenant;
+-   creación y edición con nombre, descripción, motivo de consulta y estructura SOAP;
+-   activación y desactivación;
+-   aplicación desde el workspace de consulta;
+-   al aplicar una plantilla se copia su contenido al registro clínico como snapshot;
+-   editar posteriormente la plantilla no modifica consultas ya capturadas;
+-   sólo se ofrecen plantillas activas del tenant actual;
+-   contador de usos;
+-   eliminación permitida únicamente cuando la plantilla no ha sido utilizada;
+-   plantillas utilizadas pueden desactivarse, pero no eliminarse;
+-   auditoría de operaciones relevantes y aplicación;
+-   confirmaciones de acciones mediante SweetAlert;
+-   botones alineados con el sistema visual existente de DocTotal;
+-   cobertura automatizada de aislamiento multi-tenant y comportamiento funcional.
+
+Plantillas por especialidad permanecen como evolución posterior sobre esta foundation.
+
+Calidad final DT-26:
+
+`1011 tests verdes`
+
+`0 failures`
 
 # Regla de cierre
 

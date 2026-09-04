@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-25: 1005 tests verdes / 0
+> Suite completa al cierre técnico de DT-26: 1011 tests verdes / 0
 > failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
@@ -773,7 +773,7 @@ Relacionado principalmente con DT-9.
 
 -   [x] Finalización protegida y revalidada en backend.
 
--   [ ] Plantillas clínicas.
+-   [x] Plantillas clínicas reutilizables por tenant --- DT-26.
 
 -   [ ] Plantillas por especialidad.
 
@@ -3802,6 +3802,32 @@ Validación final:
 
 `0 failures`
 
+# 27C. Plantillas clínicas reutilizables --- DT-26
+
+Relacionado con DT-26.
+
+-   [x] Administración de plantillas clínicas por tenant.
+-   [x] Crear y editar nombre, descripción, motivo de consulta y estructura SOAP.
+-   [x] Activar y desactivar plantillas.
+-   [x] Aplicar plantillas desde el workspace de consulta.
+-   [x] Copiar el contenido como snapshot sin dependencia mutable con la plantilla original.
+-   [x] Mantener consultas previas sin cambios cuando la plantilla se edita después.
+-   [x] Mostrar únicamente plantillas activas del tenant actual al aplicar.
+-   [x] Registrar contador de usos.
+-   [x] Permitir eliminar sólo plantillas nunca utilizadas.
+-   [x] Mantener plantillas utilizadas mediante desactivación en lugar de eliminación.
+-   [x] Auditar operaciones relevantes y aplicación.
+-   [x] Usar SweetAlert para confirmaciones de aplicación/eliminación.
+-   [x] Integrar botones con el sistema visual existente de DocTotal.
+-   [x] Cobertura automatizada de aislamiento multi-tenant y flujo funcional.
+-   [ ] Plantillas por especialidad.
+
+Validación final:
+
+`1011 tests verdes`
+
+`0 failures`
+
 # 28. Deuda y decisiones de producto
 
 Estas decisiones no necesariamente requieren un DT inmediato, pero deben
@@ -3982,7 +4008,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-25
+# Baseline actual al cierre técnico de DT-26
 
 Avance global ponderado vigente:
 
@@ -3994,17 +4020,16 @@ producto.
 
 Suite completa final:
 
-1005 tests verdes.
+1011 tests verdes.
 
 0 failures.
 
 Assertions finales no registradas; no se infieren.
 
-DT-21 está completado e integrado.
+DT-21, DT-22, DT-23, DT-24 y DT-25 están completados e integrados.
 
-DT-22, DT-23 y DT-24 están completados e integrados. DT-25 tiene cierre
-técnico completado y está pendiente de documentación final, commit, push,
-PR, merge y cierre Jira.
+DT-26 tiene cierre técnico completado y está pendiente de documentación
+final, commit, push, PR, merge y cierre Jira.
 
 # 32. Visión de producto
 
@@ -4086,14 +4111,15 @@ médico.
 2.  📱 **Interacción del paciente con citas --- DT-24 COMPLETADO**
     Confirmación y cancelación mediante enlaces públicos seguros.
 
-3.  🔗 **Compartición manual del enlace de cita --- DT-25 CIERRE TÉCNICO
-    COMPLETADO** Generación/regeneración manual, URL compacta, copia,
-    WhatsApp, correo y experiencia amigable para enlaces inválidos.
+3.  🔗 **Compartición manual del enlace de cita --- DT-25 COMPLETADO**
+    Generación/regeneración manual, URL compacta, copia, WhatsApp, correo
+    y experiencia amigable para enlaces inválidos.
 
-4.  📋 **Plantillas clínicas --- SIGUIENTE PRIORIDAD** Plantillas
-    reutilizables para consultas y base para plantillas por especialidad.
+4.  📋 **Plantillas clínicas --- DT-26 CIERRE TÉCNICO COMPLETADO**
+    Plantillas reutilizables por tenant, aplicación como snapshot y base
+    para futuras plantillas por especialidad.
 
-5.  🧪 **Laboratorios estructurados** Estudios, resultados estructurados
+5.  🧪 **Laboratorios estructurados --- SIGUIENTE PRIORIDAD** Estudios, resultados estructurados
     e historial longitudinal, sin interpretación clínica automática.
 
 6.  🔐 **Seguridad de cuenta** 2FA, passkeys, verificación de correo,

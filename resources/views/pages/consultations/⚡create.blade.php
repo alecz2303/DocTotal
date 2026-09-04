@@ -2,6 +2,7 @@
 
 use App\Models\Appointment;
 use App\Models\Consultation;
+use App\Models\ClinicalTemplate;
 use App\Models\ConsultationDiagnosis;
 use App\Models\DiagnosisCatalog;
 use App\Models\DoctorProfile;
@@ -44,6 +45,58 @@ new
 
         public string $saveStatus = 'saved';
         public ?string $saveErrorMessage = null;
+
+        public string $selectedTemplateId = '';
+
+        #[Computed]
+        public function activeClinicalTemplates()
+        {
+            return ClinicalTemplate::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get();
+        }
+
+        public function applyClinicalTemplate(): void
+        {
+            $validated = $this->validate([
+                'selectedTemplateId' => ['required', 'integer'],
+            ]);
+
+            $template = ClinicalTemplate::query()
+                ->where('active', true)
+                ->findOrFail((int) $validated['selectedTemplateId']);
+
+            $content = $template->content ?? [];
+
+            foreach (['reason', 'subjective', 'objective', 'assessment', 'plan'] as $field) {
+                $this->{$field} = (string) ($content[$field] ?? '');
+            }
+
+            $consultation = DB::transaction(function () use ($template): Consultation {
+                $consultation = $this->persistDraft();
+
+                $template->increment('usage_count');
+
+                app(AuditLogger::class)->safeLog(
+                    action: 'clinical_template.applied',
+                    auditable: $consultation,
+                    description: 'Plantilla clínica aplicada a consulta.',
+                    metadata: [
+                        'clinical_template_id' => $template->id,
+                        'clinical_template_name' => $template->name,
+                    ],
+                );
+
+                return $consultation;
+            });
+
+            $this->consultation = $consultation;
+            $this->fillFromConsultation();
+            $this->selectedTemplateId = '';
+
+            session()->flash('success', 'Plantilla clínica aplicada correctamente.');
+        }
 
         /*
          |--------------------------------------------------------------------------
@@ -1403,6 +1456,69 @@ new
         <main class="min-w-0">
 
             <div class="space-y-6">
+
+                {{-- CLINICAL TEMPLATES --}}
+                <section class="overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/40 shadow-sm">
+                    <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <h2 class="font-semibold text-slate-950">Plantilla clínica</h2>
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        Aplica una estructura guardada. El contenido actual de Motivo y SOAP será reemplazado.
+                                    </p>
+                                </div>
+                                <a href="{{ route('clinical-templates.index') }}" class="shrink-0 text-xs font-bold text-blue-700 hover:text-blue-900">
+                                    Administrar plantillas
+                                </a>
+                            </div>
+
+                            <select wire:model="selectedTemplateId" class="dt-input mt-3">
+                                <option value="">Selecciona una plantilla...</option>
+                                @foreach ($this->activeClinicalTemplates as $clinicalTemplate)
+                                    <option value="{{ $clinicalTemplate->id }}">{{ $clinicalTemplate->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('selectedTemplateId')
+                                <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <button
+                            type="button"
+                            x-data
+                            x-on:click="
+                                if (! $wire.selectedTemplateId) {
+                                    Swal.fire({
+                                        title: 'Selecciona una plantilla',
+                                        text: 'Elige primero la plantilla clínica que deseas aplicar.',
+                                        icon: 'info',
+                                        confirmButtonText: 'Entendido'
+                                    });
+
+                                    return;
+                                }
+
+                                Swal.fire({
+                                    title: '¿Aplicar plantilla clínica?',
+                                    text: 'El contenido actual de Motivo y SOAP será reemplazado.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Sí, aplicar plantilla',
+                                    cancelButtonText: 'Cancelar',
+                                    reverseButtons: true,
+                                    focusCancel: true
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        $wire.applyClinicalTemplate()
+                                    }
+                                })
+                            "
+                            class="dt-btn dt-btn-primary">
+                            Aplicar plantilla
+                        </button>
+                    </div>
+                </section>
 
                 {{-- CONSULTATION DATA --}}
                 <section class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">

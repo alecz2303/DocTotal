@@ -329,6 +329,9 @@ Route::middleware('auth')->group(function () {
             );
         })->name('dashboard');
 
+        Route::livewire('/clinical-templates', 'pages::clinical-templates.index')
+            ->name('clinical-templates.index');
+
         Route::livewire('/patients', 'pages::patients.index')
             ->name('patients.index');
 

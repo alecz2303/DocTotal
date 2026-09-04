@@ -1767,7 +1767,7 @@ Commit principal:
 
 ## DT-25 --- Manual sharing of patient appointment management link
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1797,7 +1797,41 @@ Validación final:
 
 Commit principal:
 
-Pendiente hasta integrar DT-25 en `master`.
+`240bcf6 DT-25 feat: add manual patient appointment link sharing`.
+
+------------------------------------------------------------------------
+
+## DT-26 --- Clinical templates for medical records
+
+Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+
+Objetivo:
+
+Agregar plantillas clínicas reutilizables para agilizar la captura de consultas conservando inmutable el contenido ya aplicado al expediente.
+
+Incluye:
+
+-   Administración de plantillas clínicas por tenant.
+-   Nombre, descripción, motivo de consulta y contenido SOAP estructurado.
+-   Crear, editar, activar y desactivar plantillas.
+-   Aplicar una plantilla desde el workspace de consulta.
+-   Copia del contenido como snapshot: la consulta no mantiene dependencia mutable con la plantilla.
+-   Contador de usos.
+-   Eliminación únicamente de plantillas nunca utilizadas.
+-   Aislamiento multi-tenant mediante la foundation existente.
+-   Auditoría de operaciones relevantes y aplicación.
+-   Confirmaciones con SweetAlert y botones integrados al sistema visual de DocTotal.
+-   Cobertura automatizada de aislamiento y flujo funcional.
+
+Validación final:
+
+`1011 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-26 en `master`.
 
 ------------------------------------------------------------------------
 
@@ -2013,13 +2047,13 @@ Incluye potencialmente:
 
 DT completados e integrados en `master`:
 
-`DT-1 → DT-24`
+`DT-1 → DT-25`
 
-DT-25 tiene cierre técnico completado y está pendiente únicamente de documentación final, commit, push, PR, merge y cierre Jira.
+DT-26 tiene cierre técnico completado y está pendiente únicamente de documentación final, commit, push, PR, merge y cierre Jira.
 
 Baseline funcional actual:
 
-`1005 tests verdes`
+`1011 tests verdes`
 
 `0 failures`
 
@@ -2031,13 +2065,13 @@ Avance global ponderado vigente:
 
 El 79% es el último porcentaje formalmente calculado y no se sustituye por una estimación.
 
-DT-24 completa la primera etapa de interacción del paciente con citas: consulta segura, confirmación y cancelación mediante enlace público. La reprogramación pública permanece fuera de alcance y requiere un bloque posterior porque implica disponibilidad y selección de horarios.
-
 DT-25 completa la compartición manual del enlace seguro de gestión de citas mediante copiar, WhatsApp y correo, sin depender de transports configurados.
 
-Siguiente prioridad de la cola vigente después del cierre de DT-25:
+DT-26 completa la foundation de plantillas clínicas reutilizables por tenant y su aplicación como snapshot dentro del workspace de consulta. Las plantillas por especialidad permanecen como evolución posterior.
 
-**Plantillas clínicas**
+Siguiente prioridad de la cola vigente después del cierre de DT-26:
+
+**Laboratorios estructurados**
 
 DocTotal cuenta actualmente con una base clínica, operativa, SaaS, visual, de comunicaciones, auditoría, operación administrativa interna y autoservicio básico de citas considerablemente más madura que al inicio del roadmap.
 
