@@ -105,6 +105,11 @@ class Consultation extends Model
         return $this->hasMany(ClinicalDocument::class);
     }
 
+    public function laboratoryStudies(): HasMany
+    {
+        return $this->hasMany(LaboratoryStudy::class);
+    }
+
     public function isDraft(): bool
     {
         return $this->status === self::STATUS_DRAFT;

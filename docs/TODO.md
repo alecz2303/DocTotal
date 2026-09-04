@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-26: 1011 tests verdes / 0
+> Suite completa al cierre técnico de DT-27: 1021 tests verdes / 0
 > failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
@@ -3413,7 +3413,7 @@ Fuera de alcance:
 
 -   [ ] OCR.
 
--   [ ] Laboratorios estructurados.
+-   [x] Laboratorios estructurados --- DT-27.
 
 -   [ ] DICOM/PACS.
 
@@ -3828,6 +3828,41 @@ Validación final:
 
 `0 failures`
 
+
+# 27D. Laboratorios estructurados --- DT-27
+
+Relacionado con DT-27.
+
+-   [x] Crear estudios de laboratorio asociados al paciente.
+-   [x] Permitir asociación opcional a una consulta del mismo paciente.
+-   [x] Registrar nombre, fecha, laboratorio/proveedor y observaciones.
+-   [x] Registrar múltiples parámetros por estudio.
+-   [x] Registrar parámetro, valor, unidad y rango de referencia.
+-   [x] Soportar valores numéricos y textuales.
+-   [x] Mostrar historial de laboratorios dentro del expediente.
+-   [x] Integrar acceso/resumen visual de Laboratorios en el expediente.
+-   [x] Crear, editar y eliminar estudios.
+-   [x] Eliminar de forma segura los resultados asociados al eliminar un estudio.
+-   [x] Mantener captura manual de parámetros.
+-   [x] Permitir captura masiva mediante pegado desde Excel/Google Sheets.
+-   [x] Aceptar filas tabuladas y texto separado por `|` o `;`.
+-   [x] Convertir la captura masiva en filas revisables antes de guardar.
+-   [x] Mantener aislamiento multi-tenant.
+-   [x] Auditar altas, cambios y eliminaciones.
+-   [x] Cubrir autorización, tenant, asociación, edición, eliminación y captura masiva con tests.
+-   [ ] Vincular opcionalmente el estudio estructurado con su documento clínico fuente.
+-   [ ] Importar resultados desde PDF/imagen con revisión humana.
+-   [ ] Integraciones HL7/FHIR o importaciones de proveedores.
+-   [ ] Gráficas longitudinales avanzadas.
+-   [ ] Interpretación clínica automática/IA.
+
+Validación final:
+
+`1021 tests verdes`
+
+`0 failures`
+
+
 # 28. Deuda y decisiones de producto
 
 Estas decisiones no necesariamente requieren un DT inmediato, pero deben
@@ -4008,7 +4043,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-26
+# Baseline actual al cierre técnico de DT-27
 
 Avance global ponderado vigente:
 
@@ -4020,16 +4055,16 @@ producto.
 
 Suite completa final:
 
-1011 tests verdes.
+1021 tests verdes.
 
 0 failures.
 
 Assertions finales no registradas; no se infieren.
 
-DT-21, DT-22, DT-23, DT-24 y DT-25 están completados e integrados.
+DT-21, DT-22, DT-23, DT-24, DT-25 y DT-26 están completados e integrados.
 
-DT-26 tiene cierre técnico completado y está pendiente de documentación
-final, commit, push, PR, merge y cierre Jira.
+DT-27 tiene cierre técnico completado y está pendiente de commit, push,
+PR, merge y cierre Jira.
 
 # 32. Visión de producto
 
@@ -4115,14 +4150,14 @@ médico.
     Generación/regeneración manual, URL compacta, copia, WhatsApp, correo
     y experiencia amigable para enlaces inválidos.
 
-4.  📋 **Plantillas clínicas --- DT-26 CIERRE TÉCNICO COMPLETADO**
+4.  📋 **Plantillas clínicas --- DT-26 COMPLETADO**
     Plantillas reutilizables por tenant, aplicación como snapshot y base
     para futuras plantillas por especialidad.
 
-5.  🧪 **Laboratorios estructurados --- SIGUIENTE PRIORIDAD** Estudios, resultados estructurados
-    e historial longitudinal, sin interpretación clínica automática.
+5.  🧪 **Laboratorios estructurados --- DT-27 CIERRE TÉCNICO COMPLETADO** Estudios, resultados estructurados,
+    historial y captura masiva revisable, sin interpretación clínica automática.
 
-6.  🔐 **Seguridad de cuenta** 2FA, passkeys, verificación de correo,
+6.  🔐 **Seguridad de cuenta --- SIGUIENTE PRIORIDAD** 2FA, passkeys, verificación de correo,
     sesiones activas y revocación de sesiones/dispositivos.
 
 7.  💊 **Repetición de tratamientos/recetas** Crear nuevas recetas a
