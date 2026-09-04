@@ -74,20 +74,20 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-25 --- Manual sharing of patient appointment management link.
+-   DT-26 --- Clinical templates for medical records.
 -   Commit:
-    `240bcf6 DT-25 feat: add manual patient appointment link sharing`.
+    `4ceac23 DT-26 feat: add reusable clinical templates`.
 
 DT activo con cierre técnico completado:
 
--   DT-26 --- Clinical templates for medical records.
--   Jira: DT-26.
--   Suite completa validada: `1011 tests verdes`, `0 failures`.
--   Pendiente: documentación final, commit, push, PR, merge a `master` y cierre Jira.
+-   DT-27 --- Structured laboratory results in clinical records.
+-   Jira: DT-27.
+-   Suite completa validada: `1021 tests verdes`, `0 failures`.
+-   Pendiente: commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-26:
+Suite completa validada al cierre técnico de DT-27:
 
-`1011 tests verdes`
+`1021 tests verdes`
 
 `0 failures`
 
@@ -101,6 +101,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `4ceac23 DT-26 feat: add reusable clinical templates`
 -   `240bcf6 DT-25 feat: add manual patient appointment link sharing`
 -   `12d573b DT-24 feat: add patient appointment self-service`
 -   `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
@@ -565,3 +566,51 @@ Antes de cerrar un DT:
 
 Los números DT deben ser asignados por Jira; no deben inventarse
 manualmente.
+
+------------------------------------------------------------------------
+
+# Laboratorios estructurados --- DT-27
+
+DT-27 agrega resultados de laboratorio estructurados dentro del expediente clínico sin interpretación clínica automática.
+
+Incluye:
+
+-   Estudios asociados al paciente y opcionalmente a una consulta.
+-   Nombre del estudio, fecha, laboratorio/proveedor opcional y observaciones.
+-   Múltiples parámetros por estudio con nombre, valor, unidad y rango de referencia opcional.
+-   Valores numéricos o textuales.
+-   Historial de laboratorios accesible desde el expediente.
+-   Resumen visual de laboratorios dentro del expediente del paciente.
+-   Alta, edición y eliminación de estudios.
+-   Eliminación explícita de resultados asociados cuando un estudio con soft delete es eliminado.
+-   Captura manual de parámetros.
+-   Captura masiva mediante pegado de filas desde Excel/Google Sheets o texto separado por tabulador, `|` o `;`.
+-   Revisión y edición de las filas convertidas antes de persistirlas.
+-   Aislamiento multi-tenant mediante `TenantScope`, `TenantContext` y `BelongsToTenant`.
+-   Auditoría de altas, cambios y eliminaciones.
+-   Cobertura automatizada de autorización, tenant, asociación a consulta, edición, eliminación y captura masiva.
+
+Decisión de producto:
+
+Los documentos clínicos y los laboratorios estructurados cumplen funciones distintas. Un documento clínico conserva el archivo original; Laboratorios conserva los datos estructurados del estudio. Una futura evolución puede vincular ambos.
+
+Fuera de alcance de DT-27:
+
+-   OCR.
+-   Extracción automática desde PDF o imagen.
+-   Importaciones automáticas de proveedores.
+-   HL7/FHIR.
+-   Interpretación clínica automática o mediante IA.
+-   Catálogo nacional de estudios.
+-   Gráficas longitudinales avanzadas.
+
+Calidad final DT-27:
+
+`1021 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-27 en `master`.
+

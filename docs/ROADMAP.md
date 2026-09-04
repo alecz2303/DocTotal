@@ -1803,7 +1803,7 @@ Commit principal:
 
 ## DT-26 --- Clinical templates for medical records
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1831,9 +1831,61 @@ Validación final:
 
 Commit principal:
 
-Pendiente hasta integrar DT-26 en `master`.
+`4ceac23 DT-26 feat: add reusable clinical templates`.
 
 ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## DT-27 --- Structured laboratory results in clinical records
+
+Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+
+Objetivo:
+
+Agregar captura estructurada de resultados de laboratorio dentro del expediente clínico, con historial por paciente y asociación opcional a consulta.
+
+Incluye:
+
+-   Estudios de laboratorio por paciente.
+-   Asociación opcional a una consulta del mismo paciente.
+-   Fecha, laboratorio/proveedor y observaciones.
+-   Resultados estructurados con parámetro, valor, unidad y rango de referencia.
+-   Soporte de valores numéricos y textuales.
+-   Historial de laboratorios dentro del expediente.
+-   Tarjeta/resumen de Laboratorios integrada al expediente.
+-   Captura manual de parámetros.
+-   Pegado masivo desde Excel/Google Sheets o texto tabulado, `|` o `;`.
+-   Conversión a filas editables antes del guardado.
+-   Aislamiento multi-tenant.
+-   Auditoría de creación, actualización y eliminación.
+-   Eliminación segura de resultados asociados.
+-   Cobertura automatizada del flujo funcional, aislamiento y captura masiva.
+
+Decisiones:
+
+-   El registro estructurado de laboratorio es independiente del documento clínico original.
+-   Un futuro bloque podrá vincular el estudio estructurado con su documento fuente.
+-   La captura automática desde PDF requiere revisión humana antes de persistir datos clínicos.
+
+Fuera de alcance:
+
+-   OCR y extracción automática desde PDF/imagen.
+-   HL7/FHIR e importaciones de proveedores.
+-   Interpretación clínica automática o IA.
+-   Catálogos nacionales.
+-   Gráficas longitudinales avanzadas.
+
+Validación final:
+
+`1021 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-27 en `master`.
+
 
 ## Próximos candidatos
 
@@ -2047,13 +2099,13 @@ Incluye potencialmente:
 
 DT completados e integrados en `master`:
 
-`DT-1 → DT-25`
+`DT-1 → DT-26`
 
-DT-26 tiene cierre técnico completado y está pendiente únicamente de documentación final, commit, push, PR, merge y cierre Jira.
+DT-27 tiene cierre técnico completado y está pendiente únicamente de commit, push, PR, merge y cierre Jira.
 
 Baseline funcional actual:
 
-`1011 tests verdes`
+`1021 tests verdes`
 
 `0 failures`
 
@@ -2069,9 +2121,11 @@ DT-25 completa la compartición manual del enlace seguro de gestión de citas me
 
 DT-26 completa la foundation de plantillas clínicas reutilizables por tenant y su aplicación como snapshot dentro del workspace de consulta. Las plantillas por especialidad permanecen como evolución posterior.
 
-Siguiente prioridad de la cola vigente después del cierre de DT-26:
+DT-27 completa la foundation de laboratorios estructurados por paciente, con parámetros editables, historial, asociación opcional a consulta y captura masiva revisable. OCR/importación desde PDF permanece como evolución posterior.
 
-**Laboratorios estructurados**
+Siguiente prioridad de la cola vigente después del cierre de DT-27:
+
+**Seguridad de cuenta**
 
 DocTotal cuenta actualmente con una base clínica, operativa, SaaS, visual, de comunicaciones, auditoría, operación administrativa interna y autoservicio básico de citas considerablemente más madura que al inicio del roadmap.
 

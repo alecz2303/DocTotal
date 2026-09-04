@@ -342,6 +342,11 @@ Route::middleware('auth')->group(function () {
             ->name('patients.edit');
 
         Route::livewire(
+            '/patients/{uuid}/laboratories',
+            'pages::laboratories.index'
+        )->name('patients.laboratories.index');
+
+        Route::livewire(
             '/patients/{uuid}/consultations/create',
             'pages::consultations.create'
         )->name('consultations.create');

@@ -108,6 +108,17 @@ new
             );
         }
 
+        #[Computed]
+        public function laboratoryStudies()
+        {
+            return $this->patient
+                ->laboratoryStudies()
+                ->withCount('results')
+                ->orderByDesc('study_date')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
         public function previousHistoricalDiagnosesPage(): void
         {
             $this->historicalDiagnosesPage = max(
@@ -1291,8 +1302,7 @@ new
                     </div>
 
                 </div>
-
-                <a
+                    <a
                     href="{{ route('patients.edit', ['uuid' => $patient->uuid]) }}"
                     class="dt-btn dt-btn-secondary self-start
                            rounded-2xl px-5 py-3
@@ -2402,6 +2412,82 @@ new
         @endphp
 
         <div class="grid gap-5 border-t border-slate-200 bg-slate-100/60 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+
+            {{-- LABORATORIOS --}}
+            @php
+                $laboratoryStudies = $this->laboratoryStudies;
+                $latestLaboratoryStudy = $laboratoryStudies->first();
+            @endphp
+
+            <a
+                href="{{ route('patients.laboratories.index', ['uuid' => $patient->uuid]) }}"
+                wire:navigate
+                class="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-doctotal-md transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg">
+
+                <div class="flex min-h-[76px] items-start justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                    <div class="flex min-w-0 items-start gap-3">
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                                <path d="M9 3h6M10 3v5.2l-5.2 8.4A2.8 2.8 0 0 0 7.2 21h9.6a2.8 2.8 0 0 0 2.4-4.4L14 8.2V3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7.5 15h9" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-sm font-semibold text-slate-900">
+                                    Laboratorios
+                                </h3>
+
+                                <span class="inline-flex items-center rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-inset ring-violet-200">
+                                    {{ $laboratoryStudies->count() }}
+                                    {{ $laboratoryStudies->count() === 1 ? 'estudio' : 'estudios' }}
+                                </span>
+                            </div>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Resultados y estudios de laboratorio.
+                            </p>
+                        </div>
+                    </div>
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         class="mt-1 h-4 w-4 shrink-0 text-violet-500 transition group-hover:translate-x-0.5">
+                        <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <div class="flex flex-1 items-center px-4 py-4 sm:px-5">
+                    @if ($latestLaboratoryStudy)
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Último estudio
+                            </p>
+                            <p class="mt-1 truncate text-sm font-semibold text-slate-900">
+                                {{ $latestLaboratoryStudy->name }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-500">
+                                {{ $latestLaboratoryStudy->study_date->format('d/m/Y') }}
+                                · {{ $latestLaboratoryStudy->results_count }}
+                                {{ $latestLaboratoryStudy->results_count === 1 ? 'parámetro' : 'parámetros' }}
+                            </p>
+                        </div>
+                    @else
+                        <div>
+                            <p class="text-sm font-medium text-slate-700">
+                                Sin estudios registrados
+                            </p>
+                            <p class="mt-1 text-xs leading-5 text-slate-500">
+                                Registra resultados estructurados desde el expediente.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="mt-auto border-t border-slate-100 bg-violet-50/40 px-4 py-3 text-xs font-semibold text-violet-700 sm:px-5">
+                    {{ $latestLaboratoryStudy ? 'Ver laboratorios' : 'Registrar primer estudio' }} →
+                </div>
+            </a>
 
             {{-- DIAGNÓSTICOS HISTÓRICOS --}}
             @if ($historicalDiagnoses->isNotEmpty())
