@@ -20,6 +20,12 @@ class PublicAppointmentSelfServiceTest extends TestCase
     {
         [, , $appointment, $token] = $this->context();
 
+        $this->assertSame(32, strlen($token));
+        $this->assertStringContainsString(
+            '/a/',
+            route('public.appointments.show', ['token' => $token])
+        );
+
         app(TenantContext::class)->clear();
 
         $this->get(route('public.appointments.show', ['token' => $token]))
@@ -36,7 +42,9 @@ class PublicAppointmentSelfServiceTest extends TestCase
 
         $this->get(route('public.appointments.show', [
             'token' => str_repeat('x', 64),
-        ]))->assertNotFound();
+        ]))->assertNotFound()
+            ->assertSee('Este enlace ya no está disponible')
+            ->assertSee('solicita al consultorio');
     }
 
     public function test_patient_can_confirm_scheduled_appointment_and_confirmation_is_idempotent(): void

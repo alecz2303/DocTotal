@@ -121,7 +121,9 @@ class PublicAppointmentController extends Controller
         string $token,
         bool $lockForUpdate = false,
     ): Appointment {
-        abort_if(strlen($token) < 40, 404);
+        if (strlen($token) < 32) {
+            $this->abortWithUnavailableLink();
+        }
 
         $query = Appointment::query()
             ->withoutGlobalScope(TenantScope::class)
@@ -134,10 +136,17 @@ class PublicAppointmentController extends Controller
             $query->lockForUpdate();
         }
 
-        $appointment = $query->firstOrFail();
+        $appointment = $query->first();
 
-        $tenant = Tenant::query()
-            ->findOrFail($appointment->tenant_id);
+        if (! $appointment) {
+            $this->abortWithUnavailableLink();
+        }
+
+        $tenant = Tenant::query()->find($appointment->tenant_id);
+
+        if (! $tenant) {
+            $this->abortWithUnavailableLink();
+        }
 
         app(TenantContext::class)->set($tenant);
 
@@ -147,5 +156,15 @@ class PublicAppointmentController extends Controller
         ]);
 
         return $appointment;
+    }
+
+    private function abortWithUnavailableLink(): never
+    {
+        abort(
+            response()->view(
+                'public.appointments.unavailable',
+                status: 404,
+            )
+        );
     }
 }

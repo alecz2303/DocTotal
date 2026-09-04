@@ -1727,7 +1727,7 @@ Commit principal:
 
 ## DT-24 --- Patient self-service for appointment confirmation and cancellation
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1761,7 +1761,43 @@ Validación final:
 
 Commit principal:
 
-Pendiente hasta integrar DT-24 en `master`.
+`12d573b DT-24 feat: add patient appointment self-service`
+
+------------------------------------------------------------------------
+
+## DT-25 --- Manual sharing of patient appointment management link
+
+Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+
+Objetivo:
+
+Permitir que el médico o personal autorizado genere y comparta manualmente el enlace público seguro de una cita sin depender de un proveedor de mensajería.
+
+Incluye:
+
+-   Generación/regeneración manual desde el detalle de la cita.
+-   URL compacta `/a/{token}` con token URL-safe de alta entropía.
+-   Persistencia únicamente del hash SHA-256 del token.
+-   Compatibilidad con enlaces públicos anteriores de DT-24.
+-   Copiar enlace y copiar mensaje completo.
+-   Abrir WhatsApp con número y mensaje precargados.
+-   Normalización de números mexicanos para WhatsApp.
+-   Abrir correo con destinatario, asunto y cuerpo precargados.
+-   Mensaje humano con médico, clínica/consultorio, fecha en español y hora.
+-   Reutilización de la lógica común de enlace/mensaje por el recordatorio automático.
+-   Regeneración con invalidación inmediata del enlace previo.
+-   Vista pública amigable para enlaces inexistentes/invalidados conservando HTTP 404.
+-   Ninguna acción manual se marca como enviada sin confirmación de un transport integrado.
+
+Validación final:
+
+`1005 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-25 en `master`.
 
 ------------------------------------------------------------------------
 
@@ -1977,13 +2013,13 @@ Incluye potencialmente:
 
 DT completados e integrados en `master`:
 
-`DT-1 → DT-23`
+`DT-1 → DT-24`
 
-DT-24 tiene cierre técnico completado y está pendiente únicamente de documentación final, commit, push, PR, merge y cierre Jira.
+DT-25 tiene cierre técnico completado y está pendiente únicamente de documentación final, commit, push, PR, merge y cierre Jira.
 
 Baseline funcional actual:
 
-`1002 tests verdes`
+`1005 tests verdes`
 
 `0 failures`
 
@@ -1997,7 +2033,9 @@ El 79% es el último porcentaje formalmente calculado y no se sustituye por una 
 
 DT-24 completa la primera etapa de interacción del paciente con citas: consulta segura, confirmación y cancelación mediante enlace público. La reprogramación pública permanece fuera de alcance y requiere un bloque posterior porque implica disponibilidad y selección de horarios.
 
-Siguiente prioridad de la cola vigente después del cierre de DT-24:
+DT-25 completa la compartición manual del enlace seguro de gestión de citas mediante copiar, WhatsApp y correo, sin depender de transports configurados.
+
+Siguiente prioridad de la cola vigente después del cierre de DT-25:
 
 **Plantillas clínicas**
 

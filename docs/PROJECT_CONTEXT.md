@@ -74,20 +74,20 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-23 --- Billing recovery must honor plan change for unpaid past-due subscription.
+-   DT-24 --- Patient self-service for appointment confirmation and cancellation.
 -   Commit:
-    `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`.
+    `12d573b DT-24 feat: add patient appointment self-service`.
 
 DT activo con cierre técnico completado:
 
--   DT-24 --- Patient self-service for appointment confirmation and cancellation.
--   Jira: DT-24.
--   Suite completa validada: `1002 tests verdes`, `0 failures`.
+-   DT-25 --- Manual sharing of patient appointment management link.
+-   Jira: DT-25.
+-   Suite completa validada: `1005 tests verdes`, `0 failures`.
 -   Pendiente: documentación final, commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-24:
+Suite completa validada al cierre técnico de DT-25:
 
-`1002 tests verdes`
+`1005 tests verdes`
 
 `0 failures`
 
@@ -101,6 +101,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `12d573b DT-24 feat: add patient appointment self-service`
 -   `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
 -   `c8fdd7f DT-22 feat: complete internal SaaS administration panel`
 -   `43901d0 docs: define prioritized development queue`
@@ -481,6 +482,36 @@ Fuera de alcance de DT-24:
 Calidad final DT-24:
 
 `1002 tests verdes`
+
+`0 failures`
+
+------------------------------------------------------------------------
+
+# Compartición manual del enlace de gestión de cita --- DT-25
+
+DT-25 completa la capa operativa manual sobre el autoservicio público de DT-24.
+
+Implementado:
+
+-   generación y regeneración manual del enlace seguro desde el detalle de la cita;
+-   URL pública compacta mediante ruta `/a/{token}`;
+-   token compacto URL-safe manteniendo alta entropía y persistencia únicamente del hash SHA-256;
+-   compatibilidad con enlaces públicos anteriores de DT-24;
+-   copia directa del enlace y del mensaje completo;
+-   apertura de WhatsApp con destinatario y mensaje precargado, sin marcar envío confirmado;
+-   apertura del cliente de correo con asunto y cuerpo precargados, sin marcar envío confirmado;
+-   normalización de números mexicanos para WhatsApp;
+-   mensaje humano con nombre del médico, consultorio/clínica, fecha en español y hora;
+-   reutilización de la misma construcción de enlace/mensaje por recordatorios automáticos y flujo manual;
+-   regenerar rota el token vigente e invalida cualquier enlace anterior;
+-   pantalla pública amigable para enlaces inexistentes o invalidados, conservando respuesta HTTP 404;
+-   sin persistir el token plano en auditoría ni metadata.
+
+El flujo manual no requiere un transport configurado y no registra una comunicación como enviada por copiar o abrir un canal externo.
+
+Calidad final DT-25:
+
+`1005 tests verdes`
 
 `0 failures`
 
