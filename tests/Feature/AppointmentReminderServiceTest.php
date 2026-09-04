@@ -63,7 +63,7 @@ class AppointmentReminderServiceTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            '/appointment/',
+            '/a/',
             $communication->body
         );
 
@@ -211,7 +211,7 @@ class AppointmentReminderServiceTest extends TestCase
         );
 
         $this->assertSame(
-            'Recordatorio de cita',
+            'Recordatorio de cita - Tenant A',
             $communication->subject
         );
     }

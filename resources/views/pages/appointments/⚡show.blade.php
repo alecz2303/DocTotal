@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\AuditLogger;
+use App\Services\Communications\AppointmentPublicLinkService;
 use App\Models\Appointment;
 use App\Models\Consultation;
 use Livewire\Attributes\Layout;
@@ -18,9 +19,84 @@ new
 
         public string $cancellationReason = '';
 
+        public ?string $publicManagementUrl = null;
+
+        public ?string $publicManagementMessage = null;
+
+        public ?string $publicManagementSubject = null;
+
         public function mount(string $uuid): void
         {
             $this->loadAppointment($uuid);
+        }
+
+        public function generatePublicManagementLink(): void
+        {
+            $this->appointment->refresh();
+            $this->appointment->loadMissing('patient');
+
+            $service = app(AppointmentPublicLinkService::class);
+
+            if (! $service->canIssue($this->appointment)) {
+                $this->dispatch(
+                    'swal',
+                    title: 'Enlace no disponible',
+                    text: 'Esta cita ya no permite generar un enlace público de gestión.',
+                    icon: 'error'
+                );
+
+                return;
+            }
+
+            $result = $service->issue($this->appointment);
+
+            $this->publicManagementUrl = $result['url'];
+            $this->publicManagementMessage = $result['message'];
+            $this->publicManagementSubject = $result['subject'];
+
+            app(AuditLogger::class)->safeLog(
+                action: 'appointment.public_link_generated',
+                auditable: $this->appointment,
+                description: 'Enlace público de gestión generado manualmente.',
+                metadata: [
+                    'source' => 'manual',
+                ],
+            );
+
+            $this->refreshAppointment();
+
+            $this->dispatch(
+                'swal',
+                title: 'Enlace generado',
+                text: 'El enlace está listo para compartir. Cualquier enlace anterior de esta cita dejó de ser válido.',
+                icon: 'success'
+            );
+        }
+
+        public function copyPublicManagementLink(): void
+        {
+            if (! $this->publicManagementUrl) {
+                return;
+            }
+
+            $this->dispatch(
+                'copy-to-clipboard',
+                text: $this->publicManagementUrl,
+                label: 'Enlace copiado'
+            );
+        }
+
+        public function copyPublicManagementMessage(): void
+        {
+            if (! $this->publicManagementMessage) {
+                return;
+            }
+
+            $this->dispatch(
+                'copy-to-clipboard',
+                text: $this->publicManagementMessage,
+                label: 'Mensaje copiado'
+            );
         }
 
         public function confirmAppointment(): void
@@ -588,6 +664,172 @@ $statusGradient = $statusAccent[$appointment->status] ?? 'from-blue-500 to-viole
             </div>
         </div>
 
+        @php
+        $canGeneratePublicManagementLink =
+        in_array(
+            $appointment->status,
+            [
+                Appointment::STATUS_SCHEDULED,
+                Appointment::STATUS_CONFIRMED,
+            ],
+            true
+        )
+        && $appointment->starts_at?->isFuture();
+
+        $whatsappDigits = preg_replace(
+            '/\D+/',
+            '',
+            (string) $appointment->patient->whatsapp
+        );
+
+        // wa.me exige el número en formato internacional, sin +, espacios ni guiones.
+        // En México, un número nacional de 10 dígitos se comparte como 52 + número.
+        // Si ya viene con 52, se conserva. También limpiamos el antiguo prefijo 521.
+        if (strlen($whatsappDigits) === 10) {
+            $whatsappDigits = '52' . $whatsappDigits;
+        } elseif (strlen($whatsappDigits) === 13 && str_starts_with($whatsappDigits, '521')) {
+            $whatsappDigits = '52' . substr($whatsappDigits, 3);
+        }
+
+        $whatsappShareUrl =
+        $publicManagementMessage && $whatsappDigits
+            ? 'https://wa.me/'
+                . $whatsappDigits
+                . '?text='
+                . rawurlencode($publicManagementMessage)
+            : null;
+
+        $emailShareUrl =
+        $publicManagementMessage && $appointment->patient->email
+            ? 'mailto:'
+                . $appointment->patient->email
+                . '?subject='
+                . rawurlencode($publicManagementSubject ?: 'Recordatorio de cita')
+                . '&body='
+                . rawurlencode($publicManagementMessage)
+            : null;
+        @endphp
+
+        <div class="border-b border-slate-100 bg-slate-50/60 p-5 sm:p-6">
+            <div class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l2-2a5 5 0 0 0-7.07-7.07l-1.15 1.15" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-2 2a5 5 0 0 0 7.07 7.07l1.14-1.14" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+
+                            <div>
+                                <h3 class="font-semibold text-slate-950">
+                                    Enlace de gestión para el paciente
+                                </h3>
+                                <p class="mt-0.5 text-xs text-slate-500">
+                                    Compártelo por WhatsApp, correo o cualquier medio que prefieras.
+                                </p>
+                            </div>
+                        </div>
+
+                        @if ($appointment->public_access_token_generated_at)
+                        <p class="mt-3 text-xs text-slate-500">
+                            Último enlace generado:
+                            <span class="font-semibold tabular-nums text-slate-700">
+                                {{ $appointment->public_access_token_generated_at->format('d/m/Y H:i') }}
+                            </span>
+                        </p>
+                        @endif
+                    </div>
+
+                    @if ($canGeneratePublicManagementLink)
+                    <button
+                        type="button"
+                        wire:click="generatePublicManagementLink"
+                        wire:loading.attr="disabled"
+                        wire:target="generatePublicManagementLink"
+                        class="dt-btn dt-btn-primary shrink-0">
+                        <span wire:loading.remove wire:target="generatePublicManagementLink">
+                            {{ $publicManagementUrl ? 'Regenerar enlace' : 'Generar enlace' }}
+                        </span>
+                        <span wire:loading wire:target="generatePublicManagementLink">
+                            Generando...
+                        </span>
+                    </button>
+                    @endif
+                </div>
+
+                @if (! $canGeneratePublicManagementLink)
+                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    Esta cita ya no permite generar enlaces públicos de gestión.
+                </div>
+                @elseif (! $publicManagementUrl)
+                <div class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Al generar un nuevo enlace, cualquier enlace anterior de esta cita dejará de funcionar.
+                </div>
+                @else
+                <div class="mt-5 space-y-4">
+                    <div>
+                        <label class="dt-label">Enlace público</label>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <input
+                                type="text"
+                                value="{{ $publicManagementUrl }}"
+                                readonly
+                                class="dt-input min-w-0 flex-1 font-mono text-xs" />
+
+                            <button
+                                type="button"
+                                wire:click="copyPublicManagementLink"
+                                class="dt-btn dt-btn-secondary shrink-0">
+                                Copiar enlace
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="dt-label">Mensaje sugerido</label>
+                        <textarea
+                            readonly
+                            rows="4"
+                            class="dt-textarea">{{ $publicManagementMessage }}</textarea>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            wire:click="copyPublicManagementMessage"
+                            class="dt-btn dt-btn-secondary">
+                            Copiar mensaje
+                        </button>
+
+                        @if ($whatsappShareUrl)
+                        <a
+                            href="{{ $whatsappShareUrl }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                            Abrir WhatsApp
+                        </a>
+                        @endif
+
+                        @if ($emailShareUrl)
+                        <a
+                            href="{{ $emailShareUrl }}"
+                            class="inline-flex items-center justify-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700">
+                            Abrir correo
+                        </a>
+                        @endif
+                    </div>
+
+                    <p class="text-xs leading-5 text-slate-500">
+                        Abrir WhatsApp o correo sólo prepara el mensaje. DocTotal no lo marcará como enviado hasta que exista un transport integrado que confirme el envío.
+                    </p>
+                </div>
+                @endif
+            </div>
+        </div>
+
         @if ($appointment->communications->isEmpty())
         <div class="px-5 py-10 text-center sm:px-6">
             <div class="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
@@ -852,6 +1094,26 @@ $statusGradient = $statusAccent[$appointment->status] ?? 'from-blue-500 to-viole
             icon: event.icon,
             confirmButtonText: 'Aceptar'
         });
+    });
+
+    $wire.on('copy-to-clipboard', async (event) => {
+        try {
+            await navigator.clipboard.writeText(event.text);
+
+            Swal.fire({
+                title: event.label ?? 'Copiado',
+                icon: 'success',
+                timer: 1200,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            Swal.fire({
+                title: 'No se pudo copiar',
+                text: 'Selecciona el texto y cópialo manualmente.',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
     });
 </script>
 @endscript

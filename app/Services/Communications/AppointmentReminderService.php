@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class AppointmentReminderService
 {
+    public function __construct(
+        private AppointmentPublicLinkService $publicLinkService,
+    ) {
+    }
+
     public function create(
         Appointment $appointment,
         string $channel = Communication::CHANNEL_WHATSAPP,
@@ -54,7 +59,9 @@ class AppointmentReminderService
                 $scheduledFor = now();
             }
 
-            $publicToken = $appointment->issuePublicAccessToken();
+            $publicLink = $this->publicLinkService->issue(
+                $appointment
+            );
 
             return Communication::create([
                 'patient_id' => $appointment->patient_id,
@@ -63,12 +70,9 @@ class AppointmentReminderService
                 'channel' => $channel,
                 'recipient' => $recipient,
                 'subject' => $channel === Communication::CHANNEL_EMAIL
-                    ? 'Recordatorio de cita'
+                    ? $publicLink['subject']
                     : null,
-                'body' => $this->buildBody(
-                    $appointment,
-                    $publicToken
-                ),
+                'body' => $publicLink['message'],
                 'status' => Communication::STATUS_PENDING,
                 'idempotency_key' => $idempotencyKey,
                 'scheduled_for' => $scheduledFor,
@@ -132,17 +136,4 @@ class AppointmentReminderService
         ]);
     }
 
-    private function buildBody(
-        Appointment $appointment,
-        string $publicToken,
-    ): string {
-        return sprintf(
-            "Recordatorio: tiene una cita programada para el %s.\n\nConfirme o gestione su cita:\n%s",
-            $appointment->starts_at->format('d/m/Y H:i'),
-            route(
-                'public.appointments.show',
-                ['token' => $publicToken]
-            )
-        );
-    }
 }

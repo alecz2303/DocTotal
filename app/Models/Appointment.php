@@ -210,7 +210,7 @@ class Appointment extends Model
 
     public function issuePublicAccessToken(): string
     {
-        $token = bin2hex(random_bytes(32));
+        $token = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
 
         $this->update([
             'public_access_token_hash' => hash('sha256', $token),

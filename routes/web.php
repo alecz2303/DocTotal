@@ -15,7 +15,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::prefix('appointment')->name('public.appointments.')->group(function () {
+Route::prefix('a')->name('public.appointments.')->group(function () {
     Route::get('/{token}', [PublicAppointmentController::class, 'show'])
         ->name('show');
 
@@ -24,6 +24,13 @@ Route::prefix('appointment')->name('public.appointments.')->group(function () {
 
     Route::post('/{token}/cancel', [PublicAppointmentController::class, 'cancel'])
         ->name('cancel');
+});
+
+// Compatibilidad con enlaces emitidos antes de DT-25.
+Route::prefix('appointment')->group(function () {
+    Route::get('/{token}', [PublicAppointmentController::class, 'show']);
+    Route::post('/{token}/confirm', [PublicAppointmentController::class, 'confirm']);
+    Route::post('/{token}/cancel', [PublicAppointmentController::class, 'cancel']);
 });
 
 // Route::get('/', function () {

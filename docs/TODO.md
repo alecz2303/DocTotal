@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-24: 1002 tests verdes / 0
+> Suite completa al cierre técnico de DT-25: 1005 tests verdes / 0
 > failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
@@ -3775,6 +3775,33 @@ Validación final:
 
 `0 failures`
 
+
+# 27B. Compartición manual del enlace de gestión de cita --- DT-25
+
+Relacionado con DT-25.
+
+-   [x] Generar manualmente el enlace seguro desde el detalle de la cita.
+-   [x] Regenerar el enlace e invalidar inmediatamente el anterior.
+-   [x] Usar URL pública compacta `/a/{token}`.
+-   [x] Mantener token URL-safe de alta entropía y persistir sólo SHA-256.
+-   [x] Mantener compatibilidad con enlaces anteriores de DT-24.
+-   [x] Copiar enlace público.
+-   [x] Copiar mensaje completo.
+-   [x] Abrir WhatsApp con destinatario y mensaje precargados.
+-   [x] Normalizar números mexicanos para WhatsApp.
+-   [x] Abrir correo con destinatario, asunto y cuerpo precargados.
+-   [x] Incluir médico, clínica/consultorio, fecha humana y hora en el mensaje.
+-   [x] Reutilizar construcción de enlace/mensaje en recordatorios automáticos y flujo manual.
+-   [x] No marcar como enviada una comunicación por copiar o abrir WhatsApp/correo.
+-   [x] Mostrar una vista pública amigable para enlaces inválidos o invalidados conservando HTTP 404.
+-   [x] Mantener token plano fuera de auditoría y metadata persistida.
+
+Validación final:
+
+`1005 tests verdes`
+
+`0 failures`
+
 # 28. Deuda y decisiones de producto
 
 Estas decisiones no necesariamente requieren un DT inmediato, pero deben
@@ -3955,7 +3982,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-24
+# Baseline actual al cierre técnico de DT-25
 
 Avance global ponderado vigente:
 
@@ -3967,7 +3994,7 @@ producto.
 
 Suite completa final:
 
-988 tests verdes.
+1005 tests verdes.
 
 0 failures.
 
@@ -3975,9 +4002,9 @@ Assertions finales no registradas; no se infieren.
 
 DT-21 está completado e integrado.
 
-DT-22 y DT-23 están completados e integrados. DT-24 tiene cierre técnico
-completado y está pendiente de documentación final, commit, push, PR,
-merge y cierre Jira.
+DT-22, DT-23 y DT-24 están completados e integrados. DT-25 tiene cierre
+técnico completado y está pendiente de documentación final, commit, push,
+PR, merge y cierre Jira.
 
 # 32. Visión de producto
 
@@ -4056,20 +4083,22 @@ médico.
 1.  🏥 **Panel administrativo interno SaaS --- DT-22 COMPLETADO** Consola
     interna implementada e integrada.
 
-2.  📱 **Interacción del paciente con citas --- DT-24 CIERRE TÉCNICO
-    COMPLETADO** Confirmación y cancelación mediante enlaces públicos
-    seguros integrados con la infraestructura de comunicaciones. La
-    reprogramación pública queda pendiente como evolución posterior.
+2.  📱 **Interacción del paciente con citas --- DT-24 COMPLETADO**
+    Confirmación y cancelación mediante enlaces públicos seguros.
 
-3.  📋 **Plantillas clínicas --- SIGUIENTE PRIORIDAD** Plantillas
+3.  🔗 **Compartición manual del enlace de cita --- DT-25 CIERRE TÉCNICO
+    COMPLETADO** Generación/regeneración manual, URL compacta, copia,
+    WhatsApp, correo y experiencia amigable para enlaces inválidos.
+
+4.  📋 **Plantillas clínicas --- SIGUIENTE PRIORIDAD** Plantillas
     reutilizables para consultas y base para plantillas por especialidad.
 
-4.  🧪 **Laboratorios estructurados** Estudios, resultados estructurados
+5.  🧪 **Laboratorios estructurados** Estudios, resultados estructurados
     e historial longitudinal, sin interpretación clínica automática.
 
-5.  🔐 **Seguridad de cuenta** 2FA, passkeys, verificación de correo,
+6.  🔐 **Seguridad de cuenta** 2FA, passkeys, verificación de correo,
     sesiones activas y revocación de sesiones/dispositivos.
 
-6.  💊 **Repetición de tratamientos/recetas** Crear nuevas recetas a
+7.  💊 **Repetición de tratamientos/recetas** Crear nuevas recetas a
     partir de tratamientos anteriores conservando inmutable el
     historial.
