@@ -2106,7 +2106,7 @@ Fuera de alcance:
 
 ## DT-32 --- Harden transactional communications and appointment reminders
 
-Estado: Implementado y validado técnicamente; pendiente de aprobación humana e integración.
+Estado: Completado
 
 Objetivo:
 
@@ -2401,3 +2401,40 @@ La selección y ejecución del siguiente DT debe seguir priorizando:
 -   dependencias técnicas;
 -   experiencia del usuario;
 -   preparación para producción.
+
+------------------------------------------------------------------------
+
+## DT-33 --- Close DocTotal 1.0 billing production readiness
+
+Estado: Completado
+
+Objetivo:
+
+Cerrar las brechas críticas de facturación necesarias para operación comercial de DocTotal 1.0 sin reconstruir el lifecycle existente.
+
+Incluye:
+
+- Webhook Stripe autenticado mediante firma.
+- Registro persistente e idempotente de eventos del proveedor.
+- Sincronización de `payment_intent.succeeded`, `payment_intent.payment_failed` y `payment_intent.canceled`.
+- Recuperación segura de eventos previamente fallidos.
+- Validación de identidad DocTotal, tenant, PaymentIntent, importe, moneda, customer y contexto de suscripción.
+- Sincronización de pagos manuales, recuperación manual y cobros automáticos.
+- Preservación de los flujos de recovery, retries, grace period, suspensión y reactivación ya existentes.
+- Auditoría controlada de eventos procesados sin almacenar secretos ni payload completo.
+- Comprobante operativo de pago para pagos exitosos, explícitamente no fiscal.
+- Protección multi-tenant del comprobante.
+- Cobertura automatizada para éxito, fallo, cancelación, idempotencia, tenant isolation y recuperación automática.
+- Validación completa mediante GitHub Actions CI #37.
+
+Fuera de alcance:
+
+- CFDI/facturación fiscal mexicana.
+- Rediseño completo de billing.
+- Cambios de precios o planes.
+- Deployment automático.
+- Merge automático.
+
+Resultado:
+
+El bloque de billing queda preparado para la etapa final de producción de DocTotal 1.0, manteniendo Stripe detrás de las abstracciones existentes y sin credenciales reales en repositorio o CI.

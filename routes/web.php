@@ -8,8 +8,11 @@ use App\Http\Controllers\Internal\InternalCommunicationController;
 use App\Http\Controllers\Internal\InternalAuditController;
 use App\Http\Controllers\ServiceSuspendedController;
 use App\Http\Controllers\PublicAppointmentController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\PaymentReceiptController;
 
-
+Route::post('/webhooks/stripe', StripeWebhookController::class)
+    ->name('webhooks.stripe');
 
 Route::get('/', function () {
     return view('welcome');
@@ -50,6 +53,11 @@ Route::middleware('auth')->group(function () {
         '/settings/billing',
         'pages::settings.billing'
     )->middleware('verified')->name('settings.billing');
+
+    Route::get(
+        '/settings/billing/receipts/{payment}',
+        PaymentReceiptController::class
+    )->middleware('verified')->name('billing.receipts.show');
 
     Route::livewire(
         '/settings/security',
