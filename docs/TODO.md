@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**79% completado**
+**90% completado**
 
-`████████████████░░░░` 79%
+`██████████████████░░` 90%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -16,8 +16,7 @@ tests.
 >
 > Baseline al cierre de DT-20: 77%.
 >
-> Baseline ponderado vigente: 79% (último porcentaje formalmente
-> calculado).
+> Baseline ponderado formal recalculado después de DT-32: 90% (90.05%).
 >
 > Suite completa validada por CI en DT-31: 1119 tests verdes / 3484 assertions / 0 failures.
 >
@@ -26,6 +25,8 @@ tests.
 >
 > El porcentaje representa avance global ponderado del producto y no
 > cobertura de tests.
+
+DT-33 cerró las brechas críticas de billing para v1.0: webhooks Stripe autenticados e idempotentes, sincronización de éxito/fallo/cancelación, recuperación automática coherente, comprobante operativo de pago y cobertura multi-tenant.
 
 Este documento representa el estado funcional actual de DocTotal y sirve
 

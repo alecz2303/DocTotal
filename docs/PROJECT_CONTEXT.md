@@ -72,12 +72,24 @@ multi-tenant.
 
 # Baseline actual
 
-Último DT integrado en `master`:
+Último DT integrado en `master` antes de este bloque:
 
--   DT-31 --- Automate DocTotal CI validation with GitHub Actions.
--   Commit: `2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`.
--   DT-30 quedó integrado previamente mediante:
-    `bf99782 DT-30 feat: add public appointment rescheduling`.
+-   DT-32 --- Harden transactional communications and appointment reminders.
+-   Commit: `9fbf6a5 DT-32 feat: harden transactional communications and appointment reminders`.
+
+DT-33 --- Close DocTotal 1.0 billing production readiness:
+
+-   Jira: DT-33.
+-   Rama: `DT-33`.
+-   Base canónica: `9fbf6a5`.
+-   Webhooks Stripe autenticados e idempotentes.
+-   Sincronización de éxito, fallo y cancelación de PaymentIntent.
+-   Recuperación segura de eventos fallidos.
+-   Coherencia de pagos manuales, recuperación manual y cobros automáticos.
+-   Comprobante operativo para pagos exitosos con aislamiento por tenant.
+-   Auditoría controlada sin secretos ni payload completo.
+-   GitHub Actions CI #37 verde sobre el bloque técnico final.
+-   Sin CFDI, deployment ni merge automático.
 
 DT-32 --- Harden transactional communications and appointment reminders:
 
@@ -100,10 +112,12 @@ Flujo operativo de CI:
 
 Avance global ponderado vigente:
 
-`79%`
+`90%`
 
-## El 79% es el último porcentaje formalmente calculado. No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio ponderado del producto.
+## El 90% corresponde a la recalculación ponderada formal post-DT-32 (90.05%), usando DocTotal 1.0 listo para operación comercial como 100%.
 # Commits recientes canónicos
+
+-   `9fbf6a5 DT-32 feat: harden transactional communications and appointment reminders`
 
 -   `2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`
 -   `bf99782 DT-30 feat: add public appointment rescheduling`
