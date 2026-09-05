@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa validada en DT-30: 1119 tests verdes / 0 failures.
+> Suite completa validada por CI en DT-31: 1119 tests verdes / 3484 assertions / 0 failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
 > ponderado del producto.
@@ -2531,6 +2531,16 @@ El baseline de 952 corresponde a la suite completa ejecutada durante el
 desarrollo de DT-22. El porcentaje global permanece en 79% hasta
 realizar el cierre técnico y recalcularlo.
 
+Cierre técnico DT-31:
+
+1119 tests verdes.
+
+3484 assertions.
+
+0 failures.
+
+GitHub Actions validado tanto en `push` a rama `DT-*` como en `pull_request` hacia `master`.
+
 ## Cobertura existente
 
 -   [x] Tests de autenticación.
@@ -4083,7 +4093,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-30
+# Baseline actual con DT-31 técnicamente validado
 
 Avance global ponderado vigente:
 
@@ -4093,35 +4103,42 @@ Este es el último porcentaje formalmente calculado. No se infiere un
 porcentaje nuevo sin aplicar nuevamente el criterio ponderado del
 producto.
 
-Suite completa final:
+Suite completa validada por GitHub Actions:
 
 1119 tests verdes.
 
+3484 assertions.
+
 0 failures.
 
-Assertions finales globales no registradas; no se infieren.
+DT-21 a DT-30 están completados e integrados en `master`.
 
-DT-21, DT-22, DT-23, DT-24, DT-25, DT-26, DT-27, DT-28 y DT-29 están
-completados e integrados en `master`.
+DT-30 quedó integrado mediante:
 
-DT-29 quedó integrado mediante:
+`bf99782 DT-30 feat: add public appointment rescheduling`
 
-`86420d1 DT-29 feat: add prescription repeat workflow`
+DT-31 implementa la automatización de validación técnica mediante
+GitHub Actions y fue probado en los dos caminos requeridos:
 
-DT-30 tiene cierre técnico validado e integración preparada mediante:
+-   `push` a ramas `DT-*`.
+-   `pull_request` hacia `master`.
+-   PHP 8.4 y Node.js 22.
+-   dependencias reproducibles mediante lockfiles.
+-   base SQLite aislada para tests.
+-   build de frontend.
+-   validación de sintaxis PHP.
+-   suite Laravel completa.
+-   sin credenciales reales de producción.
+-   sin deployment ni merge automático.
+-   aprobación humana obligatoria antes de integrar a `master`.
 
-`PR #32 — DT-30 feat: add public appointment rescheduling`
+PR de implementación:
 
-Validación específica reportada para DT-30:
+`PR #33 — DT-31 feat: automate CI validation with GitHub Actions`
 
--   `PublicAppointmentRescheduleTest`: 9 tests verdes / 43 assertions.
--   `AppointmentReminder*`: 24 tests verdes / 68 assertions.
--   `PublicAppointmentSelfServiceTest`: 7 tests verdes / 22 assertions.
--   Suite completa: 1119 tests verdes / 0 failures.
--   `git diff --check` limpio antes del cierre documental.
+El flujo operativo de desarrollo queda definido como:
 
-DT-31 fue creado por Jira para automatizar CI con GitHub Actions y
-permanece `Por hacer` hasta el cierre formal de DT-30.
+`Kai actualiza DT-* → GitHub Actions valida → Kai corrige si es necesario → CI verde → Alecz realiza validación manual/visual cuando corresponda → PR/revisión → aprobación humana explícita → merge`
 
 # 32. Visión de producto
 
@@ -4222,13 +4239,14 @@ médico.
     inmutable el historial fuente, con trazabilidad al origen,
     edición previa y protección multi-tenant.
 
-8.  📅 **Reprogramación pública de citas --- DT-30 CIERRE TÉCNICO VALIDADO**
+8.  📅 **Reprogramación pública de citas --- DT-30 COMPLETADO**
     El paciente puede elegir horarios realmente disponibles desde su
     enlace público, con revalidación server-side, rotación del token,
     protección de estados, aislamiento multi-tenant y recordatorios
     coherentes con el nuevo horario.
 
-9.  ⚙️ **CI automatizado --- DT-31 POR HACER**
-    GitHub Actions para validar ramas `DT-*` y PRs hacia `master`, con
-    PHP 8.4, suite automática, logs visibles y aprobación humana antes
-    del merge.
+9.  ⚙️ **CI automatizado --- DT-31 VALIDADO TÉCNICAMENTE**
+    GitHub Actions valida ramas `DT-*` y PRs hacia `master` con PHP 8.4,
+    dependencias reproducibles, entorno aislado, build, sintaxis y suite
+    completa. No existe merge automático: la aprobación humana continúa
+    siendo obligatoria.
