@@ -32,16 +32,25 @@ class Patient extends Model
         'postal_code',
         'country',
         'notes',
+        'allow_email_communications',
+        'allow_whatsapp_communications',
+        'allow_sms_communications',
     ];
 
     protected $attributes = [
         'country' => 'MX',
+        'allow_email_communications' => true,
+        'allow_whatsapp_communications' => true,
+        'allow_sms_communications' => true,
     ];
 
     protected function casts(): array
     {
         return [
             'birth_date' => 'date',
+            'allow_email_communications' => 'boolean',
+            'allow_whatsapp_communications' => 'boolean',
+            'allow_sms_communications' => 'boolean',
         ];
     }
 
