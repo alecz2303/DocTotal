@@ -33,14 +33,17 @@ class ProductionReadinessCheckerTest extends TestCase
             'app.env' => 'local',
             'app.name' => 'Laravel',
             'app.debug' => true,
-            'app.url' => 'http://doctotal.test',
+            'app.url' => 'http://',
             'database.default' => 'sqlite',
+            'session.driver' => 'array',
             'session.secure' => false,
             'session.http_only' => false,
+            'cache.default' => 'array',
             'mail.default' => 'log',
             'mail.from.address' => 'hello@example.com',
             'logging.channels.single.level' => 'debug',
             'queue.default' => 'sync',
+            'queue.failed.driver' => 'null',
         ]);
 
         $keys = collect(
@@ -51,13 +54,17 @@ class ProductionReadinessCheckerTest extends TestCase
         $this->assertTrue($keys->contains('app.name'));
         $this->assertTrue($keys->contains('app.debug'));
         $this->assertTrue($keys->contains('app.url'));
+        $this->assertTrue($keys->contains('app.host'));
         $this->assertTrue($keys->contains('database.default'));
+        $this->assertTrue($keys->contains('session.driver'));
         $this->assertTrue($keys->contains('session.secure'));
         $this->assertTrue($keys->contains('session.http_only'));
+        $this->assertTrue($keys->contains('cache.default'));
         $this->assertTrue($keys->contains('mail.default'));
         $this->assertTrue($keys->contains('mail.from.address'));
         $this->assertTrue($keys->contains('logging.level'));
         $this->assertTrue($keys->contains('queue.default'));
+        $this->assertTrue($keys->contains('queue.failed.driver'));
     }
 
     public function test_production_requires_real_stripe_configuration(): void
@@ -144,13 +151,16 @@ class ProductionReadinessCheckerTest extends TestCase
             'app.key' => 'base64:'.base64_encode(str_repeat('k', 32)),
             'app.url' => 'https://doctotal.test',
             'database.default' => 'mysql',
+            'session.driver' => 'database',
             'session.secure' => true,
             'session.http_only' => true,
             'session.serialization' => 'json',
+            'cache.default' => 'database',
             'mail.default' => 'smtp',
             'mail.from.address' => 'no-reply@doctotal.test',
             'logging.channels.single.level' => 'info',
             'queue.default' => 'database',
+            'queue.failed.driver' => 'database-uuids',
             'billing.automatic_charging_enabled' => false,
             'billing.payment_gateway' => 'stripe',
             'services.stripe.key' => 'pk_test_doctotal',
