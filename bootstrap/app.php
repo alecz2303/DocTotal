@@ -3,7 +3,6 @@
 use App\Http\Middleware\EnsureInternalAdmin;
 use App\Http\Middleware\EnsureOnboardingIsComplete;
 use App\Http\Middleware\EnsureTenantHasServiceAccess;
-use App\Http\Middleware\EnsureTrustedProductionHost;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,8 +17,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(
-            EnsureTrustedProductionHost::class
+        $middleware->trustHosts(
+            at: function (): array {
+                if (config('app.env') !== 'production') {
+                    return ['.*'];
+                }
+
+                $host = parse_url(
+                    (string) config('app.url'),
+                    PHP_URL_HOST
+                );
+
+                if (! is_string($host) || $host === '') {
+                    return [];
+                }
+
+                return [preg_quote($host, '/')];
+            },
+            subdomains: false,
         );
 
         $middleware->web(append: [
