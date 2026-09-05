@@ -2,9 +2,9 @@
 
 ## Progreso general
 
-**90% completado**
+**94% completado**
 
-`██████████████████░░` 90%
+`███████████████████░` 94%
 
 > El porcentaje representa avance global del producto, no cobertura de
 
@@ -16,7 +16,7 @@ tests.
 >
 > Baseline al cierre de DT-20: 77%.
 >
-> Baseline ponderado formal recalculado después de DT-32: 90% (90.05%).
+> Baseline ponderado formal recalculado al cierre técnico de DT-34: 94%.
 >
 > Suite completa validada por CI en DT-31: 1119 tests verdes / 3484 assertions / 0 failures.
 >
@@ -27,6 +27,8 @@ tests.
 > cobertura de tests.
 
 DT-33 cerró las brechas críticas de billing para v1.0: webhooks Stripe autenticados e idempotentes, sincronización de éxito/fallo/cancelación, recuperación automática coherente, comprobante operativo de pago y cobertura multi-tenant.
+
+DT-34 incorpora alertas clínicas contextuales deterministas y trazables desde alergias, medicamentos actuales, condiciones crónicas y problemas clínicos activos; visibles durante la consulta, sin diagnóstico automático ni recomendaciones terapéuticas.
 
 Este documento representa el estado funcional actual de DocTotal y sirve
 

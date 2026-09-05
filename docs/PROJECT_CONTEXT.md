@@ -91,6 +91,19 @@ DT-33 --- Close DocTotal 1.0 billing production readiness:
 -   GitHub Actions CI #37 verde sobre el bloque técnico final.
 -   Sin CFDI, deployment ni merge automático.
 
+DT-34 --- Contextual clinical alerts for active patient problems:
+
+-   Jira: DT-34.
+-   Rama de trabajo: `DT-34`.
+-   Base canónica: `f27ff018` post-DT-33.
+-   Servicio determinista `PatientClinicalAlertService`.
+-   Fuentes: alergias, medicamentos actuales, condiciones crónicas y problemas clínicos activos.
+-   Trazabilidad explícita de fuente para cada alerta.
+-   Aislamiento multi-tenant validado.
+-   Integración visible en el workspace de consulta.
+-   Sin diagnóstico automático ni recomendaciones terapéuticas.
+-   Cobertura automatizada y GitHub Actions verdes.
+
 DT-32 --- Harden transactional communications and appointment reminders:
 
 -   Jira: DT-32.
@@ -112,9 +125,9 @@ Flujo operativo de CI:
 
 Avance global ponderado vigente:
 
-`90%`
+`94%`
 
-## El 90% corresponde a la recalculación ponderada formal post-DT-32 (90.05%), usando DocTotal 1.0 listo para operación comercial como 100%.
+## El 94% corresponde a la recalculación ponderada formal al cierre técnico de DT-34, incorporando el cierre de billing de DT-33 y la capa de alertas clínicas contextuales de DT-34.
 # Commits recientes canónicos
 
 -   `9fbf6a5 DT-32 feat: harden transactional communications and appointment reminders`

@@ -1221,6 +1221,9 @@ new
     </div>
     @endif
 
+    {{-- CONTEXTUAL CLINICAL ALERTS --}}
+    <x-clinical.patient-alerts :patient="$patient" class="mb-6" />
+
     {{-- CLINICAL WORKSPACE --}}
     <div class="mt-7 grid items-start gap-6 pb-28 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
 

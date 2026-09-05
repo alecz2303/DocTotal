@@ -2438,3 +2438,43 @@ Fuera de alcance:
 Resultado:
 
 El bloque de billing queda preparado para la etapa final de producción de DocTotal 1.0, manteniendo Stripe detrás de las abstracciones existentes y sin credenciales reales en repositorio o CI.
+
+------------------------------------------------------------------------
+
+## DT-34 --- Contextual clinical alerts for active patient problems
+
+Estado: Completado
+
+Objetivo:
+
+Incorporar alertas clínicas contextuales, deterministas y trazables sobre fuentes estructuradas ya existentes del expediente, sin crear una capa de diagnóstico automático ni recomendaciones terapéuticas.
+
+Incluye:
+
+- Servicio `PatientClinicalAlertService` aislado del UI.
+- Alertas derivadas de alergias registradas.
+- Alertas derivadas de medicamentos actuales.
+- Alertas derivadas de condiciones crónicas.
+- Alertas derivadas únicamente de `PatientProblem` activos.
+- Trazabilidad explícita mediante tipo, identificador y etiqueta de fuente.
+- Validación explícita del tenant clínico activo.
+- Componente visual reutilizable para alertas.
+- Integración visible en el workspace de consulta antes del área de captura clínica.
+- Distinción visual de alergias como información de alta visibilidad.
+- Mensaje explícito de que las alertas no constituyen diagnóstico ni recomendación terapéutica.
+- Casos vacíos sin ruido visual.
+- Cobertura automatizada del servicio, presentación, estados resueltos y aislamiento multi-tenant.
+- Validación mediante GitHub Actions.
+
+Fuera de alcance:
+
+- IA clínica generativa.
+- Diagnóstico automático.
+- Recomendaciones terapéuticas.
+- Interacciones medicamentosas externas o farmacovigilancia.
+- DICOM/PACS, OCR o analítica clínica avanzada.
+- Auto deploy o auto merge.
+
+Resultado:
+
+DocTotal dispone de una capa explícita de alertas clínicas contextuales basada exclusivamente en información estructurada ya registrada y visible en el momento de atención.
