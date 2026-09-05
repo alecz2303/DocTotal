@@ -13,7 +13,9 @@ class TrustedProductionHostTest extends TestCase
             'app.url' => 'https://doctotal.test',
         ]);
 
-        $this->withHeader('Host', 'doctotal.test')
+        $this->withServerVariables([
+            'HTTP_HOST' => 'doctotal.test',
+        ])
             ->get('/up')
             ->assertOk();
     }
@@ -25,7 +27,9 @@ class TrustedProductionHostTest extends TestCase
             'app.url' => 'https://doctotal.test',
         ]);
 
-        $this->withHeader('Host', 'evil.test')
+        $this->withServerVariables([
+            'HTTP_HOST' => 'evil.test',
+        ])
             ->get('/up')
             ->assertStatus(400);
     }
@@ -37,7 +41,9 @@ class TrustedProductionHostTest extends TestCase
             'app.url' => 'http://localhost',
         ]);
 
-        $this->withHeader('Host', 'arbitrary.local')
+        $this->withServerVariables([
+            'HTTP_HOST' => 'arbitrary.local',
+        ])
             ->get('/up')
             ->assertOk();
     }
