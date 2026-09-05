@@ -6,13 +6,15 @@ use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, HasUuid, Notifiable, SoftDeletes;
+    use HasFactory, HasUuid, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     public const ROLE_OWNER = 'owner';
     public const ROLE_INTERNAL_ADMIN = 'internal_admin';
@@ -28,6 +30,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -35,6 +39,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -47,6 +52,16 @@ class User extends Authenticatable
     public function doctorProfile(): HasOne
     {
         return $this->hasOne(DoctorProfile::class);
+    }
+
+    /**
+     * Envía la notificación personalizada para verificar el correo electrónico.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(
+            new \App\Notifications\VerifyEmailNotification()
+        );
     }
 
     /**

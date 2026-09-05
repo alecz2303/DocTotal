@@ -74,20 +74,20 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-26 --- Clinical templates for medical records.
+-   DT-27 --- Structured laboratory results in clinical records.
 -   Commit:
-    `4ceac23 DT-26 feat: add reusable clinical templates`.
+    `a1a66a1 DT-27 feat: add structured laboratory results`.
 
 DT activo con cierre técnico completado:
 
--   DT-27 --- Structured laboratory results in clinical records.
--   Jira: DT-27.
--   Suite completa validada: `1021 tests verdes`, `0 failures`.
+-   DT-28 --- Complete account security and recovery flows.
+-   Jira: DT-28.
+-   Suite completa validada: `1068 tests verdes`, `0 failures`.
 -   Pendiente: commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-27:
+Suite completa validada al cierre técnico de DT-28:
 
-`1021 tests verdes`
+`1068 tests verdes`
 
 `0 failures`
 
@@ -101,6 +101,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `a1a66a1 DT-27 feat: add structured laboratory results`
 -   `4ceac23 DT-26 feat: add reusable clinical templates`
 -   `240bcf6 DT-25 feat: add manual patient appointment link sharing`
 -   `12d573b DT-24 feat: add patient appointment self-service`
@@ -612,5 +613,43 @@ Calidad final DT-27:
 
 Commit principal:
 
-Pendiente hasta integrar DT-27 en `master`.
+`a1a66a1 DT-27 feat: add structured laboratory results`.
 
+
+
+------------------------------------------------------------------------
+
+# Seguridad de cuenta y recuperación --- DT-28
+
+DT-28 completa la capa visible de seguridad de cuenta sobre Laravel Fortify.
+
+Implementado:
+
+-   cambio de contraseña con contraseña actual, confirmación y reglas de Laravel;
+-   auditoría `account.password.updated` sin credenciales;
+-   2FA TOTP con QR, confirmación, recovery codes, regeneración y desactivación;
+-   challenge 2FA en login y códigos de recuperación de un solo uso;
+-   protección de secretos 2FA y exposición temporal autorizada de QR/recovery codes;
+-   sesiones y dispositivos visibles sin exponer IDs reales de sesión;
+-   revocación individual y de todas las demás sesiones con contraseña actual;
+-   rotación del remember token al revocar sesiones;
+-   verificación de correo con notificación personalizada, enlace firmado y reenvío;
+-   middleware de correo verificado en onboarding, billing, consola interna y aplicación clínica;
+-   Configuración → Seguridad accesible para usuarios no verificados y tenants suspendidos;
+-   auditoría `account.email.verified` sin URL firmada ni hash de verificación;
+-   compatibilidad de redirección para administradores internos;
+-   cobertura automatizada de contraseña, 2FA, sesiones y verificación de correo.
+
+Passkeys/WebAuthn:
+
+La infraestructura actual de Laravel 13/Fortify ya contiene foundation de passkeys y persistencia. Su activación se difiere hasta definir el hostname productivo HTTPS canónico y configurar de forma definitiva el relying party y los allowed origins de WebAuthn. No se registrarán credenciales productivas contra dominios locales de desarrollo.
+
+Calidad final DT-28:
+
+`1068 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-28 en `master`.

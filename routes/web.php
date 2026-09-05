@@ -40,7 +40,7 @@ Route::prefix('appointment')->group(function () {
 Route::middleware('auth')->group(function () {
 
     Route::livewire('/onboarding', 'pages::onboarding.wizard')
-        ->middleware('auth')
+        ->middleware(['auth', 'verified'])
         ->name('onboarding');
 
     Route::get('/service/suspended', ServiceSuspendedController::class)
@@ -49,9 +49,14 @@ Route::middleware('auth')->group(function () {
     Route::livewire(
         '/settings/billing',
         'pages::settings.billing'
-    )->name('settings.billing');
+    )->middleware('verified')->name('settings.billing');
 
-    Route::middleware('internal.admin')->group(function () {
+    Route::livewire(
+        '/settings/security',
+        'pages::settings.security'
+    )->name('settings.security');
+
+    Route::middleware(['verified', 'internal.admin'])->group(function () {
         Route::get('/internal', InternalDashboardController::class)
             ->name('internal.dashboard');
 
@@ -73,6 +78,7 @@ Route::middleware('auth')->group(function () {
 
 
     Route::middleware([
+        'verified',
         'onboarding',
         'service.access',
     ])->group(function () {
