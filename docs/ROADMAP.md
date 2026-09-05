@@ -2043,7 +2043,11 @@ Fuera de alcance:
 
 ## DT-31 --- Automate DocTotal CI validation with GitHub Actions
 
-Estado: Implementado y validado técnicamente.
+Estado: Completado e integrado en `master`.
+
+Commit principal:
+
+`2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`
 
 Objetivo:
 
@@ -2099,6 +2103,45 @@ Fuera de alcance:
 -   Servicios pagados nuevos.
 
 ------------------------------------------------------------------------
+
+## DT-32 --- Harden transactional communications and appointment reminders
+
+Estado: Implementado y validado técnicamente; pendiente de aprobación humana e integración.
+
+Objetivo:
+
+Endurecer la foundation de DT-20 para comunicaciones transaccionales y recordatorios de citas sin acoplar el dominio a proveedores reales.
+
+Incluye:
+
+-   Preferencias explícitas por paciente y canal para email, WhatsApp y SMS.
+-   `PatientCommunicationEligibilityService`.
+-   Estado `processing` y `processing_started_at`.
+-   Claim transaccional antes de contactar al transport para evitar procesamiento concurrente duplicado.
+-   Reintentos existentes preservados con máximo de 3 intentos y backoff.
+-   Redacción de secretos/tokens en errores persistidos.
+-   `FakeCommunicationTransport` determinista y sin I/O externo.
+-   Idempotencia existente de recordatorios por appointment UUID + canal + timestamp preservada.
+-   Aislamiento multi-tenant preservado.
+-   Sin credenciales reales, deployment ni merge automático.
+
+Validación técnica:
+
+-   GitHub Actions en push DT-32: success.
+-   Suite completa: `1123 tests verdes`.
+-   `3499 assertions`.
+-   `0 failures`.
+-   PR #34 abierto hacia `master`.
+
+Fuera de alcance:
+
+-   Campañas de marketing o mensajería masiva.
+-   Alertas clínicas inteligentes.
+-   Activación obligatoria de proveedores reales.
+-   Contratación de servicios externos.
+-   Deployment o merge automático.
+
+------------------------------------------------------------------------
 ## Próximos candidatos
 
 Los siguientes bloques no están todavía comprometidos como DT
@@ -2152,8 +2195,10 @@ implementación.
 
 Estado:
 
-Foundation realizada en DT-20. Permanecen evoluciones futuras como
-proveedores reales, consentimiento y nuevos tipos de comunicación.
+Foundation realizada en DT-20 y endurecida en DT-32 con preferencias por canal,
+elegibilidad centralizada, protección de procesamiento concurrente y redacción
+de errores. Permanecen evoluciones futuras como proveedores reales y nuevos
+tipos de comunicación.
 
 Objetivo:
 

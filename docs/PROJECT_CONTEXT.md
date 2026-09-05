@@ -74,28 +74,25 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-30 --- Patient self-service appointment rescheduling with available slots.
--   Commit:
+-   DT-31 --- Automate DocTotal CI validation with GitHub Actions.
+-   Commit: `2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`.
+-   DT-30 quedó integrado previamente mediante:
     `bf99782 DT-30 feat: add public appointment rescheduling`.
--   DT-29 quedó integrado previamente mediante:
-    `86420d1 DT-29 feat: add prescription repeat workflow`.
 
-DT-31 --- Automate DocTotal CI validation with GitHub Actions:
+DT-32 --- Harden transactional communications and appointment reminders:
 
--   Jira: DT-31.
--   Rama de implementación: `DT-31`.
--   Base canónica:
-    `bf99782 DT-30 feat: add public appointment rescheduling`.
--   Workflow canónico: `.github/workflows/ci.yml`.
--   Trigger `push` sobre ramas `DT-*`: validado.
--   Trigger `pull_request` hacia `master`: validado mediante PR #33.
--   PHP 8.4 y Node.js 22.
--   Composer/npm reproducibles desde lockfiles.
--   SQLite in-memory y entorno no productivo.
--   Build frontend y validación de sintaxis PHP.
--   Suite completa: `1119 tests verdes`, `3484 assertions`, `0 failures`.
+-   Jira: DT-32.
+-   Rama: `DT-32`.
+-   Base canónica: `2ddfb92`.
+-   PR: #34 hacia `master`.
+-   Preferencias explícitas por canal en Patient.
+-   `PatientCommunicationEligibilityService`.
+-   Claim transaccional y estado `processing`.
+-   Redacción de secretos/tokens en errores persistidos.
+-   `FakeCommunicationTransport` sin I/O externo.
+-   Suite completa: `1123 tests verdes`, `3499 assertions`, `0 failures`.
 -   Sin credenciales reales, deployment ni merge automático.
--   La aprobación humana continúa siendo obligatoria antes del merge.
+-   Pendiente únicamente de validación final del PR y aprobación humana antes del merge.
 
 Flujo operativo de CI:
 
@@ -108,6 +105,7 @@ Avance global ponderado vigente:
 ## El 79% es el último porcentaje formalmente calculado. No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio ponderado del producto.
 # Commits recientes canónicos
 
+-   `2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`
 -   `bf99782 DT-30 feat: add public appointment rescheduling`
 -   `86420d1 DT-29 feat: add prescription repeat workflow`
 -   `762b3d3 DT-28 feat: complete account security and recovery flows`

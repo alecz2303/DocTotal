@@ -15,6 +15,7 @@ class Communication extends Model
     public const CHANNEL_SMS = 'sms';
 
     public const STATUS_PENDING = 'pending';
+    public const STATUS_PROCESSING = 'processing';
     public const STATUS_SENT = 'sent';
     public const STATUS_FAILED = 'failed';
     public const STATUS_CANCELLED = 'cancelled';
@@ -35,6 +36,7 @@ class Communication extends Model
         'status',
         'idempotency_key',
         'scheduled_for',
+        'processing_started_at',
         'sent_at',
         'failed_at',
         'attempt_count',
@@ -54,6 +56,7 @@ class Communication extends Model
     {
         return [
             'scheduled_for' => 'datetime',
+            'processing_started_at' => 'datetime',
             'sent_at' => 'datetime',
             'failed_at' => 'datetime',
             'attempt_count' => 'integer',
@@ -73,10 +76,22 @@ class Communication extends Model
         return $this->belongsTo(Appointment::class);
     }
 
+    public function markProcessing(): void
+    {
+        $this->update([
+            'status' => self::STATUS_PROCESSING,
+            'processing_started_at' => now(),
+            'next_attempt_at' => null,
+        ]);
+
+        $this->increment('attempt_count');
+    }
+
     public function markSent(): void
     {
         $this->update([
             'status' => self::STATUS_SENT,
+            'processing_started_at' => null,
             'sent_at' => now(),
             'failed_at' => null,
             'next_attempt_at' => null,
@@ -92,6 +107,7 @@ class Communication extends Model
     ): void {
         $this->update([
             'status' => self::STATUS_FAILED,
+            'processing_started_at' => null,
             'failed_at' => now(),
             'next_attempt_at' => $nextAttemptAt,
             'cancelled_at' => null,
@@ -105,6 +121,7 @@ class Communication extends Model
     ): void {
         $this->update([
             'status' => self::STATUS_CANCELLED,
+            'processing_started_at' => null,
             'cancelled_at' => now(),
             'cancellation_reason' => $reason,
             'next_attempt_at' => null,
@@ -124,6 +141,11 @@ class Communication extends Model
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isProcessing(): bool
+    {
+        return $this->status === self::STATUS_PROCESSING;
     }
 
     public function isSent(): bool

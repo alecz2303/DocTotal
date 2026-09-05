@@ -1823,10 +1823,9 @@ de citas.
 
 -   [ ] Comunicaciones de trial y billing.
 
--   [ ] Preferencias/consentimiento por canal.
+-   [x] Preferencias explícitas de comunicaciones por canal en Patient (DT-32).
 
--   \[!\] Evaluar hardening adicional de concurrencia para despliegues
-    distribuidos.
+-   [x] Hardening de concurrencia mediante claim transaccional y estado `processing` (DT-32).
 
 ## Decisiones
 
@@ -4093,7 +4092,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual con DT-31 técnicamente validado
+# Baseline actual con DT-32 técnicamente validado
 
 Avance global ponderado vigente:
 
@@ -4103,40 +4102,35 @@ Este es el último porcentaje formalmente calculado. No se infiere un
 porcentaje nuevo sin aplicar nuevamente el criterio ponderado del
 producto.
 
-Suite completa validada por GitHub Actions:
+Último DT integrado en `master`:
 
-1119 tests verdes.
+`2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`
 
-3484 assertions.
+DT-32 endurece la foundation de comunicaciones transaccionales y
+recordatorios de citas con:
+
+-   preferencias explícitas por paciente/canal para email, WhatsApp y SMS.
+-   elegibilidad centralizada del destinatario.
+-   claim transaccional y estado `processing` para evitar procesamiento concurrente duplicado.
+-   `processing_started_at` para trazabilidad operacional.
+-   redacción de secretos y tokens en errores persistidos.
+-   transport fake determinista y sin llamadas externas.
+-   conservación de idempotencia por cita, canal y horario.
+-   aislamiento multi-tenant heredado de `Communication` mediante `BelongsToTenant`.
+
+Validación GitHub Actions DT-32:
+
+1123 tests verdes.
+
+3499 assertions.
 
 0 failures.
 
-DT-21 a DT-30 están completados e integrados en `master`.
-
-DT-30 quedó integrado mediante:
-
-`bf99782 DT-30 feat: add public appointment rescheduling`
-
-DT-31 implementa la automatización de validación técnica mediante
-GitHub Actions y fue probado en los dos caminos requeridos:
-
--   `push` a ramas `DT-*`.
--   `pull_request` hacia `master`.
--   PHP 8.4 y Node.js 22.
--   dependencias reproducibles mediante lockfiles.
--   base SQLite aislada para tests.
--   build de frontend.
--   validación de sintaxis PHP.
--   suite Laravel completa.
--   sin credenciales reales de producción.
--   sin deployment ni merge automático.
--   aprobación humana obligatoria antes de integrar a `master`.
-
 PR de implementación:
 
-`PR #33 — DT-31 feat: automate CI validation with GitHub Actions`
+`PR #34 — DT-32 feat: harden transactional communications and appointment reminders`
 
-El flujo operativo de desarrollo queda definido como:
+El flujo operativo permanece:
 
 `Kai actualiza DT-* → GitHub Actions valida → Kai corrige si es necesario → CI verde → Alecz realiza validación manual/visual cuando corresponda → PR/revisión → aprobación humana explícita → merge`
 
@@ -4245,8 +4239,13 @@ médico.
     protección de estados, aislamiento multi-tenant y recordatorios
     coherentes con el nuevo horario.
 
-9.  ⚙️ **CI automatizado --- DT-31 VALIDADO TÉCNICAMENTE**
+9.  ⚙️ **CI automatizado --- DT-31 COMPLETADO**
     GitHub Actions valida ramas `DT-*` y PRs hacia `master` con PHP 8.4,
     dependencias reproducibles, entorno aislado, build, sintaxis y suite
     completa. No existe merge automático: la aprobación humana continúa
     siendo obligatoria.
+
+
+10. 📣 **Comunicaciones transaccionales endurecidas --- DT-32 VALIDADO TÉCNICAMENTE**
+    Preferencias por canal, elegibilidad centralizada, claim de procesamiento,
+    redacción de errores y transport fake determinista.

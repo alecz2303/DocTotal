@@ -10,8 +10,8 @@ class AppointmentReminderService
 {
     public function __construct(
         private AppointmentPublicLinkService $publicLinkService,
-    ) {
-    }
+        private PatientCommunicationEligibilityService $eligibilityService,
+    ) {}
 
     public function create(
         Appointment $appointment,
@@ -29,7 +29,7 @@ class AppointmentReminderService
                 return null;
             }
 
-            $recipient = $this->resolveRecipient(
+            $recipient = $this->eligibilityService->recipientFor(
                 $appointment,
                 $channel
             );
@@ -85,43 +85,17 @@ class AppointmentReminderService
         });
     }
 
-    private function isEligible(
-        Appointment $appointment
-    ): bool {
+    private function isEligible(Appointment $appointment): bool
+    {
         if (! in_array(
             $appointment->status,
-            [
-                Appointment::STATUS_SCHEDULED,
-                Appointment::STATUS_CONFIRMED,
-            ],
+            [Appointment::STATUS_SCHEDULED, Appointment::STATUS_CONFIRMED],
             true
         )) {
             return false;
         }
 
-        if (! $appointment->starts_at) {
-            return false;
-        }
-
-        return $appointment->starts_at->isFuture();
-    }
-
-    private function resolveRecipient(
-        Appointment $appointment,
-        string $channel,
-    ): ?string {
-        return match ($channel) {
-            Communication::CHANNEL_EMAIL =>
-            $appointment->patient->email,
-
-            Communication::CHANNEL_WHATSAPP =>
-            $appointment->patient->whatsapp,
-
-            Communication::CHANNEL_SMS =>
-            $appointment->patient->phone,
-
-            default => null,
-        };
+        return $appointment->starts_at?->isFuture() === true;
     }
 
     private function idempotencyKey(
@@ -135,5 +109,4 @@ class AppointmentReminderService
             $appointment->starts_at->getTimestamp(),
         ]);
     }
-
 }

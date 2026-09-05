@@ -4,84 +4,92 @@ namespace App\Services\Communications;
 
 use App\Contracts\Communications\CommunicationTransport;
 use App\Models\Communication;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class CommunicationProcessor
 {
     public const MAX_ATTEMPTS = 3;
 
-    private const RETRY_DELAYS_MINUTES = [
-        1 => 5,
-        2 => 15,
-    ];
+    private const RETRY_DELAYS_MINUTES = [1 => 5, 2 => 15];
 
     public function process(
         Communication $communication,
         CommunicationTransport $transport,
     ): bool {
-        /*
-         * Una comunicación enviada nunca debe volver a enviarse.
-         */
-        if ($communication->isSent()) {
-            return true;
-        }
+        $claimed = $this->claim($communication);
 
-        /*
-         * Una comunicación fallida que agotó sus intentos
-         * queda en estado FAILED sin next_attempt_at.
-         */
-        if (
-            $communication->isFailed()
-            && $communication->attempt_count >= self::MAX_ATTEMPTS
-        ) {
-            return false;
+        if ($claimed === null) {
+            $communication->refresh();
+            return $communication->isSent();
         }
-
-        /*
-         * Si existe un reintento programado y todavía no llegó
-         * su momento, no intentamos enviarla antes de tiempo.
-         */
-        if (
-            $communication->isFailed()
-            && $communication->next_attempt_at
-            && $communication->next_attempt_at->isFuture()
-        ) {
-            return false;
-        }
-
-        /*
-         * Registramos el intento antes de contactar al transport.
-         */
-        $communication->registerAttempt();
-        $communication->refresh();
 
         try {
-            $transport->send($communication);
-
-            $communication->markSent();
-
+            $transport->send($claimed);
+            $claimed->markSent();
             return true;
         } catch (Throwable $exception) {
-            $communication->markFailed(
-                $exception->getMessage(),
-                $this->nextAttemptAt(
-                    $communication->attempt_count
-                )
+            $claimed->markFailed(
+                $this->safeError($exception),
+                $this->nextAttemptAt($claimed->attempt_count)
             );
-
             return false;
         }
     }
 
-    private function nextAttemptAt(
-        int $attemptCount
-    ): ?\DateTimeInterface {
+    private function claim(Communication $communication): ?Communication
+    {
+        return DB::transaction(function () use ($communication) {
+            $current = Communication::query()
+                ->whereKey($communication->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($current->isSent() || $current->isCancelled() || $current->isProcessing()) {
+                return null;
+            }
+
+            if ($current->attempt_count >= self::MAX_ATTEMPTS) {
+                return null;
+            }
+
+            if (
+                $current->isFailed()
+                && $current->next_attempt_at
+                && $current->next_attempt_at->isFuture()
+            ) {
+                return null;
+            }
+
+            if (! $current->isPending() && ! $current->isFailed()) {
+                return null;
+            }
+
+            $current->markProcessing();
+            $current->refresh();
+
+            return $current;
+        });
+    }
+
+    private function safeError(Throwable $exception): string
+    {
+        $message = mb_substr($exception->getMessage(), 0, 500);
+
+        return preg_replace(
+            [
+                '/\bsk_(?:test|live)_[A-Za-z0-9_-]+\b/i',
+                '/\bBearer\s+[A-Za-z0-9._~+\/-]+=*\b/i',
+                '/\b(api[_-]?key|token|secret|password)\s*[:=]\s*[^\s,;]+/i',
+            ],
+            '[REDACTED]',
+            $message
+        ) ?? '[REDACTED]';
+    }
+
+    private function nextAttemptAt(int $attemptCount): ?\DateTimeInterface
+    {
         $delay = self::RETRY_DELAYS_MINUTES[$attemptCount] ?? null;
-
-        if ($delay === null) {
-            return null;
-        }
-
-        return now()->addMinutes($delay);
+        return $delay === null ? null : now()->addMinutes($delay);
     }
 }
