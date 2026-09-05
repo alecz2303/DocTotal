@@ -118,6 +118,10 @@ new
 
                 <div class="flex flex-wrap gap-2 lg:max-w-md lg:justify-end">
                     @if ($prescription->status === 'active')
+                    <a href="{{ route('prescriptions.repeat', ['uuid' => $prescription->uuid]) }}"
+                        class="dt-btn dt-btn-secondary">
+                        Repetir receta
+                    </a>
                     <a href="{{ route('prescriptions.edit', ['uuid' => $prescription->uuid]) }}"
                         class="dt-btn dt-btn-secondary">
                         Editar
@@ -184,6 +188,20 @@ new
     @endif
 
     {{-- DOCUMENT --}}
+    @if ($prescription->source_prescription_id)
+    @php
+        $sourcePrescription = $prescription->sourcePrescription()
+            ->where('patient_id', $prescription->patient_id)->first();
+    @endphp
+    <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        Esta receta se creó a partir de una receta anterior. Ambas conservan su historial independiente.
+        @if ($sourcePrescription)
+        <a class="font-semibold underline" href="{{ route('prescriptions.show', ['uuid' => $sourcePrescription->uuid]) }}">Ver receta origen</a>
+        @else
+        <span>La receta origen no está disponible.</span>
+        @endif
+    </div>
+    @endif
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         {{-- PATIENT / DOCTOR --}}

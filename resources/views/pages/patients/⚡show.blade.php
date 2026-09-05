@@ -2663,11 +2663,18 @@ new
                                 </p>
                             </div>
 
+                            <div class="flex shrink-0 flex-col items-end gap-2">
                             <a
                                 href="{{ route('prescriptions.show', ['uuid' => $entry['latest_prescription']->uuid]) }}"
                                 class="shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-700">
                                 Ver
                             </a>
+                            <x-prescriptions.repeat-link
+                                :prescription="$entry['latest_prescription']"
+                                :patient-id="$patient->id"
+                                context="treatment-summary"
+                                label="Repetir receta completa" />
+                            </div>
 
                         </div>
 
@@ -3204,6 +3211,11 @@ new
                                     Ver receta
                                 </a>
 
+                                <x-prescriptions.repeat-link
+                                    :prescription="$prescription"
+                                    :patient-id="$patient->id"
+                                    context="consultation-history" />
+
                                 @endforeach
 
                             </div>
@@ -3297,12 +3309,16 @@ new
 
                     </div>
 
-                    <div class="lg:pt-0.5">
+                    <div class="flex flex-col items-start gap-2 lg:pt-0.5">
                         <a
                             href="{{ route('prescriptions.show', ['uuid' => $prescription->uuid]) }}"
                             class="text-sm font-semibold text-slate-600 hover:text-blue-600">
                             Ver receta
                         </a>
+                        <x-prescriptions.repeat-link
+                            :prescription="$prescription"
+                            :patient-id="$patient->id"
+                            context="standalone-history" />
                     </div>
 
                 </article>

@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-28: 1068 tests verdes / 0
+> Suite completa al cierre técnico de DT-29: 1110 tests verdes / 0
 > failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
@@ -901,7 +901,17 @@ formulario.
 -   [x] Historial longitudinal de medicamentos/tratamientos por
     paciente.
 
--   [ ] Repetir receta anterior.
+-   [x] Repetir una receta anterior mediante una nueva emisión independiente.
+
+-   [x] Precargar medicamentos, presentación, dosis, frecuencia, duración e instrucciones para revisión antes de guardar.
+
+-   [x] Conservar trazabilidad hacia la receta origen mediante `source_prescription_id`.
+
+-   [x] Mantener inmutable la receta fuente y crear nuevos `PrescriptionItem`.
+
+-   [x] Mantener la repetición dentro del mismo paciente y tenant.
+
+-   [x] Crear la receta repetida como evento independiente, sin adjuntarla retroactivamente a la consulta histórica de origen.
 
 -   \[!\] Revisar requisitos legales/documentales antes de producción.
 
@@ -2114,7 +2124,7 @@ System.
 
 -   [x] Mejorar documento final.
 
--   [ ] Facilitar repetir tratamientos.
+-   [x] Facilitar repetir tratamientos/recetas desde el historial del paciente.
 
 ## Configuración
 
@@ -4074,7 +4084,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-28
+# Baseline actual al cierre técnico de DT-29
 
 Avance global ponderado vigente:
 
@@ -4086,16 +4096,22 @@ producto.
 
 Suite completa final:
 
-1068 tests verdes.
+1110 tests verdes.
 
 0 failures.
 
 Assertions finales no registradas; no se infieren.
 
-DT-21, DT-22, DT-23, DT-24, DT-25, DT-26 y DT-27 están completados e integrados.
+DT-21, DT-22, DT-23, DT-24, DT-25, DT-26, DT-27 y DT-28 están completados e integrados.
 
-DT-28 tiene cierre técnico completado y está pendiente de commit, push,
+DT-29 tiene cierre técnico completado y está pendiente de commit, push,
 PR, merge y cierre Jira.
+
+Validación específica reportada para el cierre de DT-29:
+
+-   Bloque 2 de repetición/historial: 16 tests verdes.
+-   Regresión de recetas: 112 tests verdes.
+-   Suite completa: 1110 tests verdes / 0 failures.
 
 # 32. Visión de producto
 
@@ -4188,9 +4204,10 @@ médico.
 5.  🧪 **Laboratorios estructurados --- DT-27 COMPLETADO** Estudios, resultados estructurados,
     historial y captura masiva revisable, sin interpretación clínica automática.
 
-6.  🔐 **Seguridad de cuenta --- DT-28 CIERRE TÉCNICO COMPLETADO** Cambio de contraseña, 2FA,
+6.  🔐 **Seguridad de cuenta --- DT-28 COMPLETADO** Cambio de contraseña, 2FA,
     verificación de correo, sesiones/dispositivos y revocación. Passkeys evaluadas y diferidas hasta fijar el origen WebAuthn productivo.
 
-7.  💊 **Repetición de tratamientos/recetas** Crear nuevas recetas a
-    partir de tratamientos anteriores conservando inmutable el
-    historial.
+7.  💊 **Repetición de tratamientos/recetas --- DT-29 CIERRE TÉCNICO COMPLETADO**
+    Crear nuevas recetas a partir de recetas anteriores, conservando
+    inmutable el historial fuente, con trazabilidad al origen,
+    edición previa y protección multi-tenant.
