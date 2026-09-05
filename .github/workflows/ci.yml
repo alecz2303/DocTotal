@@ -1,0 +1,84 @@
+name: DocTotal CI
+
+on:
+  push:
+    branches:
+      - 'DT-*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctotal-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: PHP 8.4 · Laravel test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: false
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      BILLING_PAYMENT_GATEWAY: fake
+      BILLING_AUTOMATIC_CHARGING_ENABLED: false
+      STRIPE_SECRET: sk_test_ci_dummy
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, dom, curl, fileinfo, openssl, tokenizer, xml, ctype
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan config:clear
+
+      - name: Check PHP syntax
+        run: find app routes database tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run Laravel test suite
+        run: php artisan test

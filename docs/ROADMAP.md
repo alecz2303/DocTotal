@@ -1988,7 +1988,7 @@ Commit principal:
 
 ## DT-30 --- Patient self-service appointment rescheduling with available slots
 
-Estado: Cierre técnico validado. Integración preparada mediante PR #32.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -2026,9 +2026,9 @@ Base canónica:
 
 `86420d1 DT-29 feat: add prescription repeat workflow`
 
-Integración:
+Commit principal:
 
-`PR #32 — DT-30 feat: add public appointment rescheduling`
+`bf99782 DT-30 feat: add public appointment rescheduling`
 
 Fuera de alcance:
 
@@ -2043,24 +2043,62 @@ Fuera de alcance:
 
 ## DT-31 --- Automate DocTotal CI validation with GitHub Actions
 
-Estado: Por hacer en Jira.
+Estado: Implementado y validado técnicamente.
 
 Objetivo:
 
 Automatizar la validación técnica de ramas `DT-*` y pull requests hacia
-`master`, reduciendo la dependencia de ejecución manual local.
+`master`, reduciendo la dependencia de ejecución manual local y haciendo
+visible el resultado de calidad directamente en GitHub.
 
-Alcance previsto:
+Incluye:
 
--   GitHub Actions en pushes a `DT-*` y PRs hacia `master`.
--   PHP 8.4 y dependencias reproducibles desde lockfile.
--   Entorno de tests aislado de producción.
--   Suite Laravel automatizada y checks compatibles con el repositorio.
--   Logs y estado visibles en commits/PRs.
--   Sin credenciales reales de producción.
--   Sin merge automático a `master`.
--   Aprobación humana antes de la integración final.
+-   GitHub Actions en `push` a ramas `DT-*`.
+-   GitHub Actions en `pull_request` hacia `master`.
+-   Ejecución manual opcional mediante `workflow_dispatch`.
+-   PHP 8.4.
+-   Node.js 22.
+-   Composer instalado de forma reproducible desde `composer.lock`.
+-   Frontend instalado mediante `npm ci`.
+-   Entorno Laravel aislado de producción.
+-   SQLite in-memory para la suite.
+-   Mail, cache, session y queue no productivos.
+-   Billing/provider configurado con valores de test, sin credenciales reales.
+-   Build de assets frontend.
+-   Validación de sintaxis PHP en `app`, `routes`, `database` y `tests`.
+-   Suite completa mediante `php artisan test`.
+-   Cancelación de ejecuciones obsoletas por concurrencia.
+-   Permisos de repositorio de solo lectura durante CI.
+-   Sin deployment automático.
+-   Sin merge automático.
+-   Aprobación humana obligatoria antes de integrar a `master`.
 
+Validación real:
+
+-   Trigger por `push` a `DT-31`: correcto.
+-   Trigger por PR hacia `master`: correcto.
+-   Job `PHP 8.4 · Laravel test suite`: success.
+-   Suite validada: `1119 tests verdes`.
+-   `3484 assertions`.
+-   `0 failures`.
+
+PR:
+
+`PR #33 — DT-31 feat: automate CI validation with GitHub Actions`
+
+Flujo operativo resultante:
+
+`Kai actualiza DT-* → GitHub Actions valida → Kai corrige si es necesario → CI verde → Alecz realiza validación manual/visual cuando corresponda → PR/revisión → aprobación humana explícita → merge`
+
+Fuera de alcance:
+
+-   Deployment a producción.
+-   Merge automático.
+-   Sustituir la validación manual/visual de producto.
+-   Credenciales reales de WhatsApp, email, SMS, pagos u otros proveedores.
+-   Servicios pagados nuevos.
+
+------------------------------------------------------------------------
 ## Próximos candidatos
 
 Los siguientes bloques no están todavía comprometidos como DT

@@ -74,42 +74,41 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-29 --- Repeat previous treatments and prescriptions.
--   Commit:
-    `86420d1 DT-29 feat: add prescription repeat workflow`.
--   DT-28 quedó integrado previamente mediante:
-    `762b3d3 DT-28 feat: complete account security and recovery flows`.
-
-DT activo con cierre técnico completado:
-
 -   DT-30 --- Patient self-service appointment rescheduling with available slots.
--   Jira: DT-30.
--   Rama: `DT-30`.
--   Base canónica:
+-   Commit:
+    `bf99782 DT-30 feat: add public appointment rescheduling`.
+-   DT-29 quedó integrado previamente mediante:
     `86420d1 DT-29 feat: add prescription repeat workflow`.
--   Cobertura específica `PublicAppointmentRescheduleTest`: `9 tests verdes`, `43 assertions`.
--   Regresión de recordatorios: `24 tests verdes`, `68 assertions`.
--   Regresión de autoservicio público: `7 tests verdes`, `22 assertions`.
--   Suite completa validada: `1119 tests verdes`, `0 failures`.
--   PR de cierre: `#32`.
--   Estado actual: en revisión; pendiente merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-30:
+DT-31 --- Automate DocTotal CI validation with GitHub Actions:
 
-`1119 tests verdes`
+-   Jira: DT-31.
+-   Rama de implementación: `DT-31`.
+-   Base canónica:
+    `bf99782 DT-30 feat: add public appointment rescheduling`.
+-   Workflow canónico: `.github/workflows/ci.yml`.
+-   Trigger `push` sobre ramas `DT-*`: validado.
+-   Trigger `pull_request` hacia `master`: validado mediante PR #33.
+-   PHP 8.4 y Node.js 22.
+-   Composer/npm reproducibles desde lockfiles.
+-   SQLite in-memory y entorno no productivo.
+-   Build frontend y validación de sintaxis PHP.
+-   Suite completa: `1119 tests verdes`, `3484 assertions`, `0 failures`.
+-   Sin credenciales reales, deployment ni merge automático.
+-   La aprobación humana continúa siendo obligatoria antes del merge.
 
-`0 failures`
+Flujo operativo de CI:
 
-Assertions finales globales no registradas; no se infieren.
+`Kai actualiza DT-* → GitHub Actions valida → Kai corrige si es necesario → CI verde → Alecz realiza validación manual/visual cuando corresponda → PR/revisión → aprobación humana explícita → merge`
 
 Avance global ponderado vigente:
 
 `79%`
 
 ## El 79% es el último porcentaje formalmente calculado. No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio ponderado del producto.
-
 # Commits recientes canónicos
 
+-   `bf99782 DT-30 feat: add public appointment rescheduling`
 -   `86420d1 DT-29 feat: add prescription repeat workflow`
 -   `762b3d3 DT-28 feat: complete account security and recovery flows`
 -   `a1a66a1 DT-27 feat: add structured laboratory results`
