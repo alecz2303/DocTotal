@@ -477,6 +477,12 @@ new
                 class="whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-slate-500 transition hover:border-slate-300 hover:text-slate-900">
                 Facturación
             </a>
+
+            <a
+                href="{{ route('settings.security') }}"
+                class="whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-slate-500 transition hover:border-slate-300 hover:text-slate-900">
+                Seguridad
+            </a>
         </nav>
     </div>
 

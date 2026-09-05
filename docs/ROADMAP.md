@@ -1887,6 +1887,49 @@ Commit principal:
 Pendiente hasta integrar DT-27 en `master`.
 
 
+## DT-28 --- Complete account security and recovery flows
+
+Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+
+Objetivo:
+
+Completar los flujos de seguridad de cuenta y recuperación sobre Laravel Fortify sin debilitar el acceso de recuperación para tenants suspendidos.
+
+Incluye:
+
+-   Cambio de contraseña desde Configuración → Seguridad con contraseña actual y confirmación.
+-   Auditoría `account.password.updated` sin credenciales.
+-   2FA TOTP con QR, confirmación, recovery codes, regeneración y desactivación.
+-   Challenge 2FA durante login y soporte de códigos de recuperación.
+-   Reautenticación para acciones sensibles de 2FA.
+-   Administración visible de sesiones/dispositivos.
+-   Revocación de una sesión específica o de todas las demás sesiones.
+-   Fingerprints opacos en lugar de IDs reales de sesión.
+-   Rotación del remember token al revocar sesiones para invalidar cookies persistentes antiguas.
+-   Verificación de correo mediante enlaces firmados y reenvío.
+-   Middleware `verified` en áreas protegidas de la aplicación.
+-   Configuración → Seguridad y aviso de verificación disponibles para recuperación incluso con tenant suspendido.
+-   Redirección correcta del administrador interno después de verificar correo o completar 2FA.
+-   Auditoría de verificación de correo sin almacenar URL firmada ni hash de verificación.
+
+Passkeys/WebAuthn:
+
+-   Evaluadas contra la infraestructura real de Laravel 13/Fortify.
+-   La foundation de backend y base de datos está disponible.
+-   Activación diferida hasta fijar el hostname productivo HTTPS canónico y los valores definitivos de WebAuthn relying party/origins.
+-   No se introduce una implementación temporal ligada a dominios locales.
+
+Calidad final DT-28:
+
+`1068 tests verdes`
+
+`0 failures`
+
+Commit principal:
+
+Pendiente hasta integrar DT-28 en `master`.
+
+
 ## Próximos candidatos
 
 Los siguientes bloques no están todavía comprometidos como DT
@@ -2123,9 +2166,7 @@ DT-26 completa la foundation de plantillas clínicas reutilizables por tenant y 
 
 DT-27 completa la foundation de laboratorios estructurados por paciente, con parámetros editables, historial, asociación opcional a consulta y captura masiva revisable. OCR/importación desde PDF permanece como evolución posterior.
 
-Siguiente prioridad de la cola vigente después del cierre de DT-27:
-
-**Seguridad de cuenta**
+DT-28 completa la seguridad de cuenta priorizada después de DT-27. La siguiente prioridad debe seleccionarse de la cola vigente después del cierre formal de DT-28.
 
 DocTotal cuenta actualmente con una base clínica, operativa, SaaS, visual, de comunicaciones, auditoría, operación administrativa interna y autoservicio básico de citas considerablemente más madura que al inicio del roadmap.
 

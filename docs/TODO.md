@@ -19,7 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-27: 1021 tests verdes / 0
+> Suite completa al cierre técnico de DT-28: 1068 tests verdes / 0
 > failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
@@ -247,37 +247,41 @@ Relacionado principalmente con DT-5.
 
 -   [x] Backend para actualización de contraseña.
 
--   \[\~\] Recuperación de contraseña --- infraestructura existente;
+-   [x] Recuperación de contraseña mediante el flujo existente de Fortify.
 
-revisar flujo/UI.
+-   [x] Cambio de contraseña desde Configuración → Seguridad.
 
--   \[\~\] Cambio de contraseña --- infraestructura existente; revisar
-    UI
+-   [x] Contraseña actual obligatoria y confirmación de la nueva contraseña.
 
-desde
-
-      configuración.
+-   [x] Auditoría del cambio de contraseña sin persistir credenciales.
 
 ## Seguridad adicional
 
--   \[\~\] Two-factor authentication --- infraestructura de base de
-    datos
+-   [x] Two-factor authentication (TOTP) con confirmación de configuración.
 
-existente.
+-   [x] QR y códigos de recuperación con exposición temporal protegida.
 
--   \[\~\] Passkeys --- infraestructura de base de datos existente.
+-   [x] Regeneración de códigos de recuperación y desactivación con reautenticación.
 
--   [ ] Verificar implementación completa de 2FA.
+-   [x] Challenge 2FA durante login y soporte de código de recuperación.
 
--   [ ] Verificar implementación completa de passkeys.
+-   [x] Verificación de correo con enlace firmado, reenvío y bloqueo de áreas protegidas.
 
--   [ ] Verificación de correo.
+-   [x] Configuración → Seguridad permanece accesible para usuarios no verificados y tenants suspendidos.
 
--   [ ] Administración visible de sesiones.
+-   [x] Administración visible de sesiones y dispositivos.
 
--   [ ] Revocación de sesiones/dispositivos.
+-   [x] Revocación individual de sesiones y revocación de todas las demás sesiones.
 
--   \[!\] Auditar seguridad completa antes de producción.
+-   [x] Invalidación de cookies persistentes mediante rotación de remember token al revocar sesiones.
+
+-   [x] Auditoría de acciones sensibles sin contraseñas, OTP, códigos de recuperación, tokens ni IDs reales de sesión.
+
+-   [x] Passkeys/WebAuthn evaluadas técnicamente en DT-28.
+
+-   [!] Activación de passkeys diferida hasta definir el hostname productivo HTTPS canónico y sus WebAuthn relying party/origins.
+
+-   [!] Mantener auditoría integral de seguridad de producción como requisito previo al lanzamiento.
 
 # 3. Onboarding
 
@@ -3943,6 +3947,33 @@ resolverse antes de los módulos que dependan de ellas.
 
 -   \[!\] Estructura definitiva del workspace clínico.
 
+# 28. Seguridad de cuenta --- DT-28
+
+Relacionado con DT-28.
+
+Implementado:
+
+-   Configuración → Seguridad con cambio de contraseña protegido por contraseña actual.
+-   2FA TOTP con QR, confirmación, códigos de recuperación, regeneración, desactivación y challenge de login.
+-   Administración de sesiones/dispositivos con revocación individual y masiva, sin exponer IDs reales.
+-   Verificación de correo con enlaces firmados y reenvío.
+-   Protección de onboarding, billing, consola interna y aplicación clínica para cuentas no verificadas.
+-   Acceso a Seguridad conservado para cuentas no verificadas y tenants suspendidos.
+-   Auditoría de eventos sensibles sin credenciales, secretos, OTP, recovery codes ni URLs firmadas.
+-   Evaluación de passkeys/WebAuthn sobre la infraestructura real de Laravel/Fortify.
+
+Decisión de passkeys:
+
+-   Laravel/Fortify y la base de datos ya contienen foundation para passkeys.
+-   La activación se difiere hasta definir el hostname productivo HTTPS canónico y configurar de forma definitiva relying party/origins.
+-   No se activa una ceremonia WebAuthn contra dominios locales que no serán el origen productivo.
+
+Calidad final DT-28:
+
+`1068 tests verdes`
+
+`0 failures`
+
 # 29. Regla para decidir el siguiente DT
 
 Al terminar cada DT:
@@ -4043,7 +4074,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-27
+# Baseline actual al cierre técnico de DT-28
 
 Avance global ponderado vigente:
 
@@ -4055,15 +4086,15 @@ producto.
 
 Suite completa final:
 
-1021 tests verdes.
+1068 tests verdes.
 
 0 failures.
 
 Assertions finales no registradas; no se infieren.
 
-DT-21, DT-22, DT-23, DT-24, DT-25 y DT-26 están completados e integrados.
+DT-21, DT-22, DT-23, DT-24, DT-25, DT-26 y DT-27 están completados e integrados.
 
-DT-27 tiene cierre técnico completado y está pendiente de commit, push,
+DT-28 tiene cierre técnico completado y está pendiente de commit, push,
 PR, merge y cierre Jira.
 
 # 32. Visión de producto
@@ -4154,11 +4185,11 @@ médico.
     Plantillas reutilizables por tenant, aplicación como snapshot y base
     para futuras plantillas por especialidad.
 
-5.  🧪 **Laboratorios estructurados --- DT-27 CIERRE TÉCNICO COMPLETADO** Estudios, resultados estructurados,
+5.  🧪 **Laboratorios estructurados --- DT-27 COMPLETADO** Estudios, resultados estructurados,
     historial y captura masiva revisable, sin interpretación clínica automática.
 
-6.  🔐 **Seguridad de cuenta --- SIGUIENTE PRIORIDAD** 2FA, passkeys, verificación de correo,
-    sesiones activas y revocación de sesiones/dispositivos.
+6.  🔐 **Seguridad de cuenta --- DT-28 CIERRE TÉCNICO COMPLETADO** Cambio de contraseña, 2FA,
+    verificación de correo, sesiones/dispositivos y revocación. Passkeys evaluadas y diferidas hasta fijar el origen WebAuthn productivo.
 
 7.  💊 **Repetición de tratamientos/recetas** Crear nuevas recetas a
     partir de tratamientos anteriores conservando inmutable el

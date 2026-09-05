@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\AuditLogger;
 use App\Support\TenantContext;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use App\Contracts\PaymentGateway;
 use App\Services\Billing\FakePaymentGateway;
@@ -104,5 +107,14 @@ class AppServiceProvider extends ServiceProvider
             'layouts',
             resource_path('views/components/layouts')
         );
+
+
+        Event::listen(Verified::class, function (Verified $event): void {
+            app(AuditLogger::class)->safeLog(
+                action: 'account.email.verified',
+                auditable: $event->user,
+                description: 'Correo electrónico de acceso verificado.',
+            );
+        });
     }
 }
