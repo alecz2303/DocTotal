@@ -74,20 +74,27 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-27 --- Structured laboratory results in clinical records.
+-   DT-28 --- Complete account security and recovery flows.
 -   Commit:
+    `762b3d3 DT-28 feat: complete account security and recovery flows`.
+-   DT-27 quedó integrado previamente mediante:
     `a1a66a1 DT-27 feat: add structured laboratory results`.
 
 DT activo con cierre técnico completado:
 
--   DT-28 --- Complete account security and recovery flows.
--   Jira: DT-28.
--   Suite completa validada: `1068 tests verdes`, `0 failures`.
+-   DT-29 --- Repeat previous treatments and prescriptions.
+-   Jira: DT-29.
+-   Rama: `DT-29`.
+-   Base canónica:
+    `762b3d3 DT-28 feat: complete account security and recovery flows`.
+-   Bloque 2 de repetición/historial: `16 tests verdes`.
+-   Regresión de recetas: `112 tests verdes`.
+-   Suite completa validada: `1110 tests verdes`, `0 failures`.
 -   Pendiente: commit, push, PR, merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-28:
+Suite completa validada al cierre técnico de DT-29:
 
-`1068 tests verdes`
+`1110 tests verdes`
 
 `0 failures`
 
@@ -101,6 +108,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `762b3d3 DT-28 feat: complete account security and recovery flows`
 -   `a1a66a1 DT-27 feat: add structured laboratory results`
 -   `4ceac23 DT-26 feat: add reusable clinical templates`
 -   `240bcf6 DT-25 feat: add manual patient appointment link sharing`
@@ -126,6 +134,7 @@ DocTotal cuenta actualmente con:
 -   Workspace clínico con autosave y protección de cambios.
 -   Diagnósticos y catálogo diagnóstico.
 -   Recetas y catálogo de medicamentos.
+-   Repetición de recetas anteriores como nueva emisión independiente y trazable.
 -   Expediente longitudinal.
 -   Problemas clínicos activos/resueltos mediante `PatientProblem`.
 -   Documentos clínicos privados.
@@ -652,4 +661,66 @@ Calidad final DT-28:
 
 Commit principal:
 
-Pendiente hasta integrar DT-28 en `master`.
+`762b3d3 DT-28 feat: complete account security and recovery flows`.
+
+
+
+------------------------------------------------------------------------
+
+# Repetición de tratamientos y recetas --- DT-29
+
+DT-29 permite crear una nueva receta a partir de una receta anterior del
+mismo paciente sin modificar la emisión clínica fuente.
+
+Implementado:
+
+-   acción de dominio `App\Actions\Prescriptions\RepeatPrescription`;
+-   trazabilidad mediante `source_prescription_id`;
+-   formulario de repetición con medicamento, presentación, dosis,
+    frecuencia, duración, instrucciones e instrucciones generales
+    precargadas y editables;
+-   nueva receta con UUID, fecha, estado e ítems propios;
+-   creación de nuevos `PrescriptionItem` sin reutilizar IDs, tenant ni
+    ownership enviados por el navegador;
+-   paciente bloqueado al paciente de la receta fuente;
+-   médico de la nueva emisión resuelto desde el usuario actual;
+-   nueva receta independiente de la consulta histórica de origen
+    (`consultation_id = null`);
+-   repetición disponible desde el detalle de receta y desde el historial
+    longitudinal del paciente;
+-   integración con recetas asociadas a consulta, recetas independientes
+    y tratamientos consolidados;
+-   recetas canceladas visibles históricamente pero no disponibles como
+    origen de repetición;
+-   revalidación de fuente, paciente, tenant y acceso al guardar;
+-   aislamiento multi-tenant en historial y endpoints del flujo;
+-   auditoría `prescription.repeated` con referencia controlada a la fuente
+    y sin payload del tratamiento;
+-   independencia de la copia frente a edición, cancelación o eliminación
+    posterior de la receta origen;
+-   impresión y PDF de la copia usando la nueva emisión;
+-   repetición de una receta derivada manteniendo como origen inmediato la
+    receta desde la cual se repite;
+-   la repetición no modifica
+    `PatientMedicalHistory.current_medications_text`.
+
+Cobertura:
+
+-   `PrescriptionRepeatTest`;
+-   `PrescriptionRepeatHistoryTest`.
+
+Validación reportada al cierre técnico:
+
+-   bloque 2 de repetición/historial: `16 tests verdes`;
+-   regresión de recetas: `112 tests verdes`;
+-   suite completa: `1110 tests verdes`;
+-   `0 failures`.
+
+Base canónica:
+
+`762b3d3 DT-28 feat: complete account security and recovery flows`
+
+Estado:
+
+DT-29 tiene cierre técnico completado. Sigue pendiente el cierre formal
+mediante commit, push, PR, merge a `master` y cierre Jira.

@@ -372,6 +372,11 @@ Route::middleware('auth')->group(function () {
             'pages::prescriptions.show'
         )->name('prescriptions.show');
 
+        Route::livewire(
+            '/prescriptions/{uuid}/repeat',
+            'pages::prescriptions.repeat'
+        )->name('prescriptions.repeat');
+
         Route::livewire('/prescriptions', 'pages::prescriptions.index')
             ->name('prescriptions.index');
 

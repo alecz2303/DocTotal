@@ -1839,7 +1839,7 @@ Commit principal:
 
 ## DT-27 --- Structured laboratory results in clinical records
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1884,12 +1884,12 @@ Validación final:
 
 Commit principal:
 
-Pendiente hasta integrar DT-27 en `master`.
+`a1a66a1 DT-27 feat: add structured laboratory results`.
 
 
 ## DT-28 --- Complete account security and recovery flows
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1927,7 +1927,61 @@ Calidad final DT-28:
 
 Commit principal:
 
-Pendiente hasta integrar DT-28 en `master`.
+`762b3d3 DT-28 feat: complete account security and recovery flows`.
+
+
+------------------------------------------------------------------------
+
+## DT-29 --- Repeat previous treatments and prescriptions
+
+Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+
+Objetivo:
+
+Permitir crear una nueva receta a partir de una receta anterior del mismo
+paciente sin modificar la emisión clínica fuente.
+
+Incluye:
+
+-   Acción de dominio `RepeatPrescription`.
+-   Relación opcional `source_prescription_id` hacia la receta origen.
+-   Formulario de repetición con datos precargados y editables antes de guardar.
+-   Nueva receta con UUID, fecha, estado e ítems propios.
+-   Creación de nuevos `PrescriptionItem` mediante allowlist explícita.
+-   Copia de medicamento, presentación, dosis, frecuencia, duración,
+    instrucciones e instrucciones generales.
+-   Asociación obligatoria al mismo paciente.
+-   Médico de la nueva receta tomado del usuario actual, no de la receta fuente.
+-   Nueva receta independiente con `consultation_id = null`.
+-   Repetición desde el detalle de receta y desde el historial longitudinal.
+-   Acceso desde recetas asociadas a consulta, recetas independientes y
+    tratamientos consolidados.
+-   Las recetas canceladas permanecen visibles en historial pero no pueden repetirse.
+-   Revalidación de receta fuente, paciente y acceso al momento de guardar.
+-   Aislamiento multi-tenant y rechazo de endpoints cross-tenant.
+-   Auditoría `prescription.repeated` con referencia al origen sin incluir
+    el contenido del tratamiento en metadata.
+-   Independencia entre fuente y copia ante edición, cancelación o eliminación.
+-   Impresión y PDF de la copia basados en la nueva emisión.
+-   Repetición encadenada con referencia al origen inmediato.
+-   La repetición no modifica `PatientMedicalHistory.current_medications_text`.
+-   Cobertura automatizada en `PrescriptionRepeatTest` y
+    `PrescriptionRepeatHistoryTest`.
+
+Validación al cierre técnico:
+
+-   Bloque 2 de repetición/historial: `16 tests verdes`.
+-   Regresión de recetas: `112 tests verdes`.
+-   Suite completa: `1110 tests verdes`.
+-   `0 failures`.
+
+Base de desarrollo:
+
+`762b3d3 DT-28 feat: complete account security and recovery flows`
+
+Commit principal:
+
+Pendiente hasta integrar DT-29 en `master`.
 
 
 ## Próximos candidatos
@@ -2142,13 +2196,13 @@ Incluye potencialmente:
 
 DT completados e integrados en `master`:
 
-`DT-1 → DT-26`
+`DT-1 → DT-28`
 
-DT-27 tiene cierre técnico completado y está pendiente únicamente de commit, push, PR, merge y cierre Jira.
+DT-29 tiene cierre técnico completado y está pendiente únicamente de commit, push, PR, merge y cierre Jira.
 
 Baseline funcional actual:
 
-`1021 tests verdes`
+`1110 tests verdes`
 
 `0 failures`
 
@@ -2166,7 +2220,11 @@ DT-26 completa la foundation de plantillas clínicas reutilizables por tenant y 
 
 DT-27 completa la foundation de laboratorios estructurados por paciente, con parámetros editables, historial, asociación opcional a consulta y captura masiva revisable. OCR/importación desde PDF permanece como evolución posterior.
 
-DT-28 completa la seguridad de cuenta priorizada después de DT-27. La siguiente prioridad debe seleccionarse de la cola vigente después del cierre formal de DT-28.
+DT-28 completa la seguridad de cuenta priorizada después de DT-27 y está integrado en `master`.
+
+DT-29 completa la repetición de tratamientos/recetas mediante nuevas
+emisiones independientes, editables antes del guardado y trazables hacia
+su receta origen, sin modificar el historial clínico fuente.
 
 DocTotal cuenta actualmente con una base clínica, operativa, SaaS, visual, de comunicaciones, auditoría, operación administrativa interna y autoservicio básico de citas considerablemente más madura que al inicio del roadmap.
 

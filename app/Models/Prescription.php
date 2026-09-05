@@ -20,6 +20,7 @@ class Prescription extends Model
         'patient_id',
         'doctor_profile_id',
         'consultation_id',
+        'source_prescription_id',
         'prescribed_at',
         'general_instructions',
         'status',
@@ -65,5 +66,10 @@ class Prescription extends Model
     {
         return $this->hasMany(PrescriptionItem::class)
             ->orderBy('sort_order');
+    }
+
+    public function sourcePrescription(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_prescription_id');
     }
 }
