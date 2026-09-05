@@ -16,7 +16,7 @@ class TrustedProductionHostTest extends TestCase
         $this->withServerVariables([
             'HTTP_HOST' => 'doctotal.test',
         ])
-            ->get('/up')
+            ->get('/login')
             ->assertOk();
     }
 
@@ -30,7 +30,7 @@ class TrustedProductionHostTest extends TestCase
         $this->withServerVariables([
             'HTTP_HOST' => 'evil.test',
         ])
-            ->get('/up')
+            ->get('/login')
             ->assertStatus(400);
     }
 
@@ -44,7 +44,7 @@ class TrustedProductionHostTest extends TestCase
         $this->withServerVariables([
             'HTTP_HOST' => 'arbitrary.local',
         ])
-            ->get('/up')
+            ->get('/login')
             ->assertOk();
     }
 }
