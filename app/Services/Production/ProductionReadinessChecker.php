@@ -39,11 +39,21 @@ class ProductionReadinessChecker
             'APP_KEY debe estar configurado.'
         );
 
+        $appUrl = (string) config('app.url');
+        $appHost = parse_url($appUrl, PHP_URL_HOST);
+
         $this->require(
             $failures,
-            str_starts_with((string) config('app.url'), 'https://'),
+            str_starts_with($appUrl, 'https://'),
             'app.url',
             'APP_URL debe usar HTTPS en producción.'
+        );
+
+        $this->require(
+            $failures,
+            is_string($appHost) && $appHost !== '',
+            'app.host',
+            'APP_URL debe contener un hostname válido para proteger el Host header.'
         );
 
         $this->require(
@@ -51,6 +61,13 @@ class ProductionReadinessChecker
             config('database.default') !== 'sqlite',
             'database.default',
             'DB_CONNECTION no debe usar SQLite en producción.'
+        );
+
+        $this->require(
+            $failures,
+            ! in_array(config('session.driver'), ['array', 'cookie'], true),
+            'session.driver',
+            'SESSION_DRIVER debe usar almacenamiento server-side persistente en producción.'
         );
 
         $this->require(
@@ -72,6 +89,13 @@ class ProductionReadinessChecker
             config('session.serialization') === 'json',
             'session.serialization',
             'La serialización de sesión debe permanecer en JSON.'
+        );
+
+        $this->require(
+            $failures,
+            ! in_array(config('cache.default'), ['array', 'null'], true),
+            'cache.default',
+            'CACHE_STORE debe soportar locks persistentes para procesos programados.'
         );
 
         $this->require(
@@ -102,6 +126,13 @@ class ProductionReadinessChecker
             ! in_array(config('queue.default'), ['sync', 'null'], true),
             'queue.default',
             'QUEUE_CONNECTION debe usar un backend persistente en producción.'
+        );
+
+        $this->require(
+            $failures,
+            config('queue.failed.driver') !== 'null',
+            'queue.failed.driver',
+            'QUEUE_FAILED_DRIVER debe conservar fallos para diagnóstico operativo.'
         );
 
         $this->require(
