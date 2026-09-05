@@ -19,8 +19,7 @@ tests.
 > Baseline ponderado vigente: 79% (último porcentaje formalmente
 > calculado).
 >
-> Suite completa al cierre técnico de DT-29: 1110 tests verdes / 0
-> failures.
+> Suite completa validada en DT-30: 1119 tests verdes / 0 failures.
 >
 > No se infiere un porcentaje nuevo sin aplicar nuevamente el criterio
 > ponderado del producto.
@@ -3780,7 +3779,7 @@ Relacionado con DT-24.
 -   [x] Integrar enlace seguro con la infraestructura de recordatorios DT-20.
 -   [x] Auditar confirmación/cancelación pública sin persistir el token.
 -   [x] Cobertura automatizada de acceso público, estados y aislamiento.
--   [ ] Solicitud/reprogramación pública con selección de nuevos horarios.
+-   [x] Solicitud/reprogramación pública con selección de nuevos horarios --- DT-30.
 -   [ ] Portal completo del paciente.
 
 Validación final:
@@ -4084,7 +4083,7 @@ de
 
 pantallas y funciones independientes.
 
-# Baseline actual al cierre técnico de DT-29
+# Baseline actual al cierre técnico de DT-30
 
 Avance global ponderado vigente:
 
@@ -4096,22 +4095,33 @@ producto.
 
 Suite completa final:
 
-1110 tests verdes.
+1119 tests verdes.
 
 0 failures.
 
-Assertions finales no registradas; no se infieren.
+Assertions finales globales no registradas; no se infieren.
 
-DT-21, DT-22, DT-23, DT-24, DT-25, DT-26, DT-27 y DT-28 están completados e integrados.
+DT-21, DT-22, DT-23, DT-24, DT-25, DT-26, DT-27, DT-28 y DT-29 están
+completados e integrados en `master`.
 
-DT-29 tiene cierre técnico completado y está pendiente de commit, push,
-PR, merge y cierre Jira.
+DT-29 quedó integrado mediante:
 
-Validación específica reportada para el cierre de DT-29:
+`86420d1 DT-29 feat: add prescription repeat workflow`
 
--   Bloque 2 de repetición/historial: 16 tests verdes.
--   Regresión de recetas: 112 tests verdes.
--   Suite completa: 1110 tests verdes / 0 failures.
+DT-30 tiene cierre técnico validado e integración preparada mediante:
+
+`PR #32 — DT-30 feat: add public appointment rescheduling`
+
+Validación específica reportada para DT-30:
+
+-   `PublicAppointmentRescheduleTest`: 9 tests verdes / 43 assertions.
+-   `AppointmentReminder*`: 24 tests verdes / 68 assertions.
+-   `PublicAppointmentSelfServiceTest`: 7 tests verdes / 22 assertions.
+-   Suite completa: 1119 tests verdes / 0 failures.
+-   `git diff --check` limpio antes del cierre documental.
+
+DT-31 fue creado por Jira para automatizar CI con GitHub Actions y
+permanece `Por hacer` hasta el cierre formal de DT-30.
 
 # 32. Visión de producto
 
@@ -4207,7 +4217,18 @@ médico.
 6.  🔐 **Seguridad de cuenta --- DT-28 COMPLETADO** Cambio de contraseña, 2FA,
     verificación de correo, sesiones/dispositivos y revocación. Passkeys evaluadas y diferidas hasta fijar el origen WebAuthn productivo.
 
-7.  💊 **Repetición de tratamientos/recetas --- DT-29 CIERRE TÉCNICO COMPLETADO**
-    Crear nuevas recetas a partir de recetas anteriores, conservando
+7.  💊 **Repetición de tratamientos/recetas --- DT-29 COMPLETADO**
+    Nuevas recetas a partir de recetas anteriores, conservando
     inmutable el historial fuente, con trazabilidad al origen,
     edición previa y protección multi-tenant.
+
+8.  📅 **Reprogramación pública de citas --- DT-30 CIERRE TÉCNICO VALIDADO**
+    El paciente puede elegir horarios realmente disponibles desde su
+    enlace público, con revalidación server-side, rotación del token,
+    protección de estados, aislamiento multi-tenant y recordatorios
+    coherentes con el nuevo horario.
+
+9.  ⚙️ **CI automatizado --- DT-31 POR HACER**
+    GitHub Actions para validar ramas `DT-*` y PRs hacia `master`, con
+    PHP 8.4, suite automática, logs visibles y aprobación humana antes
+    del merge.

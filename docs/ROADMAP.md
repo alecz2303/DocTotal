@@ -1934,7 +1934,7 @@ Commit principal:
 
 ## DT-29 --- Repeat previous treatments and prescriptions
 
-Estado: Cierre técnico completado; pendiente commit, push, PR, merge a `master` y cierre Jira.
+Estado: Completado e integrado en `master`.
 
 Objetivo:
 
@@ -1981,8 +1981,85 @@ Base de desarrollo:
 
 Commit principal:
 
-Pendiente hasta integrar DT-29 en `master`.
+`86420d1 DT-29 feat: add prescription repeat workflow`
 
+
+------------------------------------------------------------------------
+
+## DT-30 --- Patient self-service appointment rescheduling with available slots
+
+Estado: Cierre técnico validado. Integración preparada mediante PR #32.
+
+Objetivo:
+
+Permitir que el paciente reprograme una cita existente desde su enlace
+público de gestión, seleccionando únicamente horarios realmente
+disponibles y sin requerir cuenta ni sesión.
+
+Incluye:
+
+-   Acción pública `Reprogramar mi cita` para citas `scheduled` y `confirmed`.
+-   Selección de fecha y slots mediante `AppointmentAvailabilityService`.
+-   Conservación de paciente, tenant, médico y duración.
+-   Actualización de la misma entidad `Appointment`.
+-   Revalidación server-side de disponibilidad antes de guardar.
+-   Rechazo de horarios pasados, fuera de agenda, bloqueados u ocupados.
+-   Bloqueo transaccional de la cita y del perfil médico para endurecer concurrencia.
+-   Protección frente a manipulación de paciente, médico o tenant.
+-   Bloqueo de estados clínicos y terminales.
+-   Una cita confirmada vuelve a `scheduled` y limpia `confirmed_at`.
+-   Rotación del token público e invalidación del enlace anterior.
+-   Recordatorio anterior obsoleto y nueva identidad posible para el horario reprogramado.
+-   Auditoría `appointment.public_rescheduled` con metadata mínima y sin token.
+-   Vista pública sin datos clínicos sensibles ni identificadores internos.
+
+Validación final reportada:
+
+-   `PublicAppointmentRescheduleTest`: `9 tests verdes`, `43 assertions`.
+-   `AppointmentReminder*`: `24 tests verdes`, `68 assertions`.
+-   `PublicAppointmentSelfServiceTest`: `7 tests verdes`, `22 assertions`.
+-   Suite completa: `1119 tests verdes`.
+-   `0 failures`.
+-   `git diff --check` limpio.
+
+Base canónica:
+
+`86420d1 DT-29 feat: add prescription repeat workflow`
+
+Integración:
+
+`PR #32 — DT-30 feat: add public appointment rescheduling`
+
+Fuera de alcance:
+
+-   Portal completo del paciente.
+-   Creación pública de citas desde cero.
+-   Cambio público de médico.
+-   Pagos del paciente.
+-   Proveedor externo obligatorio de WhatsApp/email/SMS.
+-   Telemedicina.
+
+------------------------------------------------------------------------
+
+## DT-31 --- Automate DocTotal CI validation with GitHub Actions
+
+Estado: Por hacer en Jira.
+
+Objetivo:
+
+Automatizar la validación técnica de ramas `DT-*` y pull requests hacia
+`master`, reduciendo la dependencia de ejecución manual local.
+
+Alcance previsto:
+
+-   GitHub Actions en pushes a `DT-*` y PRs hacia `master`.
+-   PHP 8.4 y dependencias reproducibles desde lockfile.
+-   Entorno de tests aislado de producción.
+-   Suite Laravel automatizada y checks compatibles con el repositorio.
+-   Logs y estado visibles en commits/PRs.
+-   Sin credenciales reales de producción.
+-   Sin merge automático a `master`.
+-   Aprobación humana antes de la integración final.
 
 ## Próximos candidatos
 
@@ -2196,13 +2273,15 @@ Incluye potencialmente:
 
 DT completados e integrados en `master`:
 
-`DT-1 → DT-28`
+`DT-1 → DT-29`
 
-DT-29 tiene cierre técnico completado y está pendiente únicamente de commit, push, PR, merge y cierre Jira.
+DT-30 tiene cierre técnico validado e integración preparada mediante PR #32.
 
-Baseline funcional actual:
+DT-31 permanece `Por hacer` en Jira.
 
-`1110 tests verdes`
+Baseline funcional validado en DT-30:
+
+`1119 tests verdes`
 
 `0 failures`
 

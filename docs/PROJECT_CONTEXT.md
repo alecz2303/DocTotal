@@ -74,31 +74,33 @@ multi-tenant.
 
 Último DT integrado en `master`:
 
--   DT-28 --- Complete account security and recovery flows.
+-   DT-29 --- Repeat previous treatments and prescriptions.
 -   Commit:
+    `86420d1 DT-29 feat: add prescription repeat workflow`.
+-   DT-28 quedó integrado previamente mediante:
     `762b3d3 DT-28 feat: complete account security and recovery flows`.
--   DT-27 quedó integrado previamente mediante:
-    `a1a66a1 DT-27 feat: add structured laboratory results`.
 
 DT activo con cierre técnico completado:
 
--   DT-29 --- Repeat previous treatments and prescriptions.
--   Jira: DT-29.
--   Rama: `DT-29`.
+-   DT-30 --- Patient self-service appointment rescheduling with available slots.
+-   Jira: DT-30.
+-   Rama: `DT-30`.
 -   Base canónica:
-    `762b3d3 DT-28 feat: complete account security and recovery flows`.
--   Bloque 2 de repetición/historial: `16 tests verdes`.
--   Regresión de recetas: `112 tests verdes`.
--   Suite completa validada: `1110 tests verdes`, `0 failures`.
--   Pendiente: commit, push, PR, merge a `master` y cierre Jira.
+    `86420d1 DT-29 feat: add prescription repeat workflow`.
+-   Cobertura específica `PublicAppointmentRescheduleTest`: `9 tests verdes`, `43 assertions`.
+-   Regresión de recordatorios: `24 tests verdes`, `68 assertions`.
+-   Regresión de autoservicio público: `7 tests verdes`, `22 assertions`.
+-   Suite completa validada: `1119 tests verdes`, `0 failures`.
+-   PR de cierre: `#32`.
+-   Estado actual: en revisión; pendiente merge a `master` y cierre Jira.
 
-Suite completa validada al cierre técnico de DT-29:
+Suite completa validada al cierre técnico de DT-30:
 
-`1110 tests verdes`
+`1119 tests verdes`
 
 `0 failures`
 
-Assertions finales no registradas; no se infieren.
+Assertions finales globales no registradas; no se infieren.
 
 Avance global ponderado vigente:
 
@@ -108,6 +110,7 @@ Avance global ponderado vigente:
 
 # Commits recientes canónicos
 
+-   `86420d1 DT-29 feat: add prescription repeat workflow`
 -   `762b3d3 DT-28 feat: complete account security and recovery flows`
 -   `a1a66a1 DT-27 feat: add structured laboratory results`
 -   `4ceac23 DT-26 feat: add reusable clinical templates`
@@ -130,6 +133,8 @@ DocTotal cuenta actualmente con:
 -   Contactos de emergencia.
 -   Antecedentes médicos.
 -   Agenda y ciclo completo de citas.
+-   Autoservicio público para confirmar, cancelar y reprogramar citas elegibles.
+-   Reprogramación pública con slots reales, revalidación server-side y rotación del enlace público.
 -   Consultas persistentes draft/completed.
 -   Workspace clínico con autosave y protección de cambios.
 -   Diagnósticos y catálogo diagnóstico.
@@ -709,18 +714,66 @@ Cobertura:
 -   `PrescriptionRepeatTest`;
 -   `PrescriptionRepeatHistoryTest`.
 
-Validación reportada al cierre técnico:
+Validación reportada al cierre:
 
 -   bloque 2 de repetición/historial: `16 tests verdes`;
 -   regresión de recetas: `112 tests verdes`;
 -   suite completa: `1110 tests verdes`;
 -   `0 failures`.
 
-Base canónica:
+Commit principal:
 
-`762b3d3 DT-28 feat: complete account security and recovery flows`
+`86420d1 DT-29 feat: add prescription repeat workflow`
 
 Estado:
 
-DT-29 tiene cierre técnico completado. Sigue pendiente el cierre formal
-mediante commit, push, PR, merge a `master` y cierre Jira.
+DT-29 está completado, integrado en `master` y cerrado en Jira.
+
+------------------------------------------------------------------------
+
+# Reprogramación pública de citas --- DT-30
+
+DT-30 amplía el autoservicio público para que el paciente pueda reprogramar una cita existente sin cuenta ni sesión, eligiendo únicamente horarios válidos de la agenda actual.
+
+Implementado:
+
+-   acción pública `Reprogramar mi cita` para citas `scheduled` y `confirmed`;
+-   selección de fecha y slots reales mediante `AppointmentAvailabilityService`;
+-   conservación de paciente, tenant, médico y duración de la cita;
+-   actualización de la misma entidad `Appointment`, sin crear una cita paralela;
+-   revalidación server-side del slot antes de guardar;
+-   rechazo de fechas/horas pasadas, fuera de agenda, bloqueadas u ocupadas;
+-   bloqueo transaccional de la cita y del perfil médico para endurecer concurrencia;
+-   estados clínicos o terminales rechazados con respuesta controlada;
+-   parámetros del navegador no pueden cambiar paciente, médico ni tenant;
+-   una cita `confirmed` vuelve a `scheduled` tras reprogramarse y pierde `confirmed_at`;
+-   rotación del token público: el enlace anterior queda invalidado y se emite uno nuevo;
+-   los recordatorios asociados al horario anterior quedan obsoletos y el nuevo horario puede generar nueva identidad de recordatorio;
+-   auditoría `appointment.public_rescheduled` con metadata mínima y sin persistir el token;
+-   vista pública sin información clínica sensible ni identificadores internos;
+-   compatibilidad con el autoservicio público existente de confirmación y cancelación.
+
+Cobertura específica:
+
+-   `PublicAppointmentRescheduleTest`: `9 tests verdes`, `43 assertions`.
+-   `AppointmentReminder*`: `24 tests verdes`, `68 assertions`.
+-   `PublicAppointmentSelfServiceTest`: `7 tests verdes`, `22 assertions`.
+
+Validación final reportada:
+
+-   suite completa: `1119 tests verdes`;
+-   `0 failures`;
+-   `git diff --check` limpio;
+-   working tree limpio y sincronizado antes del cierre documental.
+
+Base canónica:
+
+`86420d1 DT-29 feat: add prescription repeat workflow`
+
+PR de cierre:
+
+`#32 DT-30 feat: add public appointment rescheduling`
+
+Estado:
+
+DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `master` y transición final a `Listo` en Jira.
