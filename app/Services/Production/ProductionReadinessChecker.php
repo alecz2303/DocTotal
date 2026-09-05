@@ -13,6 +13,20 @@ class ProductionReadinessChecker
 
         $this->require(
             $failures,
+            config('app.env') === 'production',
+            'app.env',
+            'APP_ENV debe ser production para validar un entorno productivo.'
+        );
+
+        $this->require(
+            $failures,
+            strtolower((string) config('app.name')) !== 'laravel',
+            'app.name',
+            'APP_NAME debe identificar a DocTotal y no conservar el valor genérico Laravel.'
+        );
+
+        $this->require(
+            $failures,
             ! config('app.debug'),
             'app.debug',
             'APP_DEBUG debe estar desactivado en producción.'
@@ -30,6 +44,13 @@ class ProductionReadinessChecker
             str_starts_with((string) config('app.url'), 'https://'),
             'app.url',
             'APP_URL debe usar HTTPS en producción.'
+        );
+
+        $this->require(
+            $failures,
+            config('database.default') !== 'sqlite',
+            'database.default',
+            'DB_CONNECTION no debe usar SQLite en producción.'
         );
 
         $this->require(
@@ -60,6 +81,15 @@ class ProductionReadinessChecker
             'MAIL_MAILER debe usar un transport real en producción.'
         );
 
+        $mailFrom = strtolower((string) config('mail.from.address'));
+
+        $this->require(
+            $failures,
+            filled($mailFrom) && ! str_ends_with($mailFrom, '@example.com'),
+            'mail.from.address',
+            'MAIL_FROM_ADDRESS debe usar una dirección real del servicio.'
+        );
+
         $this->require(
             $failures,
             strtolower((string) config('logging.channels.single.level')) !== 'debug',
@@ -74,28 +104,33 @@ class ProductionReadinessChecker
             'QUEUE_CONNECTION debe usar un backend persistente en producción.'
         );
 
-        if (config('billing.automatic_charging_enabled')) {
-            $this->require(
-                $failures,
-                config('billing.payment_gateway') === 'stripe',
-                'billing.payment_gateway',
-                'Los cobros automáticos requieren BILLING_PAYMENT_GATEWAY=stripe.'
-            );
+        $this->require(
+            $failures,
+            config('billing.payment_gateway') === 'stripe',
+            'billing.payment_gateway',
+            'BILLING_PAYMENT_GATEWAY debe ser stripe en producción.'
+        );
 
-            $this->require(
-                $failures,
-                filled(config('services.stripe.secret')),
-                'services.stripe.secret',
-                'STRIPE_SECRET es obligatorio cuando los cobros automáticos están habilitados.'
-            );
+        $this->require(
+            $failures,
+            filled(config('services.stripe.key')),
+            'services.stripe.key',
+            'STRIPE_KEY es obligatorio en producción.'
+        );
 
-            $this->require(
-                $failures,
-                filled(config('services.stripe.webhook_secret')),
-                'services.stripe.webhook_secret',
-                'STRIPE_WEBHOOK_SECRET es obligatorio cuando los cobros automáticos están habilitados.'
-            );
-        }
+        $this->require(
+            $failures,
+            filled(config('services.stripe.secret')),
+            'services.stripe.secret',
+            'STRIPE_SECRET es obligatorio en producción.'
+        );
+
+        $this->require(
+            $failures,
+            filled(config('services.stripe.webhook_secret')),
+            'services.stripe.webhook_secret',
+            'STRIPE_WEBHOOK_SECRET es obligatorio en producción.'
+        );
 
         return $failures;
     }

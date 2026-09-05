@@ -30,11 +30,15 @@ class ProductionReadinessCheckerTest extends TestCase
         $this->configureReadyProduction();
 
         config([
+            'app.env' => 'local',
+            'app.name' => 'Laravel',
             'app.debug' => true,
             'app.url' => 'http://doctotal.test',
+            'database.default' => 'sqlite',
             'session.secure' => false,
             'session.http_only' => false,
             'mail.default' => 'log',
+            'mail.from.address' => 'hello@example.com',
             'logging.channels.single.level' => 'debug',
             'queue.default' => 'sync',
         ]);
@@ -43,22 +47,26 @@ class ProductionReadinessCheckerTest extends TestCase
             app(ProductionReadinessChecker::class)->failures()
         )->pluck('key');
 
+        $this->assertTrue($keys->contains('app.env'));
+        $this->assertTrue($keys->contains('app.name'));
         $this->assertTrue($keys->contains('app.debug'));
         $this->assertTrue($keys->contains('app.url'));
+        $this->assertTrue($keys->contains('database.default'));
         $this->assertTrue($keys->contains('session.secure'));
         $this->assertTrue($keys->contains('session.http_only'));
         $this->assertTrue($keys->contains('mail.default'));
+        $this->assertTrue($keys->contains('mail.from.address'));
         $this->assertTrue($keys->contains('logging.level'));
         $this->assertTrue($keys->contains('queue.default'));
     }
 
-    public function test_automatic_billing_requires_real_stripe_configuration(): void
+    public function test_production_requires_real_stripe_configuration(): void
     {
         $this->configureReadyProduction();
 
         config([
-            'billing.automatic_charging_enabled' => true,
             'billing.payment_gateway' => 'fake',
+            'services.stripe.key' => null,
             'services.stripe.secret' => null,
             'services.stripe.webhook_secret' => null,
         ]);
@@ -72,6 +80,10 @@ class ProductionReadinessCheckerTest extends TestCase
         );
 
         $this->assertTrue(
+            $keys->contains('services.stripe.key')
+        );
+
+        $this->assertTrue(
             $keys->contains('services.stripe.secret')
         );
 
@@ -80,27 +92,16 @@ class ProductionReadinessCheckerTest extends TestCase
         );
     }
 
-    public function test_billing_secrets_are_not_required_when_automatic_charging_is_disabled(): void
+    public function test_automatic_charging_can_remain_disabled_in_ready_production(): void
     {
         $this->configureReadyProduction();
 
         config([
             'billing.automatic_charging_enabled' => false,
-            'billing.payment_gateway' => 'fake',
-            'services.stripe.secret' => null,
-            'services.stripe.webhook_secret' => null,
         ]);
 
-        $keys = collect(
-            app(ProductionReadinessChecker::class)->failures()
-        )->pluck('key');
-
-        $this->assertFalse(
-            $keys->contains('services.stripe.secret')
-        );
-
-        $this->assertFalse(
-            $keys->contains('services.stripe.webhook_secret')
+        $this->assertTrue(
+            app(ProductionReadinessChecker::class)->isReady()
         );
     }
 
@@ -137,19 +138,24 @@ class ProductionReadinessCheckerTest extends TestCase
     private function configureReadyProduction(): void
     {
         config([
+            'app.env' => 'production',
+            'app.name' => 'DocTotal',
             'app.debug' => false,
             'app.key' => 'base64:'.base64_encode(str_repeat('k', 32)),
             'app.url' => 'https://doctotal.test',
+            'database.default' => 'mysql',
             'session.secure' => true,
             'session.http_only' => true,
             'session.serialization' => 'json',
             'mail.default' => 'smtp',
+            'mail.from.address' => 'no-reply@doctotal.test',
             'logging.channels.single.level' => 'info',
             'queue.default' => 'database',
             'billing.automatic_charging_enabled' => false,
-            'billing.payment_gateway' => 'fake',
-            'services.stripe.secret' => null,
-            'services.stripe.webhook_secret' => null,
+            'billing.payment_gateway' => 'stripe',
+            'services.stripe.key' => 'pk_test_doctotal',
+            'services.stripe.secret' => 'sk_test_doctotal',
+            'services.stripe.webhook_secret' => 'whsec_doctotal',
         ]);
     }
 }
