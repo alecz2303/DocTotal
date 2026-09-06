@@ -44,6 +44,11 @@
                     Facturación
                 </a>
 
+                <a href="{{ route('internal.sales.index') }}"
+                    class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.sales.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
+                    Ventas
+                </a>
+
                 <a href="{{ route('internal.communications.index') }}"
                     class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.communications.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
                     Comunicaciones
@@ -134,6 +139,11 @@
                     <a href="{{ route('internal.billing.index') }}"
                         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.billing.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
                         Facturación
+                    </a>
+
+                    <a href="{{ route('internal.sales.index') }}"
+                        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.sales.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
+                        Ventas
                     </a>
 
                     <a href="{{ route('internal.communications.index') }}"

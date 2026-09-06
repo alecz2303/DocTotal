@@ -8,6 +8,7 @@ use App\Contracts\StripePaymentIntentApi as StripePaymentIntentApiContract;
 use App\Contracts\StripePaymentIntentProcessor as StripePaymentIntentProcessorContract;
 use App\Contracts\StripePaymentMethodApi as StripePaymentMethodApiContract;
 use App\Contracts\StripeSetupIntentApi as StripeSetupIntentApiContract;
+use App\Http\Controllers\Internal\InternalSalesController;
 use App\Http\Controllers\Internal\InternalTrialSettingsController;
 use App\Services\AuditLogger;
 use App\Services\Billing\FakePaymentGateway;
@@ -29,9 +30,6 @@ use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->singleton(TenantContext::class, function () {
@@ -61,8 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             StripeClient::class,
             function (): StripeClient {
-                $secret =
-                    config('services.stripe.secret');
+                $secret = config('services.stripe.secret');
 
                 if (! $secret) {
                     throw new LogicException(
@@ -70,9 +67,7 @@ class AppServiceProvider extends ServiceProvider
                     );
                 }
 
-                return new StripeClient(
-                    $secret
-                );
+                return new StripeClient($secret);
             }
         );
 
@@ -102,9 +97,6 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         if (
@@ -142,6 +134,46 @@ class AppServiceProvider extends ServiceProvider
                 '/internal/settings/trial',
                 [InternalTrialSettingsController::class, 'update']
             )->name('internal.settings.trial.update');
+
+            Route::get(
+                '/internal/sales',
+                [InternalSalesController::class, 'index']
+            )->name('internal.sales.index');
+
+            Route::post(
+                '/internal/sales/partners',
+                [InternalSalesController::class, 'storePartner']
+            )->name('internal.sales.partners.store');
+
+            Route::put(
+                '/internal/sales/partners/{partner}',
+                [InternalSalesController::class, 'updatePartner']
+            )->name('internal.sales.partners.update');
+
+            Route::put(
+                '/internal/sales/partners/{partner}/toggle',
+                [InternalSalesController::class, 'togglePartner']
+            )->name('internal.sales.partners.toggle');
+
+            Route::post(
+                '/internal/sales/promo-codes',
+                [InternalSalesController::class, 'storePromoCode']
+            )->name('internal.sales.promo-codes.store');
+
+            Route::put(
+                '/internal/sales/promo-codes/{promoCode}',
+                [InternalSalesController::class, 'updatePromoCode']
+            )->name('internal.sales.promo-codes.update');
+
+            Route::put(
+                '/internal/sales/promo-codes/{promoCode}/toggle',
+                [InternalSalesController::class, 'togglePromoCode']
+            )->name('internal.sales.promo-codes.toggle');
+
+            Route::put(
+                '/internal/sales/commissions/{commission}/paid',
+                [InternalSalesController::class, 'markCommissionPaid']
+            )->name('internal.sales.commissions.paid');
         });
 
         Event::listen(Verified::class, function (Verified $event): void {

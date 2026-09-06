@@ -6,20 +6,36 @@ use App\Models\DoctorProfile;
 use App\Models\PracticeProfile;
 use App\Models\Referral;
 use App\Models\Tenant;
+use App\Models\TenantPromoAttribution;
 use App\Models\User;
+use App\Services\Commercial\PromoCodeResolver;
 use App\Services\Commercial\TrialSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class RegisterDoctor
 {
     public function __construct(
-        private TrialSettings $trialSettings
+        private TrialSettings $trialSettings,
+        private PromoCodeResolver $promoCodeResolver,
     ) {}
 
     public function handle(array $data): User
     {
         return DB::transaction(function () use ($data) {
+            $promoCode = null;
+
+            if (! empty($data['promo_code'])) {
+                $promoCode = $this->promoCodeResolver
+                    ->findValid($data['promo_code']);
+
+                if (! $promoCode) {
+                    throw ValidationException::withMessages([
+                        'promo_code' => 'El código promocional no es válido o ya no está vigente.',
+                    ]);
+                }
+            }
 
             $tenant = Tenant::create([
                 'name' => $data['practice_name'],
@@ -64,17 +80,24 @@ class RegisterDoctor
                     ->firstOrFail();
 
                 Referral::create([
-                    'referrer_tenant_id' =>
-                    $referrer->id,
+                    'referrer_tenant_id' => $referrer->id,
+                    'referred_tenant_id' => $tenant->id,
+                    'referral_code' => $referrer->referral_code,
+                    'status' => Referral::STATUS_PENDING,
+                ]);
+            }
 
-                    'referred_tenant_id' =>
-                    $tenant->id,
-
-                    'referral_code' =>
-                    $referrer->referral_code,
-
-                    'status' =>
-                    Referral::STATUS_PENDING,
+            if ($promoCode) {
+                TenantPromoAttribution::create([
+                    'tenant_id' => $tenant->id,
+                    'promo_code_id' => $promoCode->id,
+                    'sales_partner_id' => $promoCode->sales_partner_id,
+                    'code_snapshot' => $promoCode->code,
+                    'doctor_discount_percent_snapshot' =>
+                        $promoCode->doctor_discount_percent,
+                    'commission_percent_snapshot' =>
+                        $promoCode->commission_percent,
+                    'attributed_at' => now(),
                 ]);
             }
 
