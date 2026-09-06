@@ -2546,3 +2546,34 @@ Avance global ponderado vigente:
 `94%`
 
 No se recalcula el porcentaje sin aplicar nuevamente el criterio ponderado formal del producto.
+
+
+------------------------------------------------------------------------
+
+## DT-37 --- Surface trial, subscription and payment status across the physician experience
+
+Estado: Cierre técnico validado; pendiente PR, revisión y aprobación humana.
+
+Objetivo:
+
+Hacer visible el estado comercial ya existente de DocTotal —trial, suscripción, pagos y recuperación— sin convertir el dashboard clínico en un panel financiero ni introducir una segunda fuente de verdad.
+
+Incluye:
+
+- `TenantCommercialStatusPresenter` como capa de presentación sobre reglas existentes.
+- Trial y vigencia visibles durante onboarding.
+- Aviso contextual en dashboard después de `Prioridad ahora`.
+- Sin aviso para suscripciones activas normales.
+- Avisos para `past_due`, pago fallido y pago pendiente sólo cuando son derivables del dominio real.
+- CTA hacia `settings.billing` para recuperación y facturación existentes.
+- Preservación de aislamiento multi-tenant y prioridad clínica de DT-36.
+- Tests específicos de presenter, onboarding y dashboard.
+
+Validación técnica:
+
+- Rama consolidada a un único commit antes de la validación final.
+- GitHub Actions CI #129 verde sobre el bloque funcional.
+- GitHub Actions CI #130 verde sobre el commit consolidado.
+- Sin nuevas reglas de precios, billing, grace, suspensión o recuperación.
+
+Avance global ponderado vigente: `94%`. No se recalcula sin aplicar nuevamente el criterio ponderado formal.

@@ -133,6 +133,38 @@
         </section>
 
 
+        {{-- ESTADO COMERCIAL CONTEXTUAL --}}
+@php
+$commercialNotice = auth()->user()->tenant
+    ? app(\App\Services\Billing\TenantCommercialStatusPresenter::class)
+        ->noticeFor(auth()->user()->tenant)
+    : null;
+
+$commercialNoticeClasses = match ($commercialNotice['type'] ?? null) {
+    'danger' => 'border-red-200 bg-red-50/80 text-red-950',
+    'warning' => 'border-amber-200 bg-amber-50/80 text-amber-950',
+    default => 'border-blue-200 bg-blue-50/80 text-blue-950',
+};
+@endphp
+
+@if ($commercialNotice)
+<section
+    aria-label="Estado de suscripción"
+    class="mb-6 rounded-2xl border px-4 py-3 sm:px-5 {{ $commercialNoticeClasses }}">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+            <p class="text-sm font-bold">{{ $commercialNotice['title'] }}</p>
+            <p class="mt-0.5 text-sm opacity-80">{{ $commercialNotice['message'] }}</p>
+        </div>
+        <a
+            href="{{ route($commercialNotice['action_route']) }}"
+            class="inline-flex shrink-0 items-center justify-center rounded-xl border border-current/15 bg-white/70 px-3.5 py-2 text-sm font-semibold transition hover:bg-white">
+            {{ $commercialNotice['action_label'] }} →
+        </a>
+    </div>
+</section>
+@endif
+
         {{-- INDICADORES PRINCIPALES --}}
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 

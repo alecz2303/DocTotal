@@ -31,6 +31,20 @@
 
 <body class="min-h-screen bg-[#f6f8fc] text-slate-900 antialiased">
 
+    @php
+        $onboardingTenant = auth()->user()?->tenant;
+        $trialDaysRemaining = $onboardingTenant?->isOnTrial()
+            ? $onboardingTenant->trialDaysRemaining()
+            : null;
+    @endphp
+
+    @if ($trialDaysRemaining !== null)
+        <div class="border-b border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm text-blue-950">
+            <span class="font-semibold">Periodo de prueba activo.</span>
+            Tienes {{ $trialDaysRemaining }} {{ $trialDaysRemaining === 1 ? 'día' : 'días' }} de prueba disponibles.
+        </div>
+    @endif
+
     {{ $slot }}
 
     <x-flash-messages />

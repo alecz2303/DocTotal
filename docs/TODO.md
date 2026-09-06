@@ -329,7 +329,7 @@ Relacionado principalmente con DT-6.
 
 -   [x] Experiencia visual del onboarding.
 
--   [ ] Mostrar claramente información del periodo de prueba.
+-   [x] Mostrar claramente información del periodo de prueba durante onboarding (DT-37).
 
 -   [x] Registro preparado para promociones y referidos.
 
@@ -1026,9 +1026,9 @@ Relacionado principalmente con DT-8.
 
 -   [ ] Alertas importantes no cubiertas por las alertas clínicas contextuales ya implementadas.
 
--   [ ] Trial / estado de suscripción.
+-   [x] Trial / estado de suscripción contextual en dashboard (DT-37).
 
--   [ ] Avisos de pago.
+-   [x] Avisos contextuales de pago pendiente/fallido y riesgo de suspensión derivados del dominio existente (DT-37).
 
 # 13. Configuración
 
@@ -1148,9 +1148,9 @@ del Tenant.
 
 -   [x] Trial integrado con `Tenant::hasAccessToService()`.
 
--   [ ] Aviso de días restantes.
+-   [x] Aviso de días restantes durante onboarding y experiencia principal (DT-37).
 
--   [ ] Avisos próximos al vencimiento.
+-   [x] Avisos próximos al vencimiento del trial desde el presenter comercial (DT-37).
 
 -   [ ] Pantalla de trial vencido.
 
@@ -2041,7 +2041,7 @@ System.
 
 -   [ ] Incorporar alertas.
 
--   [ ] Incorporar estado de cuenta/trial cuando corresponda.
+-   [x] Incorporar estado de cuenta/trial cuando corresponda (DT-37).
 
 ## Pacientes
 
@@ -4252,3 +4252,20 @@ médico.
 10. 📣 **Comunicaciones transaccionales endurecidas --- DT-32 VALIDADO TÉCNICAMENTE**
     Preferencias por canal, elegibilidad centralizada, claim de procesamiento,
     redacción de errores y transport fake determinista.
+
+
+## DT-37 --- Surface trial, subscription and payment status across the physician experience
+
+Estado: Cierre técnico validado; pendiente PR, revisión y aprobación humana.
+
+-   [x] Presenter comercial reutilizando las fuentes reales de Tenant, Subscription y Payment.
+-   [x] Trial visible durante onboarding con días restantes y fecha de vencimiento.
+-   [x] Dashboard mantiene `Prioridad ahora` como jerarquía principal y muestra estado comercial después.
+-   [x] Suscripción activa normal no genera avisos innecesarios.
+-   [x] `past_due`, pago fallido y pago pendiente se muestran sólo cuando el dominio existente lo determina.
+-   [x] Acciones enlazan al flujo existente de facturación/recuperación.
+-   [x] Cobertura automatizada de presenter, onboarding y dashboard.
+-   [x] GitHub Actions CI #130 verde sobre el commit consolidado previo a documentación.
+-   [x] No se duplicaron reglas de billing, grace, suspensión, acceso o recuperación.
+
+Avance global ponderado vigente: `94%`. No se recalcula sin aplicar nuevamente el criterio ponderado formal.
