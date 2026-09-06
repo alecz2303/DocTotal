@@ -40,6 +40,83 @@ class DashboardTest extends TestCase
             ->assertSee('Próxima cita');
     }
 
+    public function test_dashboard_prioritizes_checked_in_patient(): void
+    {
+        $this->travelTo(Carbon::parse('2026-08-24 08:00:00'));
+
+        [$tenant, $user, $doctor] = $this->createContext();
+        app(TenantContext::class)->set($tenant);
+
+        $scheduledPatient = $this->createPatient('Paciente', 'Programado');
+        $waitingPatient = $this->createPatient('Paciente', 'Esperando');
+
+        $this->createAppointment(
+            $doctor,
+            $scheduledPatient,
+            '2026-08-24 09:00:00',
+            '2026-08-24 09:30:00',
+            'scheduled'
+        );
+
+        $waiting = $this->createAppointment(
+            $doctor,
+            $waitingPatient,
+            '2026-08-24 10:00:00',
+            '2026-08-24 10:30:00',
+            'checked_in'
+        );
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Prioridad ahora')
+            ->assertSee('Paciente esperando')
+            ->assertSee('Paciente Esperando')
+            ->assertSee('Atender paciente')
+            ->assertSee(
+                url('/appointments/'.$waiting->uuid),
+                false
+            );
+    }
+
+    public function test_dashboard_prioritizes_consultation_in_progress_over_waiting_patient(): void
+    {
+        $this->travelTo(Carbon::parse('2026-08-24 08:00:00'));
+
+        [$tenant, $user, $doctor] = $this->createContext();
+        app(TenantContext::class)->set($tenant);
+
+        $waitingPatient = $this->createPatient('Paciente', 'Esperando');
+        $activePatient = $this->createPatient('Paciente', 'Activo');
+
+        $this->createAppointment(
+            $doctor,
+            $waitingPatient,
+            '2026-08-24 09:00:00',
+            '2026-08-24 09:30:00',
+            'checked_in'
+        );
+
+        $active = $this->createAppointment(
+            $doctor,
+            $activePatient,
+            '2026-08-24 09:30:00',
+            '2026-08-24 10:00:00',
+            'in_progress'
+        );
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Consulta en curso')
+            ->assertSee('Paciente Activo')
+            ->assertSee('Continuar atención')
+            ->assertSee(
+                url('/appointments/'.$active->uuid),
+                false
+            );
+    }
+
     public function test_dashboard_displays_patient_count(): void
     {
         [

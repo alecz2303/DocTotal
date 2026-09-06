@@ -1014,23 +1014,21 @@ Relacionado principalmente con DT-8.
 
 -   [x] Tests del dashboard.
 
--   \[\~\] Jerarquía visual.
+-   [x] Jerarquía visual priorizada para la operación clínica del día (DT-36).
 
--   \[\~\] Utilidad clínica/operativa de algunos indicadores.
+-   [x] Prioridad operativa inmediata basada en citas existentes: consulta en curso, paciente esperando y siguiente cita (DT-36).
 
--   [ ] Alertas importantes.
+-   [x] Pacientes esperando visibles como prioridad operativa cuando corresponde (DT-36).
+
+-   [x] Acciones inmediatas hacia la cita y agenda del día (DT-36).
+
+-   [x] Vista diaria ordenada por prioridad operativa y hora; vista semanal con estados legibles (DT-36).
+
+-   [ ] Alertas importantes no cubiertas por las alertas clínicas contextuales ya implementadas.
 
 -   [ ] Trial / estado de suscripción.
 
 -   [ ] Avisos de pago.
-
--   [ ] Acciones pendientes.
-
--   [ ] Pacientes esperando.
-
--   \[!\] Revisar qué información necesita realmente el médico al
-
-comenzar el día.
 
 # 13. Configuración
 
