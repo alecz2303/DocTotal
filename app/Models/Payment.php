@@ -38,6 +38,7 @@ class Payment extends Model
         'billing_cycle',
         'gross_amount',
         'referral_discount_amount',
+        'promo_code_discount_amount',
         'promotional_credit_amount',
         'promotional_credits_released_at',
         'canceled_at',
@@ -52,6 +53,7 @@ class Payment extends Model
             'failed_at' => 'datetime',
             'gross_amount' => 'integer',
             'referral_discount_amount' => 'integer',
+            'promo_code_discount_amount' => 'integer',
             'promotional_credit_amount' => 'integer',
             'promotional_credits_released_at' => 'datetime',
             'canceled_at' => 'datetime',
@@ -230,6 +232,7 @@ class Payment extends Model
     {
         return
             $this->referral_discount_amount
+            + $this->promo_code_discount_amount
             + $this->promotional_credit_amount;
     }
 

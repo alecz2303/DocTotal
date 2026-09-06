@@ -4,15 +4,18 @@ namespace App\Actions\Fortify;
 
 use App\Actions\Registration\RegisterDoctor;
 use App\Models\User;
+use App\Services\Commercial\PromoCodeResolver;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
 {
     public function __construct(
-        private RegisterDoctor $registerDoctor
+        private RegisterDoctor $registerDoctor,
+        private PromoCodeResolver $promoCodeResolver,
     ) {}
 
     public function create(array $input): User
@@ -23,25 +26,28 @@ class CreateNewUser implements CreatesNewUsers
             );
         }
 
+        if (! empty($input['promo_code'])) {
+            $input['promo_code'] = strtoupper(
+                trim($input['promo_code'])
+            );
+        }
+
         Validator::make($input, [
             'practice_name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
             'first_name' => [
                 'required',
                 'string',
                 'max:100',
             ],
-
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
             ],
-
             'email' => [
                 'required',
                 'string',
@@ -49,25 +55,43 @@ class CreateNewUser implements CreatesNewUsers
                 'max:255',
                 'unique:users,email',
             ],
-
             'password' => [
                 'required',
                 'string',
                 Password::default(),
                 'confirmed',
             ],
-
             'referral_code' => [
                 'nullable',
                 'string',
                 'max:16',
+                'prohibits:promo_code',
                 Rule::exists('tenants', 'referral_code')
                     ->whereNull('deleted_at'),
+            ],
+            'promo_code' => [
+                'nullable',
+                'string',
+                'max:32',
+                'prohibits:referral_code',
             ],
         ], [
             'referral_code.exists' =>
             'El código de referido no es válido.',
+            'referral_code.prohibits' =>
+            'Usa sólo un código: referido o promocional.',
+            'promo_code.prohibits' =>
+            'Usa sólo un código: referido o promocional.',
         ])->validate();
+
+        if (
+            ! empty($input['promo_code'])
+            && ! $this->promoCodeResolver->findValid($input['promo_code'])
+        ) {
+            throw ValidationException::withMessages([
+                'promo_code' => 'El código promocional no es válido o ya no está vigente.',
+            ]);
+        }
 
         return $this->registerDoctor->handle(
             $input

@@ -3,6 +3,7 @@
 namespace App\Actions\Billing;
 
 use App\Actions\Referrals\QualifyReferralFromSuccessfulPayment;
+use App\Actions\Sales\GenerateSalesCommissionFromSuccessfulPayment;
 use App\Models\Payment;
 use Carbon\CarbonInterface;
 
@@ -30,6 +31,17 @@ class ProcessSuccessfulPaymentPromotions
          */
         app(
             QualifyReferralFromSuccessfulPayment::class
+        )->execute(
+            $payment,
+            $paidAt
+        );
+
+        /*
+         * Finalmente devengamos la comisión comercial,
+         * únicamente para pagos realmente exitosos.
+         */
+        app(
+            GenerateSalesCommissionFromSuccessfulPayment::class
         )->execute(
             $payment,
             $paidAt

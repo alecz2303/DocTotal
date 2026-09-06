@@ -28,12 +28,6 @@ class ReservePromotionalCredits
                     );
                 }
 
-                /*
-                 * Mutex por tenant.
-                 *
-                 * Dos cobros simultáneos del mismo tenant
-                 * no pueden seleccionar el mismo saldo.
-                 */
                 Tenant::query()
                     ->lockForUpdate()
                     ->findOrFail(
@@ -44,26 +38,34 @@ class ReservePromotionalCredits
                     $payment->contractualAmount();
 
                 $referralDiscount =
-                    $payment
-                    ->referral_discount_amount;
+                    $payment->referral_discount_amount;
+
+                $promoCodeDiscount =
+                    $payment->promo_code_discount_amount;
+
+                if ($promoCodeDiscount === 0) {
+                    $inferredPromoDiscount = max(
+                        0,
+                        $grossAmount
+                        - $referralDiscount
+                        - $payment->promotional_credit_amount
+                        - $payment->amount
+                    );
+
+                    $promoCodeDiscount = $inferredPromoDiscount;
+                }
 
                 $chargeableBeforeCredits =
                     $grossAmount
-                    - $referralDiscount;
+                    - $referralDiscount
+                    - $promoCodeDiscount;
 
                 if ($chargeableBeforeCredits < 0) {
                     throw new LogicException(
-                        'El descuento de referido supera el importe contractual del pago.'
+                        'Los descuentos superan el importe contractual del pago.'
                     );
                 }
 
-                /*
-                 * Si ya existen créditos reservados para
-                 * este Payment, reutilizamos esa reserva.
-                 *
-                 * Esto hace idempotente una segunda llamada
-                 * para el mismo Payment.
-                 */
                 $reservedAmount =
                     PromotionalCredit::withoutGlobalScopes()
                     ->where(
@@ -121,13 +123,6 @@ class ReservePromotionalCredits
                         $availableCredits
                         as $credit
                     ) {
-                        /*
-                         * Los créditos no se parten.
-                         *
-                         * Además, no reservamos un crédito
-                         * si dejaría el importe final del
-                         * Payment exactamente en cero.
-                         */
                         if (
                             $reservedAmount
                             + $credit->amount
@@ -147,6 +142,9 @@ class ReservePromotionalCredits
                 }
 
                 $payment->update([
+                    'promo_code_discount_amount' =>
+                    $promoCodeDiscount,
+
                     'promotional_credit_amount' =>
                     $reservedAmount,
 

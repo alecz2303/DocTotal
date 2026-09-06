@@ -4269,3 +4269,17 @@ Estado: Cierre técnico validado; pendiente PR, revisión y aprobación humana.
 -   [x] No se duplicaron reglas de billing, grace, suspensión, acceso o recuperación.
 
 Avance global ponderado vigente: `94%`. No se recalcula sin aplicar nuevamente el criterio ponderado formal.
+
+## Cierre técnico DT-39
+
+DT-39 cerró el canal comercial de vendedores/promotores: códigos promocionales administrables, atribución inmutable de nuevos tenants, descuento independiente para el médico, comisión independiente para el vendedor y ledger con snapshots económicos ligados al pago exitoso. La baja de vendedores/códigos es no destructiva para conservar trazabilidad histórica. El registro no permite acumular simultáneamente un referido entre médicos y un código comercial. El panel interno expone registros, conversiones, ingreso atribuido, comisión devengada y pagada.
+
+- [x] Vendedores/promotores administrables desde consola interna.
+- [x] Códigos promocionales con vigencia, descuento y comisión independientes.
+- [x] Atribución comercial inmutable durante el registro.
+- [x] Descuento comercial integrado al cálculo real del cobro.
+- [x] Comisión creada sólo después de un pago exitoso.
+- [x] Snapshots económicos inmutables por comisión.
+- [x] Panel y métricas internas de adquisición/comisiones.
+- [x] Auditoría global y permisos exclusivos de `internal_admin`.
+- [x] Cobertura automatizada de DT-39.

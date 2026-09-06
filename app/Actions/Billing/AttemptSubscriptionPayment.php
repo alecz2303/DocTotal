@@ -33,16 +33,6 @@ class AttemptSubscriptionPayment
             ): Payment {
                 $subscription->refresh();
 
-                /*
-                 * Un cambio programado se vuelve contractual justo en
-                 * el intento de renovación. Esto sucede dentro de la misma
-                 * transacción que crea Payment.
-                 *
-                 * Si Stripe rechaza la tarjeta, el nuevo ciclo permanece
-                 * aplicado porque esa es la deuda que acaba de generarse.
-                 * Si ocurre una excepción inesperada, la transacción local
-                 * revierte y Stripe conserva la misma idempotency key.
-                 */
                 if (
                     ! $isRetry
                     && $subscription->pending_billing_cycle
@@ -132,6 +122,9 @@ class AttemptSubscriptionPayment
                         'referral_discount_amount' =>
                         $amountBreakdown['referral_discount_amount'],
 
+                        'promo_code_discount_amount' =>
+                        $amountBreakdown['promo_code_discount_amount'],
+
                         'promotional_credit_amount' =>
                         $amountBreakdown['promotional_credit_amount'],
 
@@ -154,20 +147,12 @@ class AttemptSubscriptionPayment
                         $idempotencyKey,
                     ]);
 
-                /*
-                 * Reservamos créditos antes de llamar
-                 * al gateway para que Payment.amount
-                 * sea el importe neto definitivo.
-                 */
                 $payment =
                     $this->reservePromotionalCredits
                     ->execute(
                         $payment
                     );
 
-                /*
-                 * El gateway debe ejecutarse una sola vez.
-                 */
                 $result =
                     $this->gateway->charge(
                         $payment

@@ -2577,3 +2577,32 @@ Validación técnica:
 - Sin nuevas reglas de precios, billing, grace, suspensión o recuperación.
 
 Avance global ponderado vigente: `94%`. No se recalcula sin aplicar nuevamente el criterio ponderado formal.
+
+------------------------------------------------------------------------
+
+## DT-39 --- Promotional referral codes and seller commission tracking
+
+Estado: Completado técnicamente; pendiente de revisión y merge.
+
+Objetivo:
+
+Incorporar un canal comercial administrable para vendedores/promotores con códigos promocionales, atribución inmutable de registros, descuento al médico y comisión sobre pagos efectivamente cobrados.
+
+Incluye:
+
+- CRUD operativo de vendedores/promotores con desactivación no destructiva.
+- CRUD operativo de códigos promocionales con vigencia, descuento y comisión independientes.
+- Captura de código comercial durante el registro y soporte de enlaces `?promo=`.
+- Exclusión mutua entre código de referido entre médicos y código comercial.
+- Atribución inmutable tenant → vendedor/código con snapshots históricos.
+- Descuento promocional aplicado al primer cobro exitoso y compatible con créditos promocionales existentes.
+- Ledger de comisiones con snapshots inmutables de base, porcentaje, importe y moneda.
+- Devengo únicamente después de pago exitoso.
+- Estado de comisión devengada/pagada y conservación de historial.
+- Panel interno con registros atribuidos, conversiones, ingreso atribuido y comisiones.
+- Auditoría global de cambios administrativos y aislamiento de permisos `internal_admin`.
+- Cobertura automatizada de registro, descuento, comisión, permisos y administración interna.
+
+Commit principal:
+
+`DT-39 feat: add promotional referral codes and seller commission tracking`

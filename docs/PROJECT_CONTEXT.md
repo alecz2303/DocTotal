@@ -861,3 +861,9 @@ DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `
 - Cobertura automatizada específica de presenter, onboarding y dashboard.
 - GitHub Actions CI #129 y #130 verdes; #130 validó el commit consolidado previo a documentación.
 - Avance global ponderado vigente: `94%`; no se recalcula automáticamente.
+
+## DT-39 — canal comercial de vendedores y códigos promocionales
+
+DT-39 añade un subsistema comercial separado del referral histórico entre tenants. `SalesPartner`, `PromoCode`, `TenantPromoAttribution` y `SalesCommission` forman la fuente persistente del canal de vendedores. La atribución se fija al registrarse y conserva snapshots de código, descuento y comisión; no se reasigna después. `CalculatePaymentAmount` integra el descuento al importe real y deja de aplicarlo después del primer pago exitoso. `ProcessSuccessfulPaymentPromotions` genera la comisión sólo cuando el pago está confirmado, tomando base, porcentaje, importe y moneda como snapshots inmutables. La consola `/internal/sales` queda restringida a `internal_admin` y permite administrar vendedores/códigos, revisar atribuciones y liquidar comisiones sin borrar historial.
+
+Regla canónica: los códigos comerciales de DT-39 y los códigos de referido entre médicos no se acumulan en un mismo registro. Las comisiones no se generan por registro ni por intento de cobro, únicamente por pago exitoso. Los cambios posteriores de vendedor/código no alteran atribuciones ni comisiones históricas.
