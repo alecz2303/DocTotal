@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\AuditLogger;
+use App\Services\Production\ProductionRuntimeGuard;
 use App\Support\TenantContext;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\ServiceProvider;
@@ -103,6 +104,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (
+            config('app.env') === 'production'
+            && ! $this->app->runningInConsole()
+        ) {
+            $this->app->make(
+                ProductionRuntimeGuard::class
+            )->assertReady();
+        }
+
         View::addNamespace(
             'layouts',
             resource_path('views/components/layouts')

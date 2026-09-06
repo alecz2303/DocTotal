@@ -30,6 +30,8 @@ DT-33 cerró las brechas críticas de billing para v1.0: webhooks Stripe autenti
 
 DT-34 incorpora alertas clínicas contextuales deterministas y trazables desde alergias, medicamentos actuales, condiciones crónicas y problemas clínicos activos; visibles durante la consulta, sin diagnóstico automático ni recomendaciones terapéuticas.
 
+DT-35 endurece la preparación de producción: validación explícita de configuración crítica, fail-fast del runtime HTTP, protección del Host canónico, cookies de sesión seguras por defecto en producción, validación del logging activo y probes operativos de base de datos, locks de cache y backend de colas. El despliegue debe ejecutar `php artisan doctotal:check-production-readiness --probe` antes de habilitar tráfico, scheduler o workers; la confianza de proxies queda condicionada a la infraestructura real y nunca debe configurarse de forma indiscriminada.
+
 Este documento representa el estado funcional actual de DocTotal y sirve
 
 como

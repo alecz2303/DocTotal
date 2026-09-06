@@ -801,3 +801,25 @@ PR de cierre:
 Estado:
 
 DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `master` y transición final a `Listo` en Jira.
+
+------------------------------------------------------------------------
+
+## DT-35 --- Production configuration and runtime safety hardening
+
+- Jira: DT-35.
+- Rama de trabajo: `DT-35`.
+- Baseline canónico previo: `38ad24007134469fae1c699961e3866db4d97a1c` (`master`, cierre de DT-34).
+- Progreso global mostrado se mantiene en 94%; DT-35 no recalcula el porcentaje ponderado.
+- La configuración crítica de producción se valida mediante `ProductionReadinessChecker`.
+- `php artisan doctotal:check-production-readiness` valida settings y `--probe` añade comprobaciones operativas de base de datos, locks de cache y backend de colas.
+- El runtime HTTP de producción falla de forma explícita ante configuración insegura, sin exponer valores sensibles.
+- Artisan permanece disponible para migraciones, mantenimiento, recuperación y la propia validación de readiness.
+- El Host de rutas web en producción se restringe al hostname canónico derivado de `APP_URL`.
+- `APP_URL` debe usar HTTPS y hostname válido; el logging activo no puede operar en `debug`.
+- Sesión, cache y colas deben usar backends persistentes; los failed jobs deben conservarse para diagnóstico.
+- La cookie de sesión es segura por defecto en producción y sigue configurable explícitamente por entorno.
+- Stripe, correo y credenciales críticas se validan sin persistir ni mostrar secretos.
+- Los proxies no se confían de manera global o arbitraria; cualquier `TrustProxies` futuro debe configurarse con datos reales de infraestructura.
+- Antes de habilitar tráfico, scheduler o workers en producción se debe ejecutar `php artisan doctotal:check-production-readiness --probe`.
+- La cobertura específica incluye readiness checker, runtime guard y trusted host.
+- Cierre técnico sujeto a auditoría final, squash, CI exacto del commit consolidado, PR, review humana y Rebase and merge.

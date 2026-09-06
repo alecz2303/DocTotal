@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureInternalAdmin;
 use App\Http\Middleware\EnsureOnboardingIsComplete;
 use App\Http\Middleware\EnsureTenantHasServiceAccess;
+use App\Http\Middleware\EnsureTrustedProductionHost;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            EnsureTrustedProductionHost::class,
+        ], append: [
             ResolveTenant::class,
         ]);
 

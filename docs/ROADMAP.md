@@ -2478,3 +2478,33 @@ Fuera de alcance:
 Resultado:
 
 DocTotal dispone de una capa explícita de alertas clínicas contextuales basada exclusivamente en información estructurada ya registrada y visible en el momento de atención.
+
+------------------------------------------------------------------------
+
+## DT-35 --- Production configuration and runtime safety hardening
+
+Estado: Completado técnicamente; pendiente de PR, aprobación y merge.
+
+Objetivo: reducir riesgo operativo previo al release candidate mediante una auditoría y endurecimiento explícitos de la configuración y del runtime de producción, sin introducir deployment automático ni debilitar desarrollo local o CI.
+
+Implementado:
+
+- `ProductionReadinessChecker` para validar configuración crítica de producción.
+- Comando `doctotal:check-production-readiness` con salida segura y códigos de éxito/fallo.
+- Opción `--probe` para comprobar conexión de base de datos, locks de cache y backend de colas antes de habilitar procesos productivos.
+- `ProductionRuntimeGuard` con fail-fast del runtime HTTP en producción sin bloquear Artisan de mantenimiento.
+- Protección explícita del Host canónico derivado de `APP_URL` en rutas web.
+- Validación robusta de esquema HTTPS y hostname de `APP_URL`.
+- Validación del canal/stack de logging realmente activo y rechazo de nivel `debug` en producción.
+- Requisitos persistentes para sesión, cache, queue y failed jobs.
+- Cookie de sesión `secure` por defecto cuando `APP_ENV=production`.
+- Requisitos explícitos de Stripe, correo real y configuración sensible sin exponer secretos.
+- Política defensiva para proxy/TLS: no confiar proxies arbitrarios; la infraestructura debe preservar Host/HTTPS de forma confiable.
+- Cobertura automatizada para checker, runtime guard y trusted host.
+
+Validación técnica:
+
+- Trusted host validado localmente y en CI.
+- Runtime guard validado localmente y en CI.
+- Probe operativo validado localmente sin fallos de `database.connection`, `cache.lock` ni `queue.connection`.
+- Suite completa validada por GitHub Actions durante DT-35.
