@@ -53,6 +53,11 @@
                     class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.audit.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
                     Auditoría
                 </a>
+
+                <a href="{{ route('internal.settings.trial') }}"
+                    class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.settings.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
+                    Configuración
+                </a>
             </nav>
 
             <div class="shrink-0 border-t border-white/10 p-4">
@@ -139,6 +144,11 @@
                     <a href="{{ route('internal.audit.index') }}"
                         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.audit.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
                         Auditoría
+                    </a>
+
+                    <a href="{{ route('internal.settings.trial') }}"
+                        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.settings.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
+                        Configuración
                     </a>
                 </nav>
             </header>

@@ -4,14 +4,19 @@ namespace App\Actions\Registration;
 
 use App\Models\DoctorProfile;
 use App\Models\PracticeProfile;
+use App\Models\Referral;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Commercial\TrialSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Models\Referral;
 
 class RegisterDoctor
 {
+    public function __construct(
+        private TrialSettings $trialSettings
+    ) {}
+
     public function handle(array $data): User
     {
         return DB::transaction(function () use ($data) {
@@ -22,7 +27,7 @@ class RegisterDoctor
                 'status' => 'trial',
                 'trial_started_at' => now(),
                 'trial_ends_at' => now()->addDays(
-                    config('doctotal.trial_days')
+                    $this->trialSettings->days()
                 ),
             ]);
 

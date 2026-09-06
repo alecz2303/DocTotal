@@ -2,27 +2,30 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGateway;
+use App\Contracts\StripeCustomerApi as StripeCustomerApiContract;
+use App\Contracts\StripePaymentIntentApi as StripePaymentIntentApiContract;
+use App\Contracts\StripePaymentIntentProcessor as StripePaymentIntentProcessorContract;
+use App\Contracts\StripePaymentMethodApi as StripePaymentMethodApiContract;
+use App\Contracts\StripeSetupIntentApi as StripeSetupIntentApiContract;
+use App\Http\Controllers\Internal\InternalTrialSettingsController;
 use App\Services\AuditLogger;
+use App\Services\Billing\FakePaymentGateway;
+use App\Services\Billing\StripeCustomerApi;
+use App\Services\Billing\StripePaymentIntentApi;
+use App\Services\Billing\StripePaymentIntentProcessor;
+use App\Services\Billing\StripePaymentMethodApi;
+use App\Services\Billing\StripeSetupIntentApi;
+use App\Services\Commercial\TrialSettings;
 use App\Services\Production\ProductionRuntimeGuard;
 use App\Support\TenantContext;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
-use App\Contracts\PaymentGateway;
-use App\Services\Billing\FakePaymentGateway;
+use Illuminate\Support\ServiceProvider;
 use LogicException;
 use Stripe\StripeClient;
-use App\Contracts\StripePaymentIntentProcessor as StripePaymentIntentProcessorContract;
-use App\Services\Billing\StripePaymentIntentProcessor;
-use App\Contracts\StripePaymentIntentApi as StripePaymentIntentApiContract;
-use App\Services\Billing\StripePaymentIntentApi;
-use App\Contracts\StripeCustomerApi as StripeCustomerApiContract;
-use App\Services\Billing\StripeCustomerApi;
-use App\Contracts\StripeSetupIntentApi as StripeSetupIntentApiContract;
-use App\Services\Billing\StripeSetupIntentApi;
-use App\Contracts\StripePaymentMethodApi as StripePaymentMethodApiContract;
-use App\Services\Billing\StripePaymentMethodApi;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -118,6 +121,28 @@ class AppServiceProvider extends ServiceProvider
             resource_path('views/components/layouts')
         );
 
+        View::composer('auth.register', function (): void {
+            config([
+                'doctotal.trial_days' => app(TrialSettings::class)->days(),
+            ]);
+        });
+
+        Route::middleware([
+            'web',
+            'auth',
+            'verified',
+            'internal.admin',
+        ])->group(function (): void {
+            Route::get(
+                '/internal/settings/trial',
+                [InternalTrialSettingsController::class, 'index']
+            )->name('internal.settings.trial');
+
+            Route::put(
+                '/internal/settings/trial',
+                [InternalTrialSettingsController::class, 'update']
+            )->name('internal.settings.trial.update');
+        });
 
         Event::listen(Verified::class, function (Verified $event): void {
             app(AuditLogger::class)->safeLog(
