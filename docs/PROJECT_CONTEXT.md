@@ -823,3 +823,23 @@ DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `
 - Antes de habilitar tráfico, scheduler o workers en producción se debe ejecutar `php artisan doctotal:check-production-readiness --probe`.
 - La cobertura específica incluye readiness checker, runtime guard y trusted host.
 - Cierre técnico sujeto a auditoría final, squash, CI exacto del commit consolidado, PR, review humana y Rebase and merge.
+
+------------------------------------------------------------------------
+
+# DT-36 --- Daily clinical workflow and dashboard polish
+
+- Jira: DT-36.
+- Rama: `DT-36`.
+- Base canónica: `05dd4d225648bebb0a52a5eb8d7563853a448def` (master post-DT-35).
+- Dashboard prioriza operación inmediata del día mediante `Prioridad ahora`.
+- Prioridad derivada de `appointmentsToday`: `in_progress` → `checked_in` → siguiente `scheduled`/`confirmed` futura.
+- Agenda semanal muestra estados operativos explícitos.
+- Agenda diaria ordena por prioridad operativa y después por hora.
+- Acciones contextuales enlazan al detalle existente; el lifecycle continúa centralizado en `Appointment` y en la vista de detalle.
+- Navegación agenda → cita → paciente preservada.
+- Sin nuevas reglas clínicas, diagnósticos automáticos ni recomendaciones terapéuticas.
+- Multi-tenancy preservado.
+- CI #109 verde sobre el commit consolidado previo al PR.
+- PR #38 hacia `master`; CI #110 verde.
+- Reviewer `aruedaboldr` aprobó el PR.
+- Avance global canónico se mantiene en 94% hasta una nueva recalculación formal.

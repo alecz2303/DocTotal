@@ -627,6 +627,57 @@ class AppointmentIndexTest extends TestCase
             ->assertDontSee('Cita Tenant B');
     }
 
+    public function test_week_view_displays_appointment_status(): void
+    {
+        [$tenant, $user, $doctor] = $this->createContext();
+        app(TenantContext::class)->set($tenant);
+        $patient = $this->createPatient('Paciente', 'Confirmado');
+        $appointment = $this->createAppointment($doctor, $patient, '2026-08-24 10:00:00', '2026-08-24 10:30:00', 'Control');
+        $appointment->update(['status' => Appointment::STATUS_CONFIRMED]);
+
+        Livewire::actingAs($user)
+            ->test('pages::appointments.index')
+            ->set('date', '2026-08-24')
+            ->set('viewMode', 'week')
+            ->assertSee('Confirmada');
+    }
+
+    public function test_day_view_prioritizes_operational_appointments(): void
+    {
+        [$tenant, $user, $doctor] = $this->createContext();
+        app(TenantContext::class)->set($tenant);
+        $patient = $this->createPatient();
+        $this->createAppointment($doctor, $patient, '2026-08-24 09:00:00', '2026-08-24 09:30:00', 'Programada primero por hora');
+        $waiting = $this->createAppointment($doctor, $patient, '2026-08-24 11:00:00', '2026-08-24 11:30:00', 'Paciente esperando');
+        $waiting->update(['status' => Appointment::STATUS_CHECKED_IN]);
+        $active = $this->createAppointment($doctor, $patient, '2026-08-24 12:00:00', '2026-08-24 12:30:00', 'Consulta activa');
+        $active->update(['status' => Appointment::STATUS_IN_PROGRESS]);
+
+        Livewire::actingAs($user)
+            ->test('pages::appointments.index')
+            ->set('date', '2026-08-24')
+            ->set('viewMode', 'day')
+            ->assertSeeInOrder(['Consulta activa', 'Paciente esperando', 'Programada primero por hora']);
+    }
+
+    public function test_day_view_exposes_contextual_next_actions(): void
+    {
+        [$tenant, $user, $doctor] = $this->createContext();
+        app(TenantContext::class)->set($tenant);
+        $patient = $this->createPatient();
+        $waiting = $this->createAppointment($doctor, $patient, '2026-08-24 10:00:00', '2026-08-24 10:30:00', 'Esperando');
+        $waiting->update(['status' => Appointment::STATUS_CHECKED_IN]);
+        $active = $this->createAppointment($doctor, $patient, '2026-08-24 11:00:00', '2026-08-24 11:30:00', 'Activa');
+        $active->update(['status' => Appointment::STATUS_IN_PROGRESS]);
+
+        Livewire::actingAs($user)
+            ->test('pages::appointments.index')
+            ->set('date', '2026-08-24')
+            ->set('viewMode', 'day')
+            ->assertSee('Iniciar consulta')
+            ->assertSee('Continuar consulta');
+    }
+
     public function test_index_has_links_to_appointment_and_patient(): void
     {
         [

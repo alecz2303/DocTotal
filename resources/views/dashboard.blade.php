@@ -46,6 +46,93 @@
         </div>
 
 
+        {{-- PRIORIDAD OPERATIVA --}}
+        @php
+        $priorityAppointment = $appointmentsToday
+            ->firstWhere('status', 'in_progress')
+            ?? $appointmentsToday->firstWhere('status', 'checked_in')
+            ?? $appointmentsToday
+                ->filter(function ($appointment) {
+                    return in_array(
+                        $appointment->status,
+                        ['scheduled', 'confirmed'],
+                        true
+                    ) && $appointment->starts_at->greaterThanOrEqualTo(now());
+                })
+                ->sortBy('starts_at')
+                ->first();
+
+        $priorityTitle = match ($priorityAppointment?->status) {
+            'in_progress' => 'Consulta en curso',
+            'checked_in' => 'Paciente esperando',
+            default => $priorityAppointment ? 'Siguiente cita' : null,
+        };
+
+        $priorityAction = match ($priorityAppointment?->status) {
+            'in_progress' => 'Continuar atención',
+            'checked_in' => 'Atender paciente',
+            default => 'Abrir cita',
+        };
+        @endphp
+
+        <section
+            class="mb-6 overflow-hidden rounded-3xl border border-blue-200/70 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-[0_24px_65px_-32px_rgba(37,99,235,0.65)]">
+            <div class="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div class="min-w-0">
+                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-blue-100">
+                        Prioridad ahora
+                    </p>
+
+                    @if ($priorityAppointment)
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-bold tracking-tight sm:text-2xl">
+                            {{ $priorityTitle }}
+                        </h2>
+                        <span class="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ring-white/20">
+                            {{ $priorityAppointment->starts_at->format('H:i') }}
+                        </span>
+                    </div>
+
+                    <p class="mt-2 text-base font-semibold text-white">
+                        {{ collect([
+                            $priorityAppointment->patient->first_name,
+                            $priorityAppointment->patient->last_name,
+                            $priorityAppointment->patient->second_last_name,
+                        ])->filter()->implode(' ') }}
+                    </p>
+
+                    <p class="mt-1 max-w-2xl text-sm text-blue-100">
+                        {{ $priorityAppointment->reason ?: 'Sin motivo registrado' }}
+                    </p>
+                    @else
+                    <h2 class="mt-2 text-xl font-bold tracking-tight sm:text-2xl">
+                        Sin acciones inmediatas
+                    </h2>
+                    <p class="mt-1 text-sm text-blue-100">
+                        No hay pacientes esperando, consultas en curso ni citas próximas para hoy.
+                    </p>
+                    @endif
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                    @if ($priorityAppointment)
+                    <a
+                        href="{{ url('/appointments/'.$priorityAppointment->uuid) }}"
+                        class="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-blue-50">
+                        {{ $priorityAction }}
+                    </a>
+                    @endif
+
+                    <a
+                        href="{{ route('appointments.index') }}"
+                        class="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15">
+                        Ver agenda del día
+                    </a>
+                </div>
+            </div>
+        </section>
+
+
         {{-- INDICADORES PRINCIPALES --}}
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 

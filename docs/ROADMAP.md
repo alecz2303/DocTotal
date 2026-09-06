@@ -2508,3 +2508,41 @@ Validación técnica:
 - Runtime guard validado localmente y en CI.
 - Probe operativo validado localmente sin fallos de `database.connection`, `cache.lock` ni `queue.connection`.
 - Suite completa validada por GitHub Actions durante DT-35.
+
+------------------------------------------------------------------------
+
+## DT-36 --- Polish daily clinical workflow and dashboard for DocTotal 1.0
+
+Estado: Cierre técnico validado; PR #38 en revisión.
+
+Objetivo:
+
+Mejorar la madurez del flujo operativo diario del médico sobre las foundations existentes, sin introducir nuevas fuentes de verdad ni reglas clínicas.
+
+Incluye:
+
+- Dashboard con bloque `Prioridad ahora` derivado exclusivamente de las citas del día.
+- Prioridad: consulta en curso, paciente esperando y siguiente cita programada/confirmada.
+- Acciones inmediatas hacia el detalle de cita y agenda del día.
+- Vista semanal con estados operativos explícitos.
+- Vista diaria ordenada por prioridad operativa y luego por hora.
+- Acciones contextuales para continuar consulta, iniciar consulta, gestionar cita o ver detalle.
+- Navegación agenda → cita → paciente preservada.
+- Estados vacíos y comportamiento responsive existentes auditados y conservados.
+- Sin duplicar el lifecycle de `Appointment`.
+- Sin diagnósticos automáticos, recomendaciones clínicas ni datos sintéticos.
+- Aislamiento multi-tenant preservado.
+- Cobertura automatizada específica de dashboard y agenda.
+
+Validación técnica:
+
+- Rama consolidada a un único commit antes del PR.
+- GitHub Actions CI #109 verde sobre el commit consolidado previo al PR.
+- GitHub Actions CI #110 verde sobre el PR.
+- Reviewer `aruedaboldr` solicitado y aprobación humana registrada.
+
+Avance global ponderado vigente:
+
+`94%`
+
+No se recalcula el porcentaje sin aplicar nuevamente el criterio ponderado formal del producto.

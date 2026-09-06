@@ -437,6 +437,28 @@ new
                 $selectedDate->copy()
             );
 
+            $operationalPriority = [
+                Appointment::STATUS_IN_PROGRESS => 0,
+                Appointment::STATUS_CHECKED_IN => 1,
+                Appointment::STATUS_CONFIRMED => 2,
+                Appointment::STATUS_SCHEDULED => 3,
+                Appointment::STATUS_COMPLETED => 4,
+                Appointment::STATUS_NO_SHOW => 5,
+                Appointment::STATUS_CANCELLED => 6,
+            ];
+
+            $operationalDayAppointments = $dayData['appointments']
+                ->sortBy(function (Appointment $appointment) use ($operationalPriority): string {
+                    $priority = $operationalPriority[$appointment->status] ?? 9;
+
+                    return sprintf(
+                        '%02d-%s',
+                        $priority,
+                        $appointment->starts_at->format('H:i:s')
+                    );
+                })
+                ->values();
+
             /*
         |--------------------------------------------------------------------------
         | Títulos
@@ -498,6 +520,9 @@ new
 
                 'dayData' =>
                 $dayData,
+
+                'operationalDayAppointments' =>
+                $operationalDayAppointments,
             ];
         }
     };
@@ -834,6 +859,20 @@ new
                             <p class="mt-1 truncate text-xs text-slate-500">
                                 {{ $appointment->reason ?: 'Sin motivo' }}
                             </p>
+                            @php
+                            $weekStatusLabels = [
+                            'scheduled' => 'Programada',
+                            'confirmed' => 'Confirmada',
+                            'checked_in' => 'Paciente llegó',
+                            'in_progress' => 'En atención',
+                            'completed' => 'Completada',
+                            'cancelled' => 'Cancelada',
+                            'no_show' => 'No se presentó',
+                            ];
+                            @endphp
+                            <span class="mt-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold text-slate-700 ring-1 ring-inset ring-slate-200">
+                                {{ $weekStatusLabels[$appointment->status] ?? ucfirst($appointment->status) }}
+                            </span>
                         </a>
                         @endforeach
 
@@ -955,7 +994,7 @@ new
             <div></div>
         </div>
 
-        @forelse ($dayData['appointments'] as $appointment)
+        @forelse ($operationalDayAppointments as $appointment)
         @php
         $statusLabels = [
         'scheduled' => 'Programada',
@@ -979,6 +1018,13 @@ new
 
         $statusLabel = $statusLabels[$appointment->status] ?? ucfirst($appointment->status);
         $statusClass = $statusClasses[$appointment->status] ?? 'bg-slate-50 text-slate-700 ring-slate-200';
+        $nextActionLabel = match ($appointment->status) {
+            Appointment::STATUS_IN_PROGRESS => 'Continuar consulta',
+            Appointment::STATUS_CHECKED_IN => 'Iniciar consulta',
+            Appointment::STATUS_CONFIRMED => 'Gestionar cita',
+            Appointment::STATUS_SCHEDULED => 'Gestionar cita',
+            default => 'Ver detalle',
+        };
         @endphp
 
         <div
@@ -1023,8 +1069,8 @@ new
             <div class="mt-4 flex flex-wrap items-center gap-2 md:mt-0 md:justify-end">
                 <a
                     href="{{ route('appointments.show', ['uuid' => $appointment->uuid]) }}"
-                    class="dt-btn dt-btn-secondary px-3 py-1.5 text-xs">
-                    Ver cita
+                    class="dt-btn {{ in_array($appointment->status, [Appointment::STATUS_IN_PROGRESS, Appointment::STATUS_CHECKED_IN], true) ? 'dt-btn-primary' : 'dt-btn-secondary' }} px-3 py-1.5 text-xs">
+                    {{ $nextActionLabel }}
                 </a>
                 <a
                     href="{{ route('patients.show', ['uuid' => $appointment->patient->uuid]) }}"
