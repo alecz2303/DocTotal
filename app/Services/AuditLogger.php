@@ -16,16 +16,20 @@ class AuditLogger
         ?string $description = null,
         array $metadata = [],
     ): AuditEvent {
-        return AuditEvent::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'auditable_type' => $auditable?->getMorphClass(),
-            'auditable_id' => $auditable?->getKey(),
-            'description' => $description,
-            'ip_address' => $this->ipAddress(),
-            'user_agent' => $this->userAgent(),
-            'metadata' => $this->sanitizeMetadata($metadata),
-        ]);
+        return AuditEvent::create(
+            $this->payload($action, $auditable, $description, $metadata)
+        );
+    }
+
+    public function logGlobal(
+        string $action,
+        ?Model $auditable = null,
+        ?string $description = null,
+        array $metadata = [],
+    ): AuditEvent {
+        return AuditEvent::createGlobal(
+            $this->payload($action, $auditable, $description, $metadata)
+        );
     }
 
     public function safeLog(
@@ -34,13 +38,49 @@ class AuditLogger
         ?string $description = null,
         array $metadata = [],
     ): ?AuditEvent {
-        try {
+        return $this->safely(function () use (
+            $action,
+            $auditable,
+            $description,
+            $metadata
+        ): AuditEvent {
             return $this->log(
                 action: $action,
                 auditable: $auditable,
                 description: $description,
                 metadata: $metadata,
             );
+        }, $action, $auditable);
+    }
+
+    public function safeLogGlobal(
+        string $action,
+        ?Model $auditable = null,
+        ?string $description = null,
+        array $metadata = [],
+    ): ?AuditEvent {
+        return $this->safely(function () use (
+            $action,
+            $auditable,
+            $description,
+            $metadata
+        ): AuditEvent {
+            return $this->logGlobal(
+                action: $action,
+                auditable: $auditable,
+                description: $description,
+                metadata: $metadata,
+            );
+        }, $action, $auditable);
+    }
+
+    private function safely(
+        callable $callback,
+        string $action,
+        ?Model $auditable
+    ): ?AuditEvent {
+        try {
+            return $callback();
         } catch (Throwable $exception) {
             Log::error(
                 'Audit event could not be recorded.',
@@ -57,6 +97,24 @@ class AuditLogger
 
             return null;
         }
+    }
+
+    private function payload(
+        string $action,
+        ?Model $auditable,
+        ?string $description,
+        array $metadata
+    ): array {
+        return [
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'auditable_type' => $auditable?->getMorphClass(),
+            'auditable_id' => $auditable?->getKey(),
+            'description' => $description,
+            'ip_address' => $this->ipAddress(),
+            'user_agent' => $this->userAgent(),
+            'metadata' => $this->sanitizeMetadata($metadata),
+        ];
     }
 
     private function ipAddress(): ?string
