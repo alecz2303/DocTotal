@@ -8,12 +8,6 @@
             </p>
         </div>
 
-        @if (session('status'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                {{ session('status') }}
-            </div>
-        @endif
-
         <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <form method="POST" action="{{ route('internal.settings.trial.update') }}" class="space-y-6">
                 @csrf
@@ -59,4 +53,21 @@
             </form>
         </section>
     </div>
+
+    @if (session('status'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Configuración actualizada',
+                    text: {!! json_encode(
+                        session('status'),
+                        JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+                    ) !!},
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#4f46e5',
+                });
+            });
+        </script>
+    @endif
 </x-layouts.internal>
