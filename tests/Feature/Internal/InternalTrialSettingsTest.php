@@ -42,7 +42,8 @@ class InternalTrialSettingsTest extends TestCase
             ->put(route('internal.settings.trial.update'), [
                 'trial_days' => 14,
             ])
-            ->assertRedirect(route('internal.settings.trial'));
+            ->assertRedirect(route('internal.settings.trial'))
+            ->assertSessionHas('status', 'Duración del periodo de prueba actualizada.');
 
         $this->assertDatabaseHas('global_settings', [
             'key' => TrialSettings::KEY,
@@ -59,6 +60,20 @@ class InternalTrialSettingsTest extends TestCase
         $this->assertNull($event->tenant_id);
         $this->assertSame($admin->id, $event->user_id);
         $this->assertSame(14, $event->metadata['new_days']);
+    }
+
+    public function test_trial_settings_success_flash_is_rendered_through_sweetalert(): void
+    {
+        $admin = $this->internalAdmin();
+
+        $this->actingAs($admin)
+            ->withSession(['status' => 'Duración del periodo de prueba actualizada.'])
+            ->get(route('internal.settings.trial'))
+            ->assertOk()
+            ->assertSee('window.Swal.fire', false)
+            ->assertSee('Configuración actualizada')
+            ->assertSee('Duración del periodo de prueba actualizada.')
+            ->assertDontSee('border-emerald-200', false);
     }
 
     public function test_trial_days_validation_rejects_out_of_range_values(): void
