@@ -843,3 +843,21 @@ DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `
 - PR #38 hacia `master`; CI #110 verde.
 - Reviewer `aruedaboldr` aprobó el PR.
 - Avance global canónico se mantiene en 94% hasta una nueva recalculación formal.
+
+
+------------------------------------------------------------------------
+
+# DT-37 --- Commercial status visibility
+
+- Jira: DT-37.
+- Base canónica: `11683346 DT-36 feat: polish daily clinical workflow and dashboard`.
+- `TenantCommercialStatusPresenter` concentra la presentación del estado comercial usando `Tenant`, `Subscription` y `Payment` existentes.
+- Onboarding muestra claramente trial vigente, días restantes y fecha de vencimiento.
+- Dashboard conserva `Prioridad ahora` como prioridad clínica y añade después un aviso comercial contextual.
+- Suscripción activa normal no muestra aviso.
+- `past_due`, pago fallido y pago pendiente sólo se muestran cuando corresponden al estado real persistido.
+- Las acciones llevan al flujo existente `settings.billing`.
+- No se introdujeron reglas nuevas de billing, acceso, grace, suspensión ni recuperación.
+- Cobertura automatizada específica de presenter, onboarding y dashboard.
+- GitHub Actions CI #129 y #130 verdes; #130 validó el commit consolidado previo a documentación.
+- Avance global ponderado vigente: `94%`; no se recalcula automáticamente.
