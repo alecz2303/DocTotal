@@ -16,8 +16,8 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 - Repo: `alecz2303/DocTotal`
 - Rama principal: `master`
-- `master` canónico post-DT-42: `cc5a1231527cdc5f4bfb232faae358a83b03a998`
-- Commit post-DT-42: `DT-42 feat: add global clinical files center`
+- `master` canónico post-DT-43: `296650cc517c3d15aa3c6052fcb61f5cc894e654`
+- Commit post-DT-43: `DT-43 feat: add production data durability foundation`
 - Jira project key: `DT`
 - Jira es la fuente de verdad para IDs DT; nunca se inventa el siguiente número.
 - GitHub Actions es la validación técnica canónica.
@@ -27,15 +27,15 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 ## Estado documental actual
 
-DT-42 quedó integrado y cerrado. DT-43 trabaja la foundation de durabilidad operativa para backup, restauración y retención segura.
+DT-43 quedó integrado y cerrado. DT-44 añade visibilidad operativa interna sobre la foundation de backup/restauración sin convertir DocTotal en el ejecutor de los respaldos.
 
-Estado canónico al iniciar DT-43:
+Estado canónico al iniciar DT-44:
 
-- DT-1 a DT-42: `Listo` en Jira.
-- DT-43: `En curso` en Jira.
-- Baseline `master`: `cc5a1231527cdc5f4bfb232faae358a83b03a998`.
+- DT-1 a DT-43: `Listo` en Jira.
+- DT-44: `En curso` en Jira.
+- Baseline `master`: `296650cc517c3d15aa3c6052fcb61f5cc894e654`.
 - Avance global ponderado formal: `94%`.
-- No se recalcula el porcentaje en DT-43.
+- No se recalcula el porcentaje en DT-44.
 - No se inventan cifras de tests/assertions. La autoridad técnica es GitHub Actions sobre el SHA validado.
 
 ## Multi-tenancy
@@ -121,7 +121,7 @@ DT-35 añadió:
 - probes operativos de DB, cache locks y backend de colas;
 - comando `php artisan doctotal:check-production-readiness --probe`.
 
-DT-43 añade una foundation separada de durabilidad de datos:
+DT-43 añadió una foundation separada de durabilidad de datos:
 
 - configuración `config/data_durability.php`;
 - cobertura obligatoria de backup de base de datos y archivos clínicos privados;
@@ -134,9 +134,21 @@ DT-43 añade una foundation separada de durabilidad de datos:
 - retención segura con modos `manual`/`policy` sin activar borrado automático;
 - `DOCTOTAL_RETENTION_AUTOMATIC_DELETION_ENABLED=true` se considera configuración insegura y bloquea readiness.
 
+DT-44 añade la capa de visibilidad operativa para administración interna:
+
+- ruta protegida `internal.data-durability.index` bajo `auth`, `verified` e `internal.admin`;
+- controlador `InternalDataDurabilityController` que reutiliza `DataDurabilityChecker`;
+- entrada `Backups` en navegación desktop/mobile de la consola interna;
+- pantalla de solo lectura con estado `Operativo`, `Incompleto` o `Inseguro`;
+- visibilidad de cobertura de BD y archivos privados, mecanismo declarado, frecuencia, copias mínimas, runbook y verificación posterior;
+- visibilidad del modo de retención y confirmación explícita de que el borrado automático debe permanecer deshabilitado;
+- lista de fallos con las mismas claves/mensajes del checker canónico;
+- ninguna descarga, restauración, dump, credencial ni contenido clínico expuesto desde la UI;
+- tests de acceso administrativo, configuración ready/incomplete/unsafe y no exposición de secretos.
+
 DocTotal no ejecuta dumps genéricos desde la aplicación ni almacena credenciales de backup. La ejecución real corresponde a infraestructura/proveedor; la aplicación valida que exista una estrategia declarada, completa y compatible con una restauración verificable.
 
-La política legal definitiva de conservación clínica sigue abierta. DT-43 no implementa eliminación destructiva de expedientes ni decide plazos regulatorios.
+La política legal definitiva de conservación clínica sigue abierta. DT-43/DT-44 no implementan eliminación destructiva de expedientes ni deciden plazos regulatorios.
 
 Permanecen como brechas reales de producción:
 
@@ -175,7 +187,7 @@ DT-40 añadió feedback SweetAlert al ajuste interno de trial.
 
 ## Baseline de calidad
 
-No se documenta en DT-43 un nuevo conteo formal de tests/assertions.
+No se documenta en DT-44 un nuevo conteo formal de tests/assertions.
 
 Referencias históricas sólo se conservan en los commits/documentos de los DT donde fueron explícitamente registradas. Para el estado actual, la autoridad técnica es GitHub Actions sobre el SHA que se valida.
 
@@ -217,7 +229,7 @@ No se modifica sin una recalculación ponderada formal.
 
 ## Siguientes candidatos de desarrollo
 
-Después de DT-43, los candidatos recomendados son:
+Después de DT-44, los candidatos recomendados son:
 
 1. **Production monitoring/error tracking + operational response procedure.**
 2. **Queue/worker topology + failed-job monitoring.**

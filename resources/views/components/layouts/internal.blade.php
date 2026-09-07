@@ -59,6 +59,11 @@
                     Auditoría
                 </a>
 
+                <a href="{{ route('internal.data-durability.index') }}"
+                    class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.data-durability.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
+                    Backups
+                </a>
+
                 <a href="{{ route('internal.settings.trial') }}"
                     class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('internal.settings.*') ? 'bg-white/10 text-white' : 'text-indigo-100 hover:bg-white/5 hover:text-white' }}">
                     Configuración
@@ -154,6 +159,11 @@
                     <a href="{{ route('internal.audit.index') }}"
                         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.audit.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
                         Auditoría
+                    </a>
+
+                    <a href="{{ route('internal.data-durability.index') }}"
+                        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('internal.data-durability.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600' }}">
+                        Backups
                     </a>
 
                     <a href="{{ route('internal.settings.trial') }}"

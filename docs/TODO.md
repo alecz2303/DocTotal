@@ -6,15 +6,16 @@
 
 `███████████████████░` 94%
 
-> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-43. No representa cobertura de tests.
+> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-44. No representa cobertura de tests.
 
-## Estado canónico post-DT-42
+## Estado canónico post-DT-43
 
-La documentación fue reconciliada en DT-41 y actualizada después del cierre de DT-42.
+La documentación fue reconciliada en DT-41 y actualizada después del cierre de DT-43.
 
-- DT-1 a DT-42 están cerrados en Jira (`Listo`).
-- `master` post-DT-42: `cc5a1231527cdc5f4bfb232faae358a83b03a998`.
-- Commit post-DT-42: `DT-42 feat: add global clinical files center`.
+- DT-1 a DT-43 están cerrados en Jira (`Listo`).
+- DT-44 está `En curso`.
+- `master` post-DT-43: `296650cc517c3d15aa3c6052fcb61f5cc894e654`.
+- Commit post-DT-43: `DT-43 feat: add production data durability foundation`.
 - GitHub Actions es la validación técnica canónica. Los números históricos de tests/assertions se conservan únicamente cuando fueron registrados explícitamente; no se inventan baselines nuevos.
 
 ## Leyenda
@@ -82,7 +83,8 @@ La documentación fue reconciliada en DT-41 y actualizada después del cierre de
 - [D] Activar passkeys hasta definir hostname HTTPS canónico y relying party/origins productivos.
 - [~] Ampliar cobertura de auditoría a más mutaciones clínicas/comerciales según riesgo.
 - [x] Foundation verificable de backup/restauración para base de datos y archivos clínicos privados — DT-43.
-- [~] Foundation operativa de retención segura sin borrado automático; la política legal definitiva sigue pendiente — DT-43.
+- [x] Visibilidad operativa interna de la estrategia de backups sin exponer secretos ni contenido clínico — DT-44.
+- [~] Foundation operativa de retención segura sin borrado automático; la política legal definitiva sigue pendiente — DT-43/DT-44.
 - [D] Inmutabilidad de auditoría garantizada a nivel de base de datos.
 - [D] Outbox transaccional para auditoría durable.
 - [!] Mantener revisión de autorización, rate limiting, observabilidad y controles de producción como requisito continuo, no como supuesto resuelto por un único DT.
@@ -135,7 +137,9 @@ La documentación fue reconciliada en DT-41 y actualizada después del cierre de
 - [x] Hardening de configuración/runtime de producción y comando `doctotal:check-production-readiness --probe` — DT-35.
 - [x] Host canónico, cookies seguras, logging activo y probes de DB/cache locks/queue backend — DT-35.
 - [x] Estrategia operativa declarativa y verificable de backup/restauración con cobertura de BD + archivos privados, frecuencia, copias mínimas y runbook — DT-43.
-- [~] Foundation de retención operacional segura; no existe borrado clínico automático y la política legal definitiva sigue abierta — DT-43.
+- [x] Pantalla interna `Backups` con estado general, cobertura, mecanismo, frecuencia, copias, restore/runbook y retención — DT-44.
+- [x] La pantalla de backups reutiliza `DataDurabilityChecker`, es solo lectura y no descarga/restaura copias ni muestra credenciales — DT-44.
+- [~] Foundation de retención operacional segura; no existe borrado clínico automático y la política legal definitiva sigue abierta — DT-43/DT-44.
 - [ ] Monitoreo/error tracking de producción y procedimiento de respuesta operacional.
 - [ ] Definir queue/worker topology del entorno objetivo y monitoreo de failed jobs cuando se despliegue con procesamiento asíncrono real.
 - [D] Impersonación y herramientas destructivas masivas.
@@ -152,7 +156,7 @@ La documentación fue reconciliada en DT-41 y actualizada después del cierre de
 
 # 7. Trabajo realmente pendiente priorizado
 
-DT-43 cubre la foundation técnica/operativa de durabilidad sin inventar plazos legales ni activar borrados destructivos. Las brechas siguientes son principalmente de operación productiva.
+DT-43 cubrió la foundation técnica/operativa de durabilidad y DT-44 añade visibilidad operativa interna sin convertir DocTotal en el ejecutor del backup. Las brechas siguientes son principalmente de operación productiva.
 
 **Siguientes candidatos recomendados (sin asignar ID DT):**
 
