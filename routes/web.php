@@ -346,6 +346,9 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/clinical-templates', 'pages::clinical-templates.index')
             ->name('clinical-templates.index');
 
+        Route::livewire('/files', 'pages::files.index')
+            ->name('files.index');
+
         Route::livewire('/patients', 'pages::patients.index')
             ->name('patients.index');
 

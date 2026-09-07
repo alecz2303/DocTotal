@@ -236,7 +236,9 @@
                             <span>Recetas</span>
                         </a>
 
-                        <a href="#" class="dt-nav-link">
+                        <a
+                            href="{{ route('files.index') }}"
+                            class="dt-nav-link {{ request()->routeIs('files.*') ? 'dt-nav-link-active' : '' }}">
 
                             <svg
                                 viewBox="0 0 24 24"
@@ -496,9 +498,9 @@
                             </a>
 
                             <a
-                                href="#"
+                                href="{{ route('files.index') }}"
                                 x-on:click="mobileMenuOpen = false"
-                                class="dt-nav-link">
+                                class="dt-nav-link {{ request()->routeIs('files.*') ? 'dt-nav-link-active' : '' }}">
 
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5 shrink-0">
                                     <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />

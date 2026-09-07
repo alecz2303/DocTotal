@@ -2,13 +2,13 @@
 
 Este documento registra el historial canónico de bloques DT y su estado real. Jira es la fuente de verdad para identificadores y estados; este archivo no sustituye Jira.
 
-## Baseline canónico post-DT-40
+## Baseline canónico post-DT-41
 
-- `master`: `1a837fac891cf4c4f2a210b50233e8f066d2ec04`
-- Último bloque integrado: **DT-40 — Add SweetAlert feedback to internal trial settings**
-- Estado Jira DT-1 … DT-40: **Listo**
+- `master`: `2954f13374981211a8f1c7f81b1919c47a817246`
+- Último bloque integrado: **DT-41 — Reconcile canonical product documentation after DocTotal 1.0 hardening**
+- Estado Jira DT-1 … DT-41: **Listo**
 - Avance global ponderado formal vigente: **94%**
-- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-41.
+- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-42.
 
 ## Historial DT
 
@@ -54,7 +54,8 @@ Este documento registra el historial canónico de bloques DT y su estado real. J
 | DT-38 | Duración de trial configurable desde administración interna | Listo |
 | DT-39 | Códigos promocionales y comisiones de vendedores | Listo |
 | DT-40 | SweetAlert en ajustes internos de trial | Listo |
-| DT-41 | Reconciliación documental post-hardening 1.0 | En curso |
+| DT-41 | Reconciliación documental post-hardening 1.0 | Listo |
+| DT-42 | Centro global de archivos clínicos y documento fuente de laboratorios | En curso |
 
 ## Evolución por etapas
 
@@ -70,7 +71,7 @@ Se construyeron suscripciones/billing, referidos, expediente longitudinal, docum
 
 Se incorporaron administración interna, correcciones de recuperación de billing, autoservicio público de citas, enlaces manuales, plantillas, laboratorios, seguridad de cuenta, repetición de recetas y reprogramación pública.
 
-### Hardening DocTotal 1.0 (DT-31 — DT-40)
+### Hardening DocTotal 1.0 (DT-31 — DT-41)
 
 - DT-31 automatizó la validación técnica mediante GitHub Actions.
 - DT-32 endureció comunicaciones transaccionales.
@@ -82,21 +83,15 @@ Se incorporaron administración interna, correcciones de recuperación de billin
 - DT-38 hizo configurable la duración del trial.
 - DT-39 añadió adquisición promocional y tracking de comisiones.
 - DT-40 añadió feedback SweetAlert a ajustes internos de trial.
+- DT-41 reconcilió la documentación canónica con el estado real de GitHub y Jira.
 
-## Correcciones documentales realizadas en DT-41
+### Evolución clínica post-hardening
 
-DT-41 elimina estados históricos que ya no eran ciertos, entre ellos referencias a DT-22/DT-32/DT-37 como pendientes de PR/merge y pendientes funcionales posteriormente cerrados por DT-27, DT-28, DT-33, DT-34, DT-36, DT-37 y DT-39.
+DT-42 convierte `Archivos` en un centro clínico global tenant-scoped que reutiliza `ClinicalDocument`, y permite vincular opcionalmente un laboratorio estructurado con un documento fuente del mismo paciente/tenant sin crear un segundo sistema de almacenamiento.
 
-También se separa explícitamente:
+## Próximo candidato después de DT-42
 
-- trabajo implementado;
-- trabajo realmente pendiente;
-- evolución diferida;
-- decisiones de producto/operación.
-
-## Próximo candidato después de DT-41
-
-Sin asignar todavía un ID Jira, el siguiente bloque recomendado es:
+Sin asignar todavía un ID Jira, el siguiente bloque recomendado continúa siendo:
 
 **Production data durability: backup, restore and retention foundation.**
 
