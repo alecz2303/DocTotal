@@ -16,8 +16,8 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 - Repo: `alecz2303/DocTotal`
 - Rama principal: `master`
-- `master` canónico post-DT-40: `1a837fac891cf4c4f2a210b50233e8f066d2ec04`
-- Commit post-DT-40: `DT-40 feat: add SweetAlert feedback to internal trial settings`
+- `master` canónico post-DT-41: `2954f13374981211a8f1c7f81b1919c47a817246`
+- Commit post-DT-41: `DT-41 docs: reconcile canonical product documentation`
 - Jira project key: `DT`
 - Jira es la fuente de verdad para IDs DT; nunca se inventa el siguiente número.
 - GitHub Actions es la validación técnica canónica.
@@ -27,15 +27,15 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 ## Estado documental actual
 
-DT-41 reconcilia los documentos canónicos después del hardening de DocTotal 1.0.
+DT-41 reconcilió los documentos canónicos después del hardening de DocTotal 1.0. DT-42 extiende la capa clínica de documentos sin duplicar el sistema de almacenamiento existente.
 
-Estado verificado al iniciar DT-41:
+Estado canónico al iniciar DT-42:
 
-- DT-1 a DT-40: `Listo` en Jira.
-- DT-41: trabajo documental.
+- DT-1 a DT-41: `Listo` en Jira.
+- DT-42: centro global de archivos clínicos y vínculo opcional documento fuente ↔ laboratorio estructurado.
 - Avance global ponderado formal: `94%`.
-- No se recalcula el porcentaje en DT-41.
-- No se inventan cifras de tests/assertions. Los baselines históricos sólo son válidos cuando fueron registrados explícitamente.
+- No se recalcula el porcentaje en DT-42.
+- No se inventan cifras de tests/assertions. La autoridad técnica es GitHub Actions sobre el SHA validado.
 
 ## Multi-tenancy
 
@@ -66,9 +66,13 @@ DocTotal incluye actualmente:
 - recetas, catálogo de medicamentos y repetición trazable de receta;
 - problemas clínicos activos/resueltos (`PatientProblem`);
 - documentos clínicos privados;
+- centro global tenant-scoped de archivos clínicos con búsqueda, filtros, acceso al expediente y acciones privadas de ver/descargar — DT-42;
 - plantillas clínicas por tenant;
 - laboratorios estructurados con captura masiva revisable;
+- vínculo opcional entre laboratorio estructurado y documento fuente de laboratorio del mismo paciente/tenant — DT-42;
 - alertas clínicas contextuales deterministas y trazables.
+
+`ClinicalDocument` continúa siendo la única entidad de almacenamiento documental clínico. DT-42 no introduce un repositorio paralelo: la vista global `Archivos` reutiliza documentos, autorización, almacenamiento privado y rutas de visualización/descarga existentes. `LaboratoryStudy.clinical_document_id` es nullable y el documento fuente se desacopla con `nullOnDelete` si el archivo es eliminado.
 
 Fuentes clínicas explícitas:
 
@@ -102,6 +106,7 @@ El estado efectivo de acceso no debe inferirse únicamente de `Tenant.status`; d
 - Cambio de contraseña, 2FA TOTP, recovery codes, verificación de correo y sesiones/dispositivos — DT-28.
 - Passkeys/WebAuthn fueron evaluadas, pero su activación se difiere hasta fijar hostname HTTPS canónico y relying party/origins productivos.
 - Credenciales, OTP, recovery codes, tokens y IDs reales de sesión no deben persistirse en auditoría.
+- Los vínculos de laboratorio a documento fuente se validan contra el paciente actual y mediante queries tenant-scoped; no se acepta selección cross-patient/cross-tenant desde el flujo clínico.
 
 ## Producción y operaciones
 
@@ -153,7 +158,7 @@ DT-40 añadió feedback SweetAlert al ajuste interno de trial.
 
 ## Baseline de calidad
 
-No existe en DT-41 un nuevo conteo formal de tests/assertions que deba documentarse.
+No se documenta en DT-42 un nuevo conteo formal de tests/assertions.
 
 Referencias históricas sólo se conservan en los commits/documentos de los DT donde fueron explícitamente registradas. Para el estado actual, la autoridad técnica es GitHub Actions sobre el SHA que se valida.
 
@@ -195,7 +200,7 @@ No se modifica sin una recalculación ponderada formal.
 
 ## Siguiente candidato de desarrollo
 
-Después de reconciliar el estado real post-DT-40, el siguiente candidato recomendado es:
+Después de DT-42, el siguiente candidato recomendado continúa siendo:
 
 **Production data durability: backup, restore and retention foundation.**
 

@@ -6,15 +6,15 @@
 
 `███████████████████░` 94%
 
-> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-41. No representa cobertura de tests.
+> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-42. No representa cobertura de tests.
 
-## Estado canónico post-DT-40
+## Estado canónico post-DT-41
 
 La documentación fue reconciliada en DT-41 contra `master` y Jira.
 
-- DT-1 a DT-40 están cerrados en Jira (`Listo`).
-- `master` post-DT-40: `1a837fac891cf4c4f2a210b50233e8f066d2ec04`.
-- Commit post-DT-40: `DT-40 feat: add SweetAlert feedback to internal trial settings`.
+- DT-1 a DT-41 están cerrados en Jira (`Listo`).
+- `master` post-DT-41: `2954f13374981211a8f1c7f81b1919c47a817246`.
+- Commit post-DT-41: `DT-41 docs: reconcile canonical product documentation`.
 - GitHub Actions es la validación técnica canónica. Los números históricos de tests/assertions se conservan únicamente cuando fueron registrados explícitamente; no se inventan baselines nuevos.
 
 ## Leyenda
@@ -33,11 +33,12 @@ La documentación fue reconciliada en DT-41 contra `master` y Jira.
 - [x] Expediente longitudinal con consultas, diagnósticos, recetas y tratamientos históricos.
 - [x] Problemas clínicos activos/resueltos (`PatientProblem`) — DT-19.
 - [x] Documentos clínicos privados — DT-15.
+- [x] Centro global tenant-scoped de archivos clínicos con búsqueda/filtros y navegación al expediente — DT-42.
 - [x] Plantillas clínicas reutilizables — DT-26.
 - [x] Laboratorios estructurados y captura masiva revisable — DT-27.
+- [x] Vinculación opcional de laboratorio estructurado con su documento fuente del mismo paciente/tenant — DT-42.
 - [x] Alertas clínicas contextuales deterministas y trazables — DT-34.
 - [~] Mejorar estructura de antecedentes cuando exista una necesidad clínica concreta (p. ej. hospitalizaciones).
-- [ ] Vincular opcionalmente un laboratorio estructurado con su documento fuente.
 - [D] OCR/extracción de documentos.
 - [D] DICOM/PACS.
 - [D] HL7/FHIR e integraciones con proveedores de laboratorio.
@@ -151,7 +152,7 @@ La documentación fue reconciliada en DT-41 contra `master` y Jira.
 
 # 7. Trabajo realmente pendiente priorizado
 
-La deuda posterior a DT-40 ya no está dominada por funcionalidades clínicas básicas. Las brechas más relevantes son operativas y de durabilidad de datos.
+La deuda posterior a DT-42 ya no incluye la vinculación entre laboratorios estructurados y documentos fuente. Las brechas más relevantes siguen siendo operativas y de durabilidad de datos.
 
 **Siguiente candidato de desarrollo recomendado (sin asignar ID DT):**
 

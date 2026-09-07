@@ -16,6 +16,7 @@ class LaboratoryStudy extends Model
         'tenant_id',
         'patient_id',
         'consultation_id',
+        'clinical_document_id',
         'name',
         'study_date',
         'laboratory_name',
@@ -37,6 +38,11 @@ class LaboratoryStudy extends Model
     public function consultation(): BelongsTo
     {
         return $this->belongsTo(Consultation::class);
+    }
+
+    public function clinicalDocument(): BelongsTo
+    {
+        return $this->belongsTo(ClinicalDocument::class);
     }
 
     public function results(): HasMany

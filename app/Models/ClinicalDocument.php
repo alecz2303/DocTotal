@@ -6,6 +6,7 @@ use App\Traits\BelongsToTenant;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClinicalDocument extends Model
 {
@@ -76,5 +77,10 @@ class ClinicalDocument extends Model
             User::class,
             'uploaded_by'
         );
+    }
+
+    public function laboratoryStudies(): HasMany
+    {
+        return $this->hasMany(LaboratoryStudy::class);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ClinicalDocument;
 use App\Models\LaboratoryStudy;
 use App\Models\Patient;
 use App\Services\AuditLogger;
@@ -25,6 +26,7 @@ new
         public string $laboratory_name = '';
         public string $notes = '';
         public ?int $consultation_id = null;
+        public ?int $clinical_document_id = null;
 
         public array $results = [];
 
@@ -42,7 +44,7 @@ new
         {
             return $this->patient
                 ->laboratoryStudies()
-                ->with(['results', 'consultation'])
+                ->with(['results', 'consultation', 'clinicalDocument'])
                 ->orderByDesc('study_date')
                 ->orderByDesc('created_at')
                 ->get();
@@ -54,6 +56,17 @@ new
             return $this->patient
                 ->consultations()
                 ->orderByDesc('consultation_at')
+                ->get();
+        }
+
+        #[Computed]
+        public function sourceDocuments()
+        {
+            return ClinicalDocument::query()
+                ->where('patient_id', $this->patient->id)
+                ->where('category', ClinicalDocument::CATEGORY_LABORATORY)
+                ->orderByDesc('document_date')
+                ->orderByDesc('created_at')
                 ->get();
         }
 
@@ -76,6 +89,7 @@ new
             $this->laboratory_name = $study->laboratory_name ?? '';
             $this->notes = $study->notes ?? '';
             $this->consultation_id = $study->consultation_id;
+            $this->clinical_document_id = $study->clinical_document_id;
             $this->results = $study->results
                 ->map(fn ($result) => [
                     'parameter_name' => $result->parameter_name,
@@ -128,6 +142,7 @@ new
                 'laboratory_name' => ['nullable', 'string', 'max:180'],
                 'notes' => ['nullable', 'string', 'max:5000'],
                 'consultation_id' => ['nullable', 'integer'],
+                'clinical_document_id' => ['nullable', 'integer'],
                 'results' => ['required', 'array', 'min:1'],
                 'results.*.parameter_name' => ['required', 'string', 'max:180'],
                 'results.*.value' => ['required', 'string', 'max:255'],
@@ -148,7 +163,23 @@ new
                 }
             }
 
-            $study = DB::transaction(function () use ($validated): LaboratoryStudy {
+            $sourceDocument = null;
+
+            if ($validated['clinical_document_id']) {
+                $sourceDocument = ClinicalDocument::query()
+                    ->whereKey($validated['clinical_document_id'])
+                    ->where('patient_id', $this->patient->id)
+                    ->where('category', ClinicalDocument::CATEGORY_LABORATORY)
+                    ->first();
+
+                if (! $sourceDocument) {
+                    throw ValidationException::withMessages([
+                        'clinical_document_id' => 'El documento seleccionado no pertenece a este paciente o no es un documento de laboratorio.',
+                    ]);
+                }
+            }
+
+            $study = DB::transaction(function () use ($validated, $sourceDocument): LaboratoryStudy {
                 if ($this->editingStudyId) {
                     $study = $this->patient
                         ->laboratoryStudies()
@@ -166,6 +197,7 @@ new
 
                 $study->fill([
                     'consultation_id' => $validated['consultation_id'] ?: null,
+                    'clinical_document_id' => $sourceDocument?->id,
                     'name' => $validated['name'],
                     'study_date' => $validated['study_date'],
                     'laboratory_name' => $validated['laboratory_name'] ?: null,
@@ -192,6 +224,7 @@ new
                     metadata: [
                         'patient_id' => $this->patient->id,
                         'consultation_id' => $study->consultation_id,
+                        'clinical_document_id' => $study->clinical_document_id,
                         'results_count' => count($validated['results']),
                     ],
                 );
@@ -351,6 +384,7 @@ new
             $this->laboratory_name = '';
             $this->notes = '';
             $this->consultation_id = null;
+            $this->clinical_document_id = null;
             $this->bulkResults = '';
             $this->showBulkResults = false;
             $this->results = [];
@@ -459,6 +493,25 @@ new
                             @endforeach
                         </select>
                         @error('consultation_id') <span class="text-xs text-rose-600">{{ $message }}</span> @enderror
+                    </label>
+
+                    <label class="space-y-1.5 lg:col-span-2">
+                        <span class="text-sm font-semibold text-slate-700">Documento fuente (opcional)</span>
+                        <select wire:model="clinical_document_id" class="dt-input">
+                            <option value="">Sin documento fuente</option>
+                            @foreach ($this->sourceDocuments as $document)
+                                <option value="{{ $document->id }}">
+                                    {{ $document->title }}
+                                    @if ($document->document_date)
+                                        — {{ $document->document_date->format('d/m/Y') }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="block text-xs leading-5 text-slate-500">
+                            Vincula el PDF o imagen original que ya está guardado como documento de laboratorio en el expediente del paciente.
+                        </span>
+                        @error('clinical_document_id') <span class="text-xs text-rose-600">{{ $message }}</span> @enderror
                     </label>
 
                     <label class="space-y-1.5 lg:col-span-2">
@@ -662,15 +715,27 @@ new
                     <div class="min-w-0">
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 lg:hidden">Estudio</p>
                         <p class="truncate text-sm font-bold text-slate-900">{{ $study->name }}</p>
-                        @if ($study->consultation)
-                            <a
-                                href="{{ route('consultations.show', ['uuid' => $study->consultation->uuid]) }}"
-                                wire:navigate
-                                class="mt-1 inline-block text-xs font-semibold text-blue-600 hover:text-blue-700"
-                            >
-                                Consulta relacionada
-                            </a>
-                        @endif
+                        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                            @if ($study->consultation)
+                                <a
+                                    href="{{ route('consultations.show', ['uuid' => $study->consultation->uuid]) }}"
+                                    wire:navigate
+                                    class="inline-block text-xs font-semibold text-blue-600 hover:text-blue-700"
+                                >
+                                    Consulta relacionada
+                                </a>
+                            @endif
+                            @if ($study->clinicalDocument)
+                                <a
+                                    href="{{ route('clinical-documents.view', $study->clinicalDocument) }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-block text-xs font-semibold text-violet-600 hover:text-violet-700"
+                                >
+                                    Ver documento fuente
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="min-w-0">
