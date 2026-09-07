@@ -1,869 +1,202 @@
-# DocTotal --- Project Context
+# DocTotal — Project Context
 
-Documento de contexto técnico y funcional del proyecto.
+Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pending real; `ROADMAP.md` registra los bloques DT; Jira es la fuente de verdad para IDs y estados.
 
-Su propósito es mantener continuidad entre sesiones, chats y nuevos
-bloques de desarrollo sin sustituir `TODO.md` ni `ROADMAP.md`.
+## Stack
 
-------------------------------------------------------------------------
+- PHP 8.4
+- Laravel 13
+- Blade + Livewire/Volt
+- Tailwind CSS
+- MySQL en desarrollo/producción
+- SQLite in-memory en tests
+- PHPUnit / Laravel Feature Tests / Livewire tests
 
-# Stack
+## Repositorio y workflow
 
-Backend:
+- Repo: `alecz2303/DocTotal`
+- Rama principal: `master`
+- `master` canónico post-DT-40: `1a837fac891cf4c4f2a210b50233e8f066d2ec04`
+- Commit post-DT-40: `DT-40 feat: add SweetAlert feedback to internal trial settings`
+- Jira project key: `DT`
+- Jira es la fuente de verdad para IDs DT; nunca se inventa el siguiente número.
+- GitHub Actions es la validación técnica canónica.
+- Antes de PR, cada rama DT debe quedar en exactamente un commit consolidado y CI verde sobre ese SHA.
+- Después del PR se solicita reviewer `aruedaboldr`, se verifica CI, Jira pasa a `En revisión` y se espera aprobación humana.
+- No se hace merge sin aprobación explícita.
 
--   PHP 8.4.
--   Laravel 13.
+## Estado documental actual
 
-Frontend:
+DT-41 reconcilia los documentos canónicos después del hardening de DocTotal 1.0.
 
--   Blade.
--   Livewire.
--   Componentes Livewire single-file estilo Volt.
--   Tailwind CSS.
+Estado verificado al iniciar DT-41:
 
-Base de datos:
-
--   MySQL en desarrollo/producción.
--   SQLite in-memory en tests.
-
-Testing:
-
--   PHPUnit.
--   Laravel Feature Tests.
--   Livewire component tests.
-
-------------------------------------------------------------------------
-
-# Convenciones del proyecto
-
-## Livewire
-
-Los componentes se crean con Artisan.
-
-Ejemplo:
-
-``` bash
-php artisan make:livewire pages::appointments.reschedule
-```
-
-Las vistas principales del proyecto utilizan nombres con el carácter
-`⚡`. En Windows, algunos comandos pueden mostrar ese carácter o texto
-UTF-8 de forma incorrecta. No debe modificarse el código fuente
-basándose únicamente en mojibake de la terminal.
+- DT-1 a DT-40: `Listo` en Jira.
+- DT-41: trabajo documental.
+- Avance global ponderado formal: `94%`.
+- No se recalcula el porcentaje en DT-41.
+- No se inventan cifras de tests/assertions. Los baselines históricos sólo son válidos cuando fueron registrados explícitamente.
 
 ## Multi-tenancy
 
-El aislamiento por tenant es requisito obligatorio.
+El aislamiento por tenant es un requisito obligatorio e innegociable.
 
-La foundation principal utiliza:
+Foundation:
 
--   `TenantContext`.
--   `TenantScope`.
--   `App\Traits\BelongsToTenant`.
+- `TenantContext`
+- `TenantScope`
+- `App\Traits\BelongsToTenant`
+- middleware de resolución del tenant
+- cobertura de aislamiento en módulos clínicos/SaaS
 
-Los modelos que usan `BelongsToTenant` reciben automáticamente
-`tenant_id` desde el contexto activo al crear registros y quedan
-protegidos por el scope global del tenant.
+Las lecturas globales de administración interna deben permanecer explícitas, encapsuladas y testeadas. No se permiten bypasses cross-tenant dispersos.
 
-Todo módulo nuevo debe revisar explícitamente su comportamiento
-multi-tenant.
+## Foundation clínica integrada
 
-------------------------------------------------------------------------
+DocTotal incluye actualmente:
 
-# Baseline actual
+- pacientes, contactos de emergencia y antecedentes;
+- expediente clínico longitudinal;
+- agenda y ciclo completo de citas;
+- autoservicio público de confirmación/cancelación/reprogramación de citas;
+- enlaces manuales seguros de gestión de cita;
+- consultas persistentes `draft/completed`;
+- workspace clínico con autosave y protección de cambios;
+- diagnósticos y catálogo diagnóstico;
+- recetas, catálogo de medicamentos y repetición trazable de receta;
+- problemas clínicos activos/resueltos (`PatientProblem`);
+- documentos clínicos privados;
+- plantillas clínicas por tenant;
+- laboratorios estructurados con captura masiva revisable;
+- alertas clínicas contextuales deterministas y trazables.
 
-Último DT integrado en `master` antes de este bloque:
+Fuentes clínicas explícitas:
 
--   DT-32 --- Harden transactional communications and appointment reminders.
--   Commit: `9fbf6a5 DT-32 feat: harden transactional communications and appointment reminders`.
+- `PatientMedicalHistory`: alergias, medicamentos actuales, antecedentes, enfermedades crónicas y cirugías.
+- `PatientProblem`: problemas clínicos longitudinales activos/resueltos.
 
-DT-33 --- Close DocTotal 1.0 billing production readiness:
+No se infieren automáticamente medicamentos actuales desde recetas históricas ni problemas activos desde diagnósticos históricos. Las alertas contextuales no realizan diagnóstico automático ni recomendaciones terapéuticas.
 
--   Jira: DT-33.
--   Rama: `DT-33`.
--   Base canónica: `9fbf6a5`.
--   Webhooks Stripe autenticados e idempotentes.
--   Sincronización de éxito, fallo y cancelación de PaymentIntent.
--   Recuperación segura de eventos fallidos.
--   Coherencia de pagos manuales, recuperación manual y cobros automáticos.
--   Comprobante operativo para pagos exitosos con aislamiento por tenant.
--   Auditoría controlada sin secretos ni payload completo.
--   GitHub Actions CI #37 verde sobre el bloque técnico final.
--   Sin CFDI, deployment ni merge automático.
+## Foundation SaaS integrada
 
-DT-34 --- Contextual clinical alerts for active patient problems:
+- Registro, autenticación y onboarding.
+- Trial y derecho de acceso centralizado.
+- Subscription lifecycle mensual/anual.
+- Stripe, pagos, métodos de pago, renovación, recuperación, grace, suspensión y reactivación.
+- Webhooks Stripe autenticados/idempotentes y sincronización de estados — DT-33.
+- Comprobante operativo de pago — DT-33.
+- Referidos y créditos promocionales — DT-13.
+- Códigos promocionales y comisiones de vendedores — DT-39.
+- Comunicaciones transaccionales/recordatorios — DT-20/DT-32.
+- Administración interna SaaS — DT-22.
+- Estado de trial/suscripción/pago visible en experiencia médica — DT-37.
+- Duración de trial configurable — DT-38.
+- Feedback SweetAlert de ajustes de trial — DT-40.
 
--   Jira: DT-34.
--   Rama de trabajo: `DT-34`.
--   Base canónica: `f27ff018` post-DT-33.
--   Servicio determinista `PatientClinicalAlertService`.
--   Fuentes: alergias, medicamentos actuales, condiciones crónicas y problemas clínicos activos.
--   Trazabilidad explícita de fuente para cada alerta.
--   Aislamiento multi-tenant validado.
--   Integración visible en el workspace de consulta.
--   Sin diagnóstico automático ni recomendaciones terapéuticas.
--   Cobertura automatizada y GitHub Actions verdes.
+El estado efectivo de acceso no debe inferirse únicamente de `Tenant.status`; depende de trial, suscripción, grace period y suspensión/cancelación según las reglas existentes del dominio.
 
-DT-32 --- Harden transactional communications and appointment reminders:
+## Seguridad y auditoría
 
--   Jira: DT-32.
--   Rama: `DT-32`.
--   Base canónica: `2ddfb92`.
--   PR: #34 hacia `master`.
--   Preferencias explícitas por canal en Patient.
--   `PatientCommunicationEligibilityService`.
--   Claim transaccional y estado `processing`.
--   Redacción de secretos/tokens en errores persistidos.
--   `FakeCommunicationTransport` sin I/O externo.
--   Suite completa: `1123 tests verdes`, `3499 assertions`, `0 failures`.
--   Sin credenciales reales, deployment ni merge automático.
--   Pendiente únicamente de validación final del PR y aprobación humana antes del merge.
+- `AuditEvent` + `AuditLogger` y sanitización de metadata sensible — DT-21.
+- Auditoría actual es best-effort; no equivale a inmutabilidad DB.
+- Cambio de contraseña, 2FA TOTP, recovery codes, verificación de correo y sesiones/dispositivos — DT-28.
+- Passkeys/WebAuthn fueron evaluadas, pero su activación se difiere hasta fijar hostname HTTPS canónico y relying party/origins productivos.
+- Credenciales, OTP, recovery codes, tokens y IDs reales de sesión no deben persistirse en auditoría.
 
-Flujo operativo de CI:
+## Producción y operaciones
 
-`Kai actualiza DT-* → GitHub Actions valida → Kai corrige si es necesario → CI verde → Alecz realiza validación manual/visual cuando corresponda → PR/revisión → aprobación humana explícita → merge`
+DT-35 añadió:
 
-Avance global ponderado vigente:
+- validación explícita de configuración crítica;
+- fail-fast del runtime HTTP;
+- Host canónico;
+- cookies de sesión seguras por defecto en producción;
+- validación de logging;
+- probes operativos de DB, cache locks y backend de colas;
+- comando `php artisan doctotal:check-production-readiness --probe`.
+
+Ese hardening no debe confundirse con una estrategia de durabilidad de datos. Permanecen como brechas reales:
+
+- backup verificable;
+- restauración probada;
+- política de retención/eliminación;
+- cuotas/operación de almacenamiento;
+- monitoreo/error tracking y procedimientos operativos del entorno objetivo.
+
+## Comunicaciones
+
+La arquitectura permanece independiente de proveedor.
+
+- `Communication`
+- `CommunicationTransport`
+- `CommunicationTransportManager`
+- `CommunicationProcessor`
+- `AppointmentReminderService`
+- `AppointmentReminderValidator`
+- preferencias y elegibilidad por canal;
+- claim transaccional + estado `processing`;
+- redacción de secretos/tokens en errores persistidos.
+
+Sin transport configurado no se simula éxito. La selección de proveedores reales de email/WhatsApp/SMS es una decisión de despliegue/producto todavía pendiente.
+
+## Estado comercial y experiencia médica
+
+DT-36 consolidó la prioridad operativa diaria en dashboard/agenda.
+
+DT-37 hizo visible, sin duplicar reglas de dominio, el estado de trial, suscripción, pagos fallidos/pending y riesgo de suspensión dentro de onboarding/dashboard.
+
+DT-38 trasladó la duración del trial a configuración interna.
+
+DT-39 añadió un canal comercial separado del referral médico: sellers/promoters, códigos promocionales, atribución inmutable y ledger de comisiones con snapshots económicos ligados a pagos exitosos.
+
+DT-40 añadió feedback SweetAlert al ajuste interno de trial.
+
+## Baseline de calidad
+
+No existe en DT-41 un nuevo conteo formal de tests/assertions que deba documentarse.
+
+Referencias históricas sólo se conservan en los commits/documentos de los DT donde fueron explícitamente registradas. Para el estado actual, la autoridad técnica es GitHub Actions sobre el SHA que se valida.
+
+Avance global ponderado formal vigente:
 
 `94%`
 
-## El 94% corresponde a la recalculación ponderada formal al cierre técnico de DT-34, incorporando el cierre de billing de DT-33 y la capa de alertas clínicas contextuales de DT-34.
-# Commits recientes canónicos
+No se modifica sin una recalculación ponderada formal.
 
--   `9fbf6a5 DT-32 feat: harden transactional communications and appointment reminders`
+## Pendientes reales vs diferidos
 
--   `2ddfb92 DT-31 feat: automate CI validation with GitHub Actions`
--   `bf99782 DT-30 feat: add public appointment rescheduling`
--   `86420d1 DT-29 feat: add prescription repeat workflow`
--   `762b3d3 DT-28 feat: complete account security and recovery flows`
--   `a1a66a1 DT-27 feat: add structured laboratory results`
--   `4ceac23 DT-26 feat: add reusable clinical templates`
--   `240bcf6 DT-25 feat: add manual patient appointment link sharing`
--   `12d573b DT-24 feat: add patient appointment self-service`
--   `bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
--   `c8fdd7f DT-22 feat: complete internal SaaS administration panel`
--   `43901d0 docs: define prioritized development queue`
--   `c3c70d9 DT-21 feat: implement audit trail and security hardening foundation`
--   `9192020 DT-20 feat: implement transactional communications and appointment reminders`
--   `1dd4ad7 DT-19 feat: implement structured active clinical problem list`
--   `b529ed5 DT-18 docs: normalize project baseline after DT-17`
--   `ff7aee4 DT-17 feat: implement advanced clinical consultation workspace`
+### Pendientes reales
 
-# Foundation clínica actual
+- estrategia de backup y restauración;
+- retención/eliminación operacional de datos clínicos/documentales;
+- observabilidad operativa del entorno productivo;
+- proveedores reales de comunicaciones cuando se requieran;
+- decisiones de cuotas/proveedor de almacenamiento.
 
-DocTotal cuenta actualmente con:
+### Diferidos deliberadamente
 
--   Pacientes y expediente clínico.
--   Contactos de emergencia.
--   Antecedentes médicos.
--   Agenda y ciclo completo de citas.
--   Autoservicio público para confirmar, cancelar y reprogramar citas elegibles.
--   Reprogramación pública con slots reales, revalidación server-side y rotación del enlace público.
--   Consultas persistentes draft/completed.
--   Workspace clínico con autosave y protección de cambios.
--   Diagnósticos y catálogo diagnóstico.
--   Recetas y catálogo de medicamentos.
--   Repetición de recetas anteriores como nueva emisión independiente y trazable.
--   Expediente longitudinal.
--   Problemas clínicos activos/resueltos mediante `PatientProblem`.
--   Documentos clínicos privados.
--   Historial visual de actividad auditada del paciente.
+- passkeys hasta fijar origen productivo;
+- DICOM/PACS;
+- OCR/IA clínica;
+- HL7/FHIR;
+- firma/QR de recetas hasta cerrar requisitos legales;
+- facturación fiscal/CFDI hasta definir alcance;
+- SIEM, impersonación y herramientas destructivas masivas;
+- multi-plan si el producto comercial lo requiere.
 
-`PatientMedicalHistory` continúa siendo la fuente explícita para:
+### Decisiones de producto/operación
 
--   alergias;
--   medicamentos actuales;
--   antecedentes;
--   enfermedades crónicas;
--   cirugías.
+- política de reembolsos;
+- efecto de reembolsos sobre promociones/comisiones;
+- retención legal/operativa;
+- cuotas de almacenamiento;
+- proveedores definitivos de correo/WhatsApp/SMS/storage externo;
+- requisitos legales de documentos/recetas.
 
-`PatientProblem` es la entidad longitudinal explícita para problemas
-clínicos activos y resueltos.
+## Siguiente candidato de desarrollo
 
-No se infieren automáticamente medicamentos actuales desde recetas
-históricas ni problemas activos desde diagnósticos históricos.
+Después de reconciliar el estado real post-DT-40, el siguiente candidato recomendado es:
 
-------------------------------------------------------------------------
+**Production data durability: backup, restore and retention foundation.**
 
-# Foundation SaaS actual
-
-DocTotal cuenta con:
-
--   Registro y autenticación.
--   Trial.
--   Onboarding.
--   Subscription lifecycle.
--   Billing con Stripe.
--   Pagos, renovaciones y recuperación.
--   Grace period y suspensión/reactivación.
--   Referidos.
--   Créditos promocionales.
--   Comunicaciones transaccionales.
--   Recordatorios de citas.
--   Scheduler para billing y comunicaciones.
-
-Los cobros automáticos deben mantenerse bajo la feature flag
-correspondiente hasta su activación controlada en el entorno objetivo.
-
-DT-22 agregó la operación administrativa interna del SaaS:
-
--   rol `internal_admin` sin tenant asociado;
--   middleware y shell administrativo separados del producto clínico;
--   dashboard operacional global;
--   listado y detalle operativo de tenants;
--   indicadores de trials, suscripciones y estado efectivo del servicio;
--   monitoreo global de incidencias de billing;
--   monitoreo de comunicaciones;
--   acceso operativo controlado a auditoría;
--   lecturas cross-tenant encapsuladas en servicios internos;
--   bloqueo clínico mediante `service.access` cuando el tenant no tiene
-    derecho vigente al servicio;
--   pantalla de servicio suspendido accesible sin debilitar el
-    aislamiento.
-
-El estado efectivo de acceso no debe inferirse únicamente desde
-`Tenant.status`. Un tenant puede conservar fechas históricas de trial y
-tener acceso por una suscripción vigente. La expiración del trial por sí
-sola no muta automáticamente el estado persistido del tenant.
-
-------------------------------------------------------------------------
-
-# Comunicaciones --- DT-20
-
-La capa de comunicaciones es independiente del proveedor.
-
-Elementos principales:
-
--   `Communication`.
--   `CommunicationTransport`.
--   `CommunicationTransportManager`.
--   `CommunicationProcessor`.
--   `AppointmentReminderService`.
--   `AppointmentReminderValidator`.
-
-Canales preparados:
-
--   email;
--   WhatsApp;
--   SMS.
-
-Reglas importantes:
-
--   Sin transport configurado no se simula éxito.
--   Sin transport no se consume intento.
--   Máximo actual de 3 intentos.
--   Backoff actual: 5 y 15 minutos.
--   Los recordatorios obsoletos se cancelan y conservan.
--   Reprogramar una cita genera una nueva identidad de recordatorio.
-
-------------------------------------------------------------------------
-
-# Auditoría y hardening --- DT-21
-
-## AuditEvent
-
-`AuditEvent` es la entidad persistente de auditoría.
-
-Registra:
-
--   tenant;
--   actor opcional;
--   acción;
--   recurso polimórfico;
--   descripción;
--   IP;
--   user agent;
--   metadata controlada;
--   timestamps.
-
-Usa `BelongsToTenant`, por lo que las consultas normales quedan aisladas
-por el tenant activo.
-
-La protección append-only implementada impide update/delete mediante
-eventos normales del modelo Eloquent.
-
-Esta protección no equivale a inmutabilidad garantizada por la base de
-datos: operaciones directas o query builder pueden omitir eventos del
-modelo.
-
-## AuditLogger
-
-`AuditLogger::log()` persiste un evento y propaga errores.
-
-`AuditLogger::safeLog()` implementa la política utilizada en las
-integraciones de DT-21:
-
--   intenta persistir el evento;
--   si falla, registra el error técnico mediante Laravel logging;
--   devuelve `null`;
--   no cambia por sí mismo el resultado funcional de la operación
-    principal.
-
-Por ello, la auditoría actual debe describirse como **best-effort**.
-
-No existe todavía outbox transaccional que garantice persistencia del
-evento ante fallos de infraestructura.
-
-## Metadata sensible
-
-La sanitización es recursiva y redacta conservadoramente claves que
-contengan fragmentos relacionados con:
-
--   password;
--   token;
--   authorization;
--   cookie;
--   secret;
--   api_key.
-
-La metadata debe mantenerse mínima y no duplicar payload clínico
-sensible.
-
-## Flujos auditados en DT-21
-
-Acciones iniciales:
-
--   `patient.updated`.
--   `consultation.completed`.
--   `appointment.rescheduled`.
--   `appointment.cancelled`.
-
-Las cuatro integraciones utilizan `safeLog()`.
-
-## Historial visual
-
-El expediente del paciente incluye una tarjeta `Historial de actividad`.
-
-Muestra:
-
--   etiqueta amigable;
--   actor;
--   descripción;
--   fecha/hora;
--   paginación de 5 eventos.
-
-No muestra:
-
--   IP;
--   user agent;
--   metadata;
--   IDs internos;
--   tipo técnico del recurso.
-
-La consulta visual actual filtra eventos cuyo recurso auditado es el
-propio Patient. Por ello, eventos auditados sobre Consultation o
-Appointment no se mezclan automáticamente en esta tarjeta.
-
-------------------------------------------------------------------------
-
-# Calidad DT-21
-
-Cobertura específica agregada para:
-
--   creación y relaciones de `AuditEvent`;
--   aislamiento multi-tenant;
--   actor opcional;
--   metadata;
--   asociación polimórfica;
--   protección Eloquent contra update/delete;
--   sanitización de metadata;
--   variantes de claves sensibles;
--   `safeLog()` ante fallo;
--   auditoría de actualización de paciente;
--   auditoría de finalización de consulta;
--   auditoría de reprogramación;
--   auditoría de cancelación;
--   historial visual y paginación.
-
-Regresión focalizada DT-21:
-
-`58 tests verdes`
-
-Regresión del historial visual/paginación:
-
-`13 tests verdes`
-
-AppointmentShow después del ajuste final a `safeLog()`:
-
-`11 tests verdes`
-
-Suite completa final:
-
-`936 tests verdes`
-
-`0 failures`
-
-------------------------------------------------------------------------
-
-# Alcance pendiente de seguridad
-
-DT-21 no pretende cerrar toda la seguridad de producción.
-
-Permanecen pendientes, entre otros:
-
--   revisión integral de autorización;
--   rate limiting;
--   administración/revocación de sesiones;
--   verificación completa de 2FA/passkeys;
--   backups y restauración;
--   logging estructurado y observabilidad;
--   política de retención;
--   política de eliminación;
--   inmutabilidad de auditoría a nivel de base de datos;
--   outbox durable para auditoría;
--   auditoría más amplia de billing y acciones administrativas.
-
-------------------------------------------------------------------------
-
-# Operación interna SaaS y acceso al servicio --- DT-22
-
-DT-22 construyó una consola administrativa interna separada de la
-experiencia clínica de los tenants.
-
-Principios:
-
--   un operador interno válido utiliza rol `internal_admin` y
-    `tenant_id = null`;
--   usuarios normales de tenant no pueden acceder a la consola interna;
--   las lecturas globales eliminan explícitamente `TenantScope`
-    únicamente donde corresponde;
--   no se utilizan bypasses globales dispersos;
--   la consola evita exponer payload clínico, destinatarios, cuerpos de
-    mensajes o secretos innecesarios.
-
-Visibilidad operacional implementada:
-
--   tenants y usuarios;
--   trial y días restantes/vencidos;
--   suscripciones;
--   pagos e incidencias de billing;
--   grace period;
--   comunicaciones y errores;
--   eventos de auditoría;
--   indicadores generales de salud SaaS.
-
-Acceso al servicio:
-
--   trial vigente: acceso permitido;
--   suscripción vigente: acceso permitido;
--   `past_due` dentro del grace period: acceso permitido;
--   grace period vencido: acceso denegado;
--   tenant suspendido o cancelado: acceso denegado;
--   sin trial vigente ni suscripción válida: acceso denegado.
-
-`EnsureTenantHasServiceAccess` protege el área clínica. La pantalla de
-servicio suspendido y la gestión de billing permanecen accesibles para
-permitir recuperación.
-
-Calidad final DT-22:
-
-`988 tests verdes`
-
-`0 failures`
-
-El cierre funcional no introduce bypasses especiales para testing; los
-fixtures clínicos históricos fueron actualizados para representar
-explícitamente tenants con acceso vigente.
-
-------------------------------------------------------------------------
-
-# Billing recovery y cambio de plan --- DT-23
-
-DT-23 corrigió la transición crítica de recuperación de una suscripción `past_due` cuando el tenant cambia de ciclo antes de pagar.
-
-Reglas consolidadas:
-
--   una suscripción anual pagada y vigente que cambia a mensual conserva el anual hasta el fin del periodo y programa el cambio futuro;
--   una suscripción anual no pagada o `past_due` puede elegir mensual como plan de recuperación;
--   el checkout de recuperación utiliza el importe y moneda del ciclo elegido;
--   el cambio de ciclo se vuelve contractual únicamente después de un pago exitoso;
--   un pago fallido o checkout abandonado no reactiva falsamente la suscripción;
--   no se reutilizan PaymentIntents ni claves de idempotencia incompatibles con el nuevo importe/ciclo;
--   pagos históricos sin snapshot de ciclo conservan compatibilidad;
--   `recoverableSubscription()` permite recuperar una suscripción `past_due` aun después de vencer el grace period sin conceder acceso clínico.
-
-Calidad final DT-23:
-
-`995 tests verdes`
-
-`0 failures`
-
-Commit canónico:
-
-`bbd9ce6 DT-23 fix: honor recovery plan for past-due subscriptions`
-
-------------------------------------------------------------------------
-
-# Interacción pública del paciente con citas --- DT-24
-
-DT-24 agrega autoservicio público de citas sin requerir cuenta ni sesión del paciente.
-
-Implementado:
-
--   enlace público seguro por cita mediante token aleatorio de alta entropía;
--   persistencia únicamente del hash del token;
--   resolución pública sin enumeración por UUID;
--   vista mínima de la cita sin expediente, motivo, notas ni información clínica sensible;
--   confirmación pública de citas `scheduled`;
--   cancelación pública de citas `scheduled` o `confirmed`;
--   confirmación idempotente;
--   bloqueo de acciones públicas para estados clínicos o terminales;
--   invalidación del enlace anterior al reprogramar la cita;
--   generación de un nuevo enlace en el siguiente recordatorio;
--   integración del enlace seguro con `AppointmentReminderService`;
--   auditoría de confirmación/cancelación pública sin persistir el token;
--   cobertura multi-tenant y funcionamiento sin sesión ni `TenantContext` previo.
-
-Fuera de alcance de DT-24:
-
--   selección pública de nuevos horarios;
--   solicitud/ejecución pública de reprogramación;
--   portal completo del paciente.
-
-Calidad final DT-24:
-
-`1002 tests verdes`
-
-`0 failures`
-
-------------------------------------------------------------------------
-
-# Compartición manual del enlace de gestión de cita --- DT-25
-
-DT-25 completa la capa operativa manual sobre el autoservicio público de DT-24.
-
-Implementado:
-
--   generación y regeneración manual del enlace seguro desde el detalle de la cita;
--   URL pública compacta mediante ruta `/a/{token}`;
--   token compacto URL-safe manteniendo alta entropía y persistencia únicamente del hash SHA-256;
--   compatibilidad con enlaces públicos anteriores de DT-24;
--   copia directa del enlace y del mensaje completo;
--   apertura de WhatsApp con destinatario y mensaje precargado, sin marcar envío confirmado;
--   apertura del cliente de correo con asunto y cuerpo precargados, sin marcar envío confirmado;
--   normalización de números mexicanos para WhatsApp;
--   mensaje humano con nombre del médico, consultorio/clínica, fecha en español y hora;
--   reutilización de la misma construcción de enlace/mensaje por recordatorios automáticos y flujo manual;
--   regenerar rota el token vigente e invalida cualquier enlace anterior;
--   pantalla pública amigable para enlaces inexistentes o invalidados, conservando respuesta HTTP 404;
--   sin persistir el token plano en auditoría ni metadata.
-
-El flujo manual no requiere un transport configurado y no registra una comunicación como enviada por copiar o abrir un canal externo.
-
-Calidad final DT-25:
-
-`1005 tests verdes`
-
-`0 failures`
-
-------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-# Plantillas clínicas --- DT-26
-
-DT-26 agrega plantillas clínicas reutilizables para acelerar la captura de consultas sin crear dependencias mutables con el registro clínico.
-
-Implementado:
-
--   administración de plantillas clínicas aisladas por tenant;
--   creación y edición con nombre, descripción, motivo de consulta y estructura SOAP;
--   activación y desactivación;
--   aplicación desde el workspace de consulta;
--   al aplicar una plantilla se copia su contenido al registro clínico como snapshot;
--   editar posteriormente la plantilla no modifica consultas ya capturadas;
--   sólo se ofrecen plantillas activas del tenant actual;
--   contador de usos;
--   eliminación permitida únicamente cuando la plantilla no ha sido utilizada;
--   plantillas utilizadas pueden desactivarse, pero no eliminarse;
--   auditoría de operaciones relevantes y aplicación;
--   confirmaciones de acciones mediante SweetAlert;
--   botones alineados con el sistema visual existente de DocTotal;
--   cobertura automatizada de aislamiento multi-tenant y comportamiento funcional.
-
-Plantillas por especialidad permanecen como evolución posterior sobre esta foundation.
-
-Calidad final DT-26:
-
-`1011 tests verdes`
-
-`0 failures`
-
-# Regla de cierre
-
-Antes de cerrar un DT:
-
-1.  Ejecutar la suite completa.
-2.  Confirmar cero fallos.
-3.  Registrar el baseline real sin inventar assertions.
-4.  Actualizar `PROJECT_CONTEXT.md`, `ROADMAP.md` y `TODO.md`.
-5.  Revisar `git status` y el diff.
-6.  Realizar commit final.
-7.  Integrar en `master`.
-8.  Registrar cierre técnico en Jira.
-9.  Transicionar el ticket a `Listo`.
-
-Los números DT deben ser asignados por Jira; no deben inventarse
-manualmente.
-
-------------------------------------------------------------------------
-
-# Laboratorios estructurados --- DT-27
-
-DT-27 agrega resultados de laboratorio estructurados dentro del expediente clínico sin interpretación clínica automática.
-
-Incluye:
-
--   Estudios asociados al paciente y opcionalmente a una consulta.
--   Nombre del estudio, fecha, laboratorio/proveedor opcional y observaciones.
--   Múltiples parámetros por estudio con nombre, valor, unidad y rango de referencia opcional.
--   Valores numéricos o textuales.
--   Historial de laboratorios accesible desde el expediente.
--   Resumen visual de laboratorios dentro del expediente del paciente.
--   Alta, edición y eliminación de estudios.
--   Eliminación explícita de resultados asociados cuando un estudio con soft delete es eliminado.
--   Captura manual de parámetros.
--   Captura masiva mediante pegado de filas desde Excel/Google Sheets o texto separado por tabulador, `|` o `;`.
--   Revisión y edición de las filas convertidas antes de persistirlas.
--   Aislamiento multi-tenant mediante `TenantScope`, `TenantContext` y `BelongsToTenant`.
--   Auditoría de altas, cambios y eliminaciones.
--   Cobertura automatizada de autorización, tenant, asociación a consulta, edición, eliminación y captura masiva.
-
-Decisión de producto:
-
-Los documentos clínicos y los laboratorios estructurados cumplen funciones distintas. Un documento clínico conserva el archivo original; Laboratorios conserva los datos estructurados del estudio. Una futura evolución puede vincular ambos.
-
-Fuera de alcance de DT-27:
-
--   OCR.
--   Extracción automática desde PDF o imagen.
--   Importaciones automáticas de proveedores.
--   HL7/FHIR.
--   Interpretación clínica automática o mediante IA.
--   Catálogo nacional de estudios.
--   Gráficas longitudinales avanzadas.
-
-Calidad final DT-27:
-
-`1021 tests verdes`
-
-`0 failures`
-
-Commit principal:
-
-`a1a66a1 DT-27 feat: add structured laboratory results`.
-
-
-
-------------------------------------------------------------------------
-
-# Seguridad de cuenta y recuperación --- DT-28
-
-DT-28 completa la capa visible de seguridad de cuenta sobre Laravel Fortify.
-
-Implementado:
-
--   cambio de contraseña con contraseña actual, confirmación y reglas de Laravel;
--   auditoría `account.password.updated` sin credenciales;
--   2FA TOTP con QR, confirmación, recovery codes, regeneración y desactivación;
--   challenge 2FA en login y códigos de recuperación de un solo uso;
--   protección de secretos 2FA y exposición temporal autorizada de QR/recovery codes;
--   sesiones y dispositivos visibles sin exponer IDs reales de sesión;
--   revocación individual y de todas las demás sesiones con contraseña actual;
--   rotación del remember token al revocar sesiones;
--   verificación de correo con notificación personalizada, enlace firmado y reenvío;
--   middleware de correo verificado en onboarding, billing, consola interna y aplicación clínica;
--   Configuración → Seguridad accesible para usuarios no verificados y tenants suspendidos;
--   auditoría `account.email.verified` sin URL firmada ni hash de verificación;
--   compatibilidad de redirección para administradores internos;
--   cobertura automatizada de contraseña, 2FA, sesiones y verificación de correo.
-
-Passkeys/WebAuthn:
-
-La infraestructura actual de Laravel 13/Fortify ya contiene foundation de passkeys y persistencia. Su activación se difiere hasta definir el hostname productivo HTTPS canónico y configurar de forma definitiva el relying party y los allowed origins de WebAuthn. No se registrarán credenciales productivas contra dominios locales de desarrollo.
-
-Calidad final DT-28:
-
-`1068 tests verdes`
-
-`0 failures`
-
-Commit principal:
-
-`762b3d3 DT-28 feat: complete account security and recovery flows`.
-
-
-
-------------------------------------------------------------------------
-
-# Repetición de tratamientos y recetas --- DT-29
-
-DT-29 permite crear una nueva receta a partir de una receta anterior del
-mismo paciente sin modificar la emisión clínica fuente.
-
-Implementado:
-
--   acción de dominio `App\Actions\Prescriptions\RepeatPrescription`;
--   trazabilidad mediante `source_prescription_id`;
--   formulario de repetición con medicamento, presentación, dosis,
-    frecuencia, duración, instrucciones e instrucciones generales
-    precargadas y editables;
--   nueva receta con UUID, fecha, estado e ítems propios;
--   creación de nuevos `PrescriptionItem` sin reutilizar IDs, tenant ni
-    ownership enviados por el navegador;
--   paciente bloqueado al paciente de la receta fuente;
--   médico de la nueva emisión resuelto desde el usuario actual;
--   nueva receta independiente de la consulta histórica de origen
-    (`consultation_id = null`);
--   repetición disponible desde el detalle de receta y desde el historial
-    longitudinal del paciente;
--   integración con recetas asociadas a consulta, recetas independientes
-    y tratamientos consolidados;
--   recetas canceladas visibles históricamente pero no disponibles como
-    origen de repetición;
--   revalidación de fuente, paciente, tenant y acceso al guardar;
--   aislamiento multi-tenant en historial y endpoints del flujo;
--   auditoría `prescription.repeated` con referencia controlada a la fuente
-    y sin payload del tratamiento;
--   independencia de la copia frente a edición, cancelación o eliminación
-    posterior de la receta origen;
--   impresión y PDF de la copia usando la nueva emisión;
--   repetición de una receta derivada manteniendo como origen inmediato la
-    receta desde la cual se repite;
--   la repetición no modifica
-    `PatientMedicalHistory.current_medications_text`.
-
-Cobertura:
-
--   `PrescriptionRepeatTest`;
--   `PrescriptionRepeatHistoryTest`.
-
-Validación reportada al cierre:
-
--   bloque 2 de repetición/historial: `16 tests verdes`;
--   regresión de recetas: `112 tests verdes`;
--   suite completa: `1110 tests verdes`;
--   `0 failures`.
-
-Commit principal:
-
-`86420d1 DT-29 feat: add prescription repeat workflow`
-
-Estado:
-
-DT-29 está completado, integrado en `master` y cerrado en Jira.
-
-------------------------------------------------------------------------
-
-# Reprogramación pública de citas --- DT-30
-
-DT-30 amplía el autoservicio público para que el paciente pueda reprogramar una cita existente sin cuenta ni sesión, eligiendo únicamente horarios válidos de la agenda actual.
-
-Implementado:
-
--   acción pública `Reprogramar mi cita` para citas `scheduled` y `confirmed`;
--   selección de fecha y slots reales mediante `AppointmentAvailabilityService`;
--   conservación de paciente, tenant, médico y duración de la cita;
--   actualización de la misma entidad `Appointment`, sin crear una cita paralela;
--   revalidación server-side del slot antes de guardar;
--   rechazo de fechas/horas pasadas, fuera de agenda, bloqueadas u ocupadas;
--   bloqueo transaccional de la cita y del perfil médico para endurecer concurrencia;
--   estados clínicos o terminales rechazados con respuesta controlada;
--   parámetros del navegador no pueden cambiar paciente, médico ni tenant;
--   una cita `confirmed` vuelve a `scheduled` tras reprogramarse y pierde `confirmed_at`;
--   rotación del token público: el enlace anterior queda invalidado y se emite uno nuevo;
--   los recordatorios asociados al horario anterior quedan obsoletos y el nuevo horario puede generar nueva identidad de recordatorio;
--   auditoría `appointment.public_rescheduled` con metadata mínima y sin persistir el token;
--   vista pública sin información clínica sensible ni identificadores internos;
--   compatibilidad con el autoservicio público existente de confirmación y cancelación.
-
-Cobertura específica:
-
--   `PublicAppointmentRescheduleTest`: `9 tests verdes`, `43 assertions`.
--   `AppointmentReminder*`: `24 tests verdes`, `68 assertions`.
--   `PublicAppointmentSelfServiceTest`: `7 tests verdes`, `22 assertions`.
-
-Validación final reportada:
-
--   suite completa: `1119 tests verdes`;
--   `0 failures`;
--   `git diff --check` limpio;
--   working tree limpio y sincronizado antes del cierre documental.
-
-Base canónica:
-
-`86420d1 DT-29 feat: add prescription repeat workflow`
-
-PR de cierre:
-
-`#32 DT-30 feat: add public appointment rescheduling`
-
-Estado:
-
-DT-30 tiene cierre técnico completado y está en revisión. Pendiente merge a `master` y transición final a `Listo` en Jira.
-
-------------------------------------------------------------------------
-
-## DT-35 --- Production configuration and runtime safety hardening
-
-- Jira: DT-35.
-- Rama de trabajo: `DT-35`.
-- Baseline canónico previo: `38ad24007134469fae1c699961e3866db4d97a1c` (`master`, cierre de DT-34).
-- Progreso global mostrado se mantiene en 94%; DT-35 no recalcula el porcentaje ponderado.
-- La configuración crítica de producción se valida mediante `ProductionReadinessChecker`.
-- `php artisan doctotal:check-production-readiness` valida settings y `--probe` añade comprobaciones operativas de base de datos, locks de cache y backend de colas.
-- El runtime HTTP de producción falla de forma explícita ante configuración insegura, sin exponer valores sensibles.
-- Artisan permanece disponible para migraciones, mantenimiento, recuperación y la propia validación de readiness.
-- El Host de rutas web en producción se restringe al hostname canónico derivado de `APP_URL`.
-- `APP_URL` debe usar HTTPS y hostname válido; el logging activo no puede operar en `debug`.
-- Sesión, cache y colas deben usar backends persistentes; los failed jobs deben conservarse para diagnóstico.
-- La cookie de sesión es segura por defecto en producción y sigue configurable explícitamente por entorno.
-- Stripe, correo y credenciales críticas se validan sin persistir ni mostrar secretos.
-- Los proxies no se confían de manera global o arbitraria; cualquier `TrustProxies` futuro debe configurarse con datos reales de infraestructura.
-- Antes de habilitar tráfico, scheduler o workers en producción se debe ejecutar `php artisan doctotal:check-production-readiness --probe`.
-- La cobertura específica incluye readiness checker, runtime guard y trusted host.
-- Cierre técnico sujeto a auditoría final, squash, CI exacto del commit consolidado, PR, review humana y Rebase and merge.
-
-------------------------------------------------------------------------
-
-# DT-36 --- Daily clinical workflow and dashboard polish
-
-- Jira: DT-36.
-- Rama: `DT-36`.
-- Base canónica: `05dd4d225648bebb0a52a5eb8d7563853a448def` (master post-DT-35).
-- Dashboard prioriza operación inmediata del día mediante `Prioridad ahora`.
-- Prioridad derivada de `appointmentsToday`: `in_progress` → `checked_in` → siguiente `scheduled`/`confirmed` futura.
-- Agenda semanal muestra estados operativos explícitos.
-- Agenda diaria ordena por prioridad operativa y después por hora.
-- Acciones contextuales enlazan al detalle existente; el lifecycle continúa centralizado en `Appointment` y en la vista de detalle.
-- Navegación agenda → cita → paciente preservada.
-- Sin nuevas reglas clínicas, diagnósticos automáticos ni recomendaciones terapéuticas.
-- Multi-tenancy preservado.
-- CI #109 verde sobre el commit consolidado previo al PR.
-- PR #38 hacia `master`; CI #110 verde.
-- Reviewer `aruedaboldr` aprobó el PR.
-- Avance global canónico se mantiene en 94% hasta una nueva recalculación formal.
-
-
-------------------------------------------------------------------------
-
-# DT-37 --- Commercial status visibility
-
-- Jira: DT-37.
-- Base canónica: `11683346 DT-36 feat: polish daily clinical workflow and dashboard`.
-- `TenantCommercialStatusPresenter` concentra la presentación del estado comercial usando `Tenant`, `Subscription` y `Payment` existentes.
-- Onboarding muestra claramente trial vigente, días restantes y fecha de vencimiento.
-- Dashboard conserva `Prioridad ahora` como prioridad clínica y añade después un aviso comercial contextual.
-- Suscripción activa normal no muestra aviso.
-- `past_due`, pago fallido y pago pendiente sólo se muestran cuando corresponden al estado real persistido.
-- Las acciones llevan al flujo existente `settings.billing`.
-- No se introdujeron reglas nuevas de billing, acceso, grace, suspensión ni recuperación.
-- Cobertura automatizada específica de presenter, onboarding y dashboard.
-- GitHub Actions CI #129 y #130 verdes; #130 validó el commit consolidado previo a documentación.
-- Avance global ponderado vigente: `94%`; no se recalcula automáticamente.
-
-## DT-39 — canal comercial de vendedores y códigos promocionales
-
-DT-39 añade un subsistema comercial separado del referral histórico entre tenants. `SalesPartner`, `PromoCode`, `TenantPromoAttribution` y `SalesCommission` forman la fuente persistente del canal de vendedores. La atribución se fija al registrarse y conserva snapshots de código, descuento y comisión; no se reasigna después. `CalculatePaymentAmount` integra el descuento al importe real y deja de aplicarlo después del primer pago exitoso. `ProcessSuccessfulPaymentPromotions` genera la comisión sólo cuando el pago está confirmado, tomando base, porcentaje, importe y moneda como snapshots inmutables. La consola `/internal/sales` queda restringida a `internal_admin` y permite administrar vendedores/códigos, revisar atribuciones y liquidar comisiones sin borrar historial.
-
-Regla canónica: los códigos comerciales de DT-39 y los códigos de referido entre médicos no se acumulan en un mismo registro. Las comisiones no se generan por registro ni por intento de cobro, únicamente por pago exitoso. Los cambios posteriores de vendedor/código no alteran atribuciones ni comisiones históricas.
+No se asigna un ID aquí. Si se aprueba ese bloque, el identificador debe crearse/obtenerse directamente en Jira.
