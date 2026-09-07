@@ -1,238 +1,77 @@
 # DocTotal — Project Context
 
-Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pending real; `ROADMAP.md` registra los bloques DT; Jira es la fuente de verdad para IDs y estados.
+Documento de continuidad técnica y funcional. `TODO.md` describe estado/pending; `ROADMAP.md` registra bloques DT; Jira es fuente de verdad para IDs/estados.
 
-## Stack
+## Stack y workflow
 
-- PHP 8.4
-- Laravel 13
-- Blade + Livewire/Volt
-- Tailwind CSS
-- MySQL en desarrollo/producción
-- SQLite in-memory en tests
-- PHPUnit / Laravel Feature Tests / Livewire tests
-
-## Repositorio y workflow
-
-- Repo: `alecz2303/DocTotal`
-- Rama principal: `master`
-- `master` canónico post-DT-43: `296650cc517c3d15aa3c6052fcb61f5cc894e654`
-- Commit post-DT-43: `DT-43 feat: add production data durability foundation`
-- Jira project key: `DT`
-- Jira es la fuente de verdad para IDs DT; nunca se inventa el siguiente número.
+- PHP 8.4 / Laravel 13 / Blade + Livewire/Volt / Tailwind CSS.
+- MySQL en desarrollo/producción; SQLite in-memory en tests.
+- Repo: `alecz2303/DocTotal`; rama principal: `master`.
+- Baseline al iniciar DT-45: `108a5c79038c1986f5081a5aa9e8b34ed994f105` (post-DT-44).
+- DT-1 a DT-44: `Listo`; DT-45: `En curso`.
+- Avance global ponderado formal: `94%`; no se recalcula en DT-45.
 - GitHub Actions es la validación técnica canónica.
-- Antes de PR, cada rama DT debe quedar en exactamente un commit consolidado y CI verde sobre ese SHA.
-- Después del PR se solicita reviewer `aruedaboldr`, se verifica CI, Jira pasa a `En revisión` y se espera aprobación humana.
-- No se hace merge sin aprobación explícita.
+- Antes de PR: rama en exactamente un commit, CI verde sobre ese SHA; luego PR, reviewer `aruedaboldr`, CI PR, Jira `En revisión` y espera de aprobación humana.
 
-## Estado documental actual
+## Requisitos transversales
 
-DT-43 quedó integrado y cerrado. DT-44 añade visibilidad operativa interna sobre la foundation de backup/restauración sin convertir DocTotal en el ejecutor de los respaldos.
+El aislamiento multi-tenant es obligatorio. Las lecturas globales de administración interna deben ser explícitas, encapsuladas y testeadas. No se permiten bypasses cross-tenant dispersos.
 
-Estado canónico al iniciar DT-44:
-
-- DT-1 a DT-43: `Listo` en Jira.
-- DT-44: `En curso` en Jira.
-- Baseline `master`: `296650cc517c3d15aa3c6052fcb61f5cc894e654`.
-- Avance global ponderado formal: `94%`.
-- No se recalcula el porcentaje en DT-44.
-- No se inventan cifras de tests/assertions. La autoridad técnica es GitHub Actions sobre el SHA validado.
-
-## Multi-tenancy
-
-El aislamiento por tenant es un requisito obligatorio e innegociable.
-
-Foundation:
-
-- `TenantContext`
-- `TenantScope`
-- `App\Traits\BelongsToTenant`
-- middleware de resolución del tenant
-- cobertura de aislamiento en módulos clínicos/SaaS
-
-Las lecturas globales de administración interna deben permanecer explícitas, encapsuladas y testeadas. No se permiten bypasses cross-tenant dispersos.
+Credenciales, tokens, OTP, recovery codes, IDs reales de sesión, payload clínico y demás datos sensibles no deben incorporarse a auditoría u observabilidad salvo necesidad explícita y controlada.
 
 ## Foundation clínica integrada
 
-DocTotal incluye actualmente:
+DocTotal incluye pacientes y expediente longitudinal, agenda y ciclo completo de citas, autoservicio público, consultas persistentes con autosave, diagnósticos, recetas, problemas activos, plantillas, alertas contextuales, documentos clínicos privados, centro global de archivos y laboratorios estructurados con documento fuente opcional.
 
-- pacientes, contactos de emergencia y antecedentes;
-- expediente clínico longitudinal;
-- agenda y ciclo completo de citas;
-- autoservicio público de confirmación/cancelación/reprogramación de citas;
-- enlaces manuales seguros de gestión de cita;
-- consultas persistentes `draft/completed`;
-- workspace clínico con autosave y protección de cambios;
-- diagnósticos y catálogo diagnóstico;
-- recetas, catálogo de medicamentos y repetición trazable de receta;
-- problemas clínicos activos/resueltos (`PatientProblem`);
-- documentos clínicos privados;
-- centro global tenant-scoped de archivos clínicos con búsqueda, filtros, acceso al expediente y acciones privadas de ver/descargar — DT-42;
-- plantillas clínicas por tenant;
-- laboratorios estructurados con captura masiva revisable;
-- vínculo opcional entre laboratorio estructurado y documento fuente de laboratorio del mismo paciente/tenant — DT-42;
-- alertas clínicas contextuales deterministas y trazables.
-
-`ClinicalDocument` continúa siendo la única entidad de almacenamiento documental clínico. DT-42 no introduce un repositorio paralelo: la vista global `Archivos` reutiliza documentos, autorización, almacenamiento privado y rutas de visualización/descarga existentes. `LaboratoryStudy.clinical_document_id` es nullable y el documento fuente se desacopla con `nullOnDelete` si el archivo es eliminado.
-
-Fuentes clínicas explícitas:
-
-- `PatientMedicalHistory`: alergias, medicamentos actuales, antecedentes, enfermedades crónicas y cirugías.
-- `PatientProblem`: problemas clínicos longitudinales activos/resueltos.
-
-No se infieren automáticamente medicamentos actuales desde recetas históricas ni problemas activos desde diagnósticos históricos. Las alertas contextuales no realizan diagnóstico automático ni recomendaciones terapéuticas.
+`ClinicalDocument` continúa siendo la entidad canónica de almacenamiento documental. No se infieren automáticamente medicamentos actuales desde recetas históricas ni problemas activos desde diagnósticos históricos.
 
 ## Foundation SaaS integrada
 
-- Registro, autenticación y onboarding.
-- Trial y derecho de acceso centralizado.
-- Subscription lifecycle mensual/anual.
-- Stripe, pagos, métodos de pago, renovación, recuperación, grace, suspensión y reactivación.
-- Webhooks Stripe autenticados/idempotentes y sincronización de estados — DT-33.
-- Comprobante operativo de pago — DT-33.
-- Referidos y créditos promocionales — DT-13.
-- Códigos promocionales y comisiones de vendedores — DT-39.
-- Comunicaciones transaccionales/recordatorios — DT-20/DT-32.
-- Administración interna SaaS — DT-22.
-- Estado de trial/suscripción/pago visible en experiencia médica — DT-37.
-- Duración de trial configurable — DT-38.
-- Feedback SweetAlert de ajustes de trial — DT-40.
+Incluye registro/auth/onboarding, trial y acceso centralizado, subscription lifecycle, Stripe y recuperación de pagos, webhooks autenticados/idempotentes, comprobantes, referidos/créditos, códigos promocionales/comisiones, comunicaciones transaccionales y administración interna.
 
-El estado efectivo de acceso no debe inferirse únicamente de `Tenant.status`; depende de trial, suscripción, grace period y suspensión/cancelación según las reglas existentes del dominio.
+## Seguridad, durabilidad y producción
 
-## Seguridad y auditoría
+DT-21 introdujo auditoría y sanitización. DT-28 añadió cambio de contraseña, 2FA, recovery codes, verificación de correo y sesiones/dispositivos.
 
-- `AuditEvent` + `AuditLogger` y sanitización de metadata sensible — DT-21.
-- Auditoría actual es best-effort; no equivale a inmutabilidad DB.
-- Cambio de contraseña, 2FA TOTP, recovery codes, verificación de correo y sesiones/dispositivos — DT-28.
-- Passkeys/WebAuthn fueron evaluadas, pero su activación se difiere hasta fijar hostname HTTPS canónico y relying party/origins productivos.
-- Credenciales, OTP, recovery codes, tokens y IDs reales de sesión no deben persistirse en auditoría.
-- Los vínculos de laboratorio a documento fuente se validan contra el paciente actual y mediante queries tenant-scoped; no se acepta selección cross-patient/cross-tenant desde el flujo clínico.
+DT-35 añadió production readiness, fail-fast HTTP, host canónico, cookies seguras, logging y probes DB/cache/queue.
 
-## Producción y operaciones
+DT-43 añadió `config/data_durability.php`, backup obligatorio de BD + archivos privados, mecanismo declarado, frecuencia/copias, runbook de restauración, checker y retención segura sin borrado automático.
 
-DT-35 añadió:
+DT-44 añadió la pantalla interna de Backups de solo lectura, reutilizando `DataDurabilityChecker`, sin dumps, restores, descargas, credenciales ni contenido clínico.
 
-- validación explícita de configuración crítica;
-- fail-fast del runtime HTTP;
-- Host canónico;
-- cookies de sesión seguras por defecto en producción;
-- validación de logging;
-- probes operativos de DB, cache locks y backend de colas;
-- comando `php artisan doctotal:check-production-readiness --probe`.
+## Observabilidad — DT-45
 
-DT-43 añadió una foundation separada de durabilidad de datos:
+DT-45 cierra la brecha de monitoreo/error tracking productivo con una foundation desacoplada del proveedor:
 
-- configuración `config/data_durability.php`;
-- cobertura obligatoria de backup de base de datos y archivos clínicos privados;
-- proveedor/mecanismo operativo de backup declarado explícitamente;
-- frecuencia máxima y número mínimo de copias declarados;
-- runbook versionado `docs/OPERATIONS_DATA_DURABILITY.md`;
-- comando `php artisan doctotal:check-data-durability`;
-- integración del checker de durabilidad dentro de `ProductionReadinessChecker`;
-- restauración considerada válida sólo después de verificación operativa;
-- retención segura con modos `manual`/`policy` sin activar borrado automático;
-- `DOCTOTAL_RETENTION_AUTOMATIC_DELETION_ENABLED=true` se considera configuración insegura y bloquea readiness.
+- `config/observability.php` declara enabled, canal, alertamiento, runbook y política de ubicación de excepción;
+- `ObservabilityChecker` exige observabilidad habilitada, canal válido, alertamiento declarado y runbook existente;
+- `ProductionReadinessChecker` incorpora sus fallos, por lo que producción no se considera ready con observabilidad incompleta;
+- `ProductionExceptionReporter` se registra en `bootstrap/app.php` mediante el pipeline de reportes de excepciones;
+- el reporter solo actúa en `production` y cuando observabilidad está habilitada;
+- contexto permitido: clase de excepción, código entero, fingerprint SHA-256, método HTTP, nombre de ruta y opcionalmente basename/line de origen;
+- no registra mensaje de excepción, stack trace completo, body, query string, headers, cookies, URL completa, email, nombres de pacientes ni contenido clínico;
+- `docs/OPERATIONS_INCIDENT_RESPONSE.md` define severidad, detección, diagnóstico, mitigación, escalamiento, recuperación y verificación posterior;
+- un incidente no se cierra solo porque la app responda: debe comprobarse integridad, aislamiento multi-tenant y ausencia de pérdida/corrupción cuando aplique.
 
-DT-44 añade la capa de visibilidad operativa para administración interna:
-
-- ruta protegida `internal.data-durability.index` bajo `auth`, `verified` e `internal.admin`;
-- controlador `InternalDataDurabilityController` que reutiliza `DataDurabilityChecker`;
-- entrada `Backups` en navegación desktop/mobile de la consola interna;
-- pantalla de solo lectura con estado `Operativo`, `Incompleto` o `Inseguro`;
-- visibilidad de cobertura de BD y archivos privados, mecanismo declarado, frecuencia, copias mínimas, runbook y verificación posterior;
-- visibilidad del modo de retención y confirmación explícita de que el borrado automático debe permanecer deshabilitado;
-- lista de fallos con las mismas claves/mensajes del checker canónico;
-- ninguna descarga, restauración, dump, credencial ni contenido clínico expuesto desde la UI;
-- tests de acceso administrativo, configuración ready/incomplete/unsafe y no exposición de secretos.
-
-DocTotal no ejecuta dumps genéricos desde la aplicación ni almacena credenciales de backup. La ejecución real corresponde a infraestructura/proveedor; la aplicación valida que exista una estrategia declarada, completa y compatible con una restauración verificable.
-
-La política legal definitiva de conservación clínica sigue abierta. DT-43/DT-44 no implementan eliminación destructiva de expedientes ni deciden plazos regulatorios.
-
-Permanecen como brechas reales de producción:
-
-- monitoreo/error tracking y procedimiento de respuesta operacional;
-- queue/worker topology y monitoreo de failed jobs del entorno objetivo;
-- cuotas/operación de almacenamiento;
-- proveedores reales de comunicaciones cuando el lanzamiento los requiera.
+La salida puede conectarse a infraestructura/proveedor externo mediante el canal de logging configurado. DocTotal no necesita acoplar el dominio clínico a un SDK concreto ni almacenar credenciales del proveedor en modelos de aplicación.
 
 ## Comunicaciones
 
-La arquitectura permanece independiente de proveedor.
-
-- `Communication`
-- `CommunicationTransport`
-- `CommunicationTransportManager`
-- `CommunicationProcessor`
-- `AppointmentReminderService`
-- `AppointmentReminderValidator`
-- preferencias y elegibilidad por canal;
-- claim transaccional + estado `processing`;
-- redacción de secretos/tokens en errores persistidos.
-
-Sin transport configurado no se simula éxito. La selección de proveedores reales de email/WhatsApp/SMS es una decisión de despliegue/producto todavía pendiente.
-
-## Estado comercial y experiencia médica
-
-DT-36 consolidó la prioridad operativa diaria en dashboard/agenda.
-
-DT-37 hizo visible, sin duplicar reglas de dominio, el estado de trial, suscripción, pagos fallidos/pending y riesgo de suspensión dentro de onboarding/dashboard.
-
-DT-38 trasladó la duración del trial a configuración interna.
-
-DT-39 añadió un canal comercial separado del referral médico: sellers/promoters, códigos promocionales, atribución inmutable y ledger de comisiones con snapshots económicos ligados a pagos exitosos.
-
-DT-40 añadió feedback SweetAlert al ajuste interno de trial.
+La arquitectura continúa independiente de proveedor (`CommunicationTransport`, manager, processor, reminders y preferencias). Sin transport configurado no se simula éxito. Email/WhatsApp/SMS reales siguen siendo decisiones de despliegue/producto.
 
 ## Baseline de calidad
 
-No se documenta en DT-44 un nuevo conteo formal de tests/assertions.
+No se documenta un conteo nuevo de tests/assertions hasta que GitHub Actions valide el SHA consolidado. No se inventan cifras. Avance formal vigente: `94%`.
 
-Referencias históricas sólo se conservan en los commits/documentos de los DT donde fueron explícitamente registradas. Para el estado actual, la autoridad técnica es GitHub Actions sobre el SHA que se valida.
+## Pendientes reales después de DT-45
 
-Avance global ponderado formal vigente:
-
-`94%`
-
-No se modifica sin una recalculación ponderada formal.
-
-## Pendientes reales vs diferidos
-
-### Pendientes reales
-
-- observabilidad operativa del entorno productivo;
 - queue/worker topology y failed-job monitoring del entorno objetivo;
-- proveedores reales de comunicaciones cuando se requieran;
+- proveedor real de correo si es requisito de lanzamiento V1.0;
+- WhatsApp/SMS si se incluyen en lanzamiento;
 - decisiones de cuotas/proveedor de almacenamiento;
-- política legal definitiva de retención/eliminación clínica.
+- política legal definitiva de retención/eliminación;
+- cierre formal de V1.0 / release readiness.
 
-### Diferidos deliberadamente
+## Diferidos deliberadamente
 
-- passkeys hasta fijar origen productivo;
-- DICOM/PACS;
-- OCR/IA clínica;
-- HL7/FHIR;
-- firma/QR de recetas hasta cerrar requisitos legales;
-- facturación fiscal/CFDI hasta definir alcance;
-- SIEM, impersonación y herramientas destructivas masivas;
-- multi-plan si el producto comercial lo requiere.
-
-### Decisiones de producto/operación
-
-- política de reembolsos;
-- efecto de reembolsos sobre promociones/comisiones;
-- retención legal definitiva;
-- cuotas de almacenamiento;
-- proveedores definitivos de correo/WhatsApp/SMS/storage externo;
-- requisitos legales de documentos/recetas.
-
-## Siguientes candidatos de desarrollo
-
-Después de DT-44, los candidatos recomendados son:
-
-1. **Production monitoring/error tracking + operational response procedure.**
-2. **Queue/worker topology + failed-job monitoring.**
-3. Proveedores reales de comunicaciones cuando el lanzamiento los requiera.
-
-Los IDs se obtienen exclusivamente desde Jira al crear formalmente los tickets.
+Passkeys hasta fijar origen productivo; DICOM/PACS; OCR/IA clínica; HL7/FHIR; firma/QR de recetas; CFDI; SIEM completo; impersonación/herramientas destructivas; multi-plan mientras no sea necesario.

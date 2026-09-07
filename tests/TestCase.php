@@ -20,6 +20,21 @@ abstract class TestCase extends BaseTestCase
      */
     protected bool $preserveUnverifiedUsers = false;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // DT-45 makes observability part of production readiness. Keep the
+        // shared test baseline operational; tests for unsafe observability
+        // explicitly override these values themselves.
+        config([
+            'observability.enabled' => true,
+            'observability.channel' => 'stack',
+            'observability.alerting_enabled' => true,
+            'observability.runbook' => 'docs/OPERATIONS_INCIDENT_RESPONSE.md',
+        ]);
+    }
+
     public function actingAs(Authenticatable $user, $guard = null)
     {
         if (! $this->preserveUnverifiedUsers
