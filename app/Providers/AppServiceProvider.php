@@ -8,6 +8,7 @@ use App\Contracts\StripePaymentIntentApi as StripePaymentIntentApiContract;
 use App\Contracts\StripePaymentIntentProcessor as StripePaymentIntentProcessorContract;
 use App\Contracts\StripePaymentMethodApi as StripePaymentMethodApiContract;
 use App\Contracts\StripeSetupIntentApi as StripeSetupIntentApiContract;
+use App\Http\Controllers\Internal\InternalDataDurabilityController;
 use App\Http\Controllers\Internal\InternalSalesController;
 use App\Http\Controllers\Internal\InternalTrialSettingsController;
 use App\Services\AuditLogger;
@@ -134,6 +135,11 @@ class AppServiceProvider extends ServiceProvider
                 '/internal/settings/trial',
                 [InternalTrialSettingsController::class, 'update']
             )->name('internal.settings.trial.update');
+
+            Route::get(
+                '/internal/data-durability',
+                InternalDataDurabilityController::class
+            )->name('internal.data-durability.index');
 
             Route::get(
                 '/internal/sales',

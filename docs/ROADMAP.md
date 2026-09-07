@@ -2,13 +2,14 @@
 
 Este documento registra el historial canónico de bloques DT y su estado real. Jira es la fuente de verdad para identificadores y estados; este archivo no sustituye Jira.
 
-## Baseline canónico post-DT-42
+## Baseline canónico post-DT-43
 
-- `master`: `cc5a1231527cdc5f4bfb232faae358a83b03a998`
-- Último bloque integrado: **DT-42 — Build global clinical files center and connect source documents to structured labs**
-- Estado Jira DT-1 … DT-42: **Listo**
+- `master`: `296650cc517c3d15aa3c6052fcb61f5cc894e654`
+- Último bloque integrado: **DT-43 — Build production backup, restore and retention foundation**
+- Estado Jira DT-1 … DT-43: **Listo**
+- DT-44: **En curso**
 - Avance global ponderado formal vigente: **94%**
-- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-43.
+- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-44.
 
 ## Historial DT
 
@@ -56,7 +57,8 @@ Este documento registra el historial canónico de bloques DT y su estado real. J
 | DT-40 | SweetAlert en ajustes internos de trial | Listo |
 | DT-41 | Reconciliación documental post-hardening 1.0 | Listo |
 | DT-42 | Centro global de archivos clínicos y documento fuente de laboratorios | Listo |
-| DT-43 | Foundation de backup, restauración y retención operativa | En curso |
+| DT-43 | Foundation de backup, restauración y retención operativa | Listo |
+| DT-44 | Visibilidad operativa de backups en administración interna | En curso |
 
 ## Evolución por etapas
 
@@ -94,7 +96,9 @@ DT-42 convierte `Archivos` en un centro clínico global tenant-scoped que reutil
 
 DT-43 establece una foundation explícita para declarar y validar cobertura de backup de base de datos y archivos privados, frecuencia y copias mínimas, un runbook versionado de restauración verificable y una política de retención segura que mantiene deshabilitado el borrado automático de información clínica.
 
-## Próximos candidatos después de DT-43
+DT-44 añade visibilidad operativa de esa foundation dentro de la administración interna: estado general, cobertura de BD/archivos privados, mecanismo declarado, frecuencia, copias, runbook, verificación post-restore y retención. La pantalla es de solo lectura y no ejecuta, descarga ni restaura backups.
+
+## Próximos candidatos después de DT-44
 
 Las siguientes brechas operativas relevantes son:
 
