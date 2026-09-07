@@ -16,8 +16,8 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 - Repo: `alecz2303/DocTotal`
 - Rama principal: `master`
-- `master` canónico post-DT-41: `2954f13374981211a8f1c7f81b1919c47a817246`
-- Commit post-DT-41: `DT-41 docs: reconcile canonical product documentation`
+- `master` canónico post-DT-42: `cc5a1231527cdc5f4bfb232faae358a83b03a998`
+- Commit post-DT-42: `DT-42 feat: add global clinical files center`
 - Jira project key: `DT`
 - Jira es la fuente de verdad para IDs DT; nunca se inventa el siguiente número.
 - GitHub Actions es la validación técnica canónica.
@@ -27,14 +27,15 @@ Documento de continuidad técnica y funcional. `TODO.md` describe el estado/pend
 
 ## Estado documental actual
 
-DT-41 reconcilió los documentos canónicos después del hardening de DocTotal 1.0. DT-42 extiende la capa clínica de documentos sin duplicar el sistema de almacenamiento existente.
+DT-42 quedó integrado y cerrado. DT-43 trabaja la foundation de durabilidad operativa para backup, restauración y retención segura.
 
-Estado canónico al iniciar DT-42:
+Estado canónico al iniciar DT-43:
 
-- DT-1 a DT-41: `Listo` en Jira.
-- DT-42: centro global de archivos clínicos y vínculo opcional documento fuente ↔ laboratorio estructurado.
+- DT-1 a DT-42: `Listo` en Jira.
+- DT-43: `En curso` en Jira.
+- Baseline `master`: `cc5a1231527cdc5f4bfb232faae358a83b03a998`.
 - Avance global ponderado formal: `94%`.
-- No se recalcula el porcentaje en DT-42.
+- No se recalcula el porcentaje en DT-43.
 - No se inventan cifras de tests/assertions. La autoridad técnica es GitHub Actions sobre el SHA validado.
 
 ## Multi-tenancy
@@ -120,13 +121,29 @@ DT-35 añadió:
 - probes operativos de DB, cache locks y backend de colas;
 - comando `php artisan doctotal:check-production-readiness --probe`.
 
-Ese hardening no debe confundirse con una estrategia de durabilidad de datos. Permanecen como brechas reales:
+DT-43 añade una foundation separada de durabilidad de datos:
 
-- backup verificable;
-- restauración probada;
-- política de retención/eliminación;
+- configuración `config/data_durability.php`;
+- cobertura obligatoria de backup de base de datos y archivos clínicos privados;
+- proveedor/mecanismo operativo de backup declarado explícitamente;
+- frecuencia máxima y número mínimo de copias declarados;
+- runbook versionado `docs/OPERATIONS_DATA_DURABILITY.md`;
+- comando `php artisan doctotal:check-data-durability`;
+- integración del checker de durabilidad dentro de `ProductionReadinessChecker`;
+- restauración considerada válida sólo después de verificación operativa;
+- retención segura con modos `manual`/`policy` sin activar borrado automático;
+- `DOCTOTAL_RETENTION_AUTOMATIC_DELETION_ENABLED=true` se considera configuración insegura y bloquea readiness.
+
+DocTotal no ejecuta dumps genéricos desde la aplicación ni almacena credenciales de backup. La ejecución real corresponde a infraestructura/proveedor; la aplicación valida que exista una estrategia declarada, completa y compatible con una restauración verificable.
+
+La política legal definitiva de conservación clínica sigue abierta. DT-43 no implementa eliminación destructiva de expedientes ni decide plazos regulatorios.
+
+Permanecen como brechas reales de producción:
+
+- monitoreo/error tracking y procedimiento de respuesta operacional;
+- queue/worker topology y monitoreo de failed jobs del entorno objetivo;
 - cuotas/operación de almacenamiento;
-- monitoreo/error tracking y procedimientos operativos del entorno objetivo.
+- proveedores reales de comunicaciones cuando el lanzamiento los requiera.
 
 ## Comunicaciones
 
@@ -158,7 +175,7 @@ DT-40 añadió feedback SweetAlert al ajuste interno de trial.
 
 ## Baseline de calidad
 
-No se documenta en DT-42 un nuevo conteo formal de tests/assertions.
+No se documenta en DT-43 un nuevo conteo formal de tests/assertions.
 
 Referencias históricas sólo se conservan en los commits/documentos de los DT donde fueron explícitamente registradas. Para el estado actual, la autoridad técnica es GitHub Actions sobre el SHA que se valida.
 
@@ -172,11 +189,11 @@ No se modifica sin una recalculación ponderada formal.
 
 ### Pendientes reales
 
-- estrategia de backup y restauración;
-- retención/eliminación operacional de datos clínicos/documentales;
 - observabilidad operativa del entorno productivo;
+- queue/worker topology y failed-job monitoring del entorno objetivo;
 - proveedores reales de comunicaciones cuando se requieran;
-- decisiones de cuotas/proveedor de almacenamiento.
+- decisiones de cuotas/proveedor de almacenamiento;
+- política legal definitiva de retención/eliminación clínica.
 
 ### Diferidos deliberadamente
 
@@ -193,15 +210,17 @@ No se modifica sin una recalculación ponderada formal.
 
 - política de reembolsos;
 - efecto de reembolsos sobre promociones/comisiones;
-- retención legal/operativa;
+- retención legal definitiva;
 - cuotas de almacenamiento;
 - proveedores definitivos de correo/WhatsApp/SMS/storage externo;
 - requisitos legales de documentos/recetas.
 
-## Siguiente candidato de desarrollo
+## Siguientes candidatos de desarrollo
 
-Después de DT-42, el siguiente candidato recomendado continúa siendo:
+Después de DT-43, los candidatos recomendados son:
 
-**Production data durability: backup, restore and retention foundation.**
+1. **Production monitoring/error tracking + operational response procedure.**
+2. **Queue/worker topology + failed-job monitoring.**
+3. Proveedores reales de comunicaciones cuando el lanzamiento los requiera.
 
-No se asigna un ID aquí. Si se aprueba ese bloque, el identificador debe crearse/obtenerse directamente en Jira.
+Los IDs se obtienen exclusivamente desde Jira al crear formalmente los tickets.

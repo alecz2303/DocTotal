@@ -163,6 +163,23 @@ class ProductionReadinessCheckerTest extends TestCase
         );
     }
 
+    public function test_incomplete_data_durability_blocks_production_readiness(): void
+    {
+        $this->configureReadyProduction();
+
+        config([
+            'data_durability.backup.enabled' => false,
+        ]);
+
+        $keys = collect(
+            app(ProductionReadinessChecker::class)->failures()
+        )->pluck('key');
+
+        $this->assertTrue(
+            $keys->contains('durability.backup.enabled')
+        );
+    }
+
     public function test_command_succeeds_for_ready_configuration(): void
     {
         $this->configureReadyProduction();
@@ -273,6 +290,16 @@ class ProductionReadinessCheckerTest extends TestCase
             'services.stripe.key' => 'pk_test_doctotal',
             'services.stripe.secret' => 'sk_test_doctotal',
             'services.stripe.webhook_secret' => 'whsec_doctotal',
+            'data_durability.backup.enabled' => true,
+            'data_durability.backup.database' => true,
+            'data_durability.backup.private_files' => true,
+            'data_durability.backup.provider' => 'managed-test-backups',
+            'data_durability.backup.frequency_hours' => 24,
+            'data_durability.backup.retention_copies' => 7,
+            'data_durability.restore.runbook' => 'docs/OPERATIONS_DATA_DURABILITY.md',
+            'data_durability.restore.verification_required' => true,
+            'data_durability.retention.mode' => 'manual',
+            'data_durability.retention.automatic_deletion_enabled' => false,
         ]);
     }
 }
