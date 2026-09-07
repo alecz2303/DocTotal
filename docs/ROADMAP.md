@@ -2,13 +2,13 @@
 
 Este documento registra el historial canónico de bloques DT y su estado real. Jira es la fuente de verdad para identificadores y estados; este archivo no sustituye Jira.
 
-## Baseline canónico post-DT-41
+## Baseline canónico post-DT-42
 
-- `master`: `2954f13374981211a8f1c7f81b1919c47a817246`
-- Último bloque integrado: **DT-41 — Reconcile canonical product documentation after DocTotal 1.0 hardening**
-- Estado Jira DT-1 … DT-41: **Listo**
+- `master`: `cc5a1231527cdc5f4bfb232faae358a83b03a998`
+- Último bloque integrado: **DT-42 — Build global clinical files center and connect source documents to structured labs**
+- Estado Jira DT-1 … DT-42: **Listo**
 - Avance global ponderado formal vigente: **94%**
-- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-42.
+- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-43.
 
 ## Historial DT
 
@@ -55,7 +55,8 @@ Este documento registra el historial canónico de bloques DT y su estado real. J
 | DT-39 | Códigos promocionales y comisiones de vendedores | Listo |
 | DT-40 | SweetAlert en ajustes internos de trial | Listo |
 | DT-41 | Reconciliación documental post-hardening 1.0 | Listo |
-| DT-42 | Centro global de archivos clínicos y documento fuente de laboratorios | En curso |
+| DT-42 | Centro global de archivos clínicos y documento fuente de laboratorios | Listo |
+| DT-43 | Foundation de backup, restauración y retención operativa | En curso |
 
 ## Evolución por etapas
 
@@ -89,10 +90,16 @@ Se incorporaron administración interna, correcciones de recuperación de billin
 
 DT-42 convierte `Archivos` en un centro clínico global tenant-scoped que reutiliza `ClinicalDocument`, y permite vincular opcionalmente un laboratorio estructurado con un documento fuente del mismo paciente/tenant sin crear un segundo sistema de almacenamiento.
 
-## Próximo candidato después de DT-42
+### Durabilidad operativa
 
-Sin asignar todavía un ID Jira, el siguiente bloque recomendado continúa siendo:
+DT-43 establece una foundation explícita para declarar y validar cobertura de backup de base de datos y archivos privados, frecuencia y copias mínimas, un runbook versionado de restauración verificable y una política de retención segura que mantiene deshabilitado el borrado automático de información clínica.
 
-**Production data durability: backup, restore and retention foundation.**
+## Próximos candidatos después de DT-43
 
-La prioridad se fundamenta en una brecha real: DT-35 valida readiness del runtime, pero no implementa una estrategia verificable de backup/restauración ni una política operativa de retención. El ID del próximo DT se obtendrá únicamente de Jira cuando se cree formalmente el ticket.
+Las siguientes brechas operativas relevantes son:
+
+- monitoreo/error tracking de producción y procedimiento de respuesta operacional;
+- queue/worker topology del entorno objetivo y monitoreo de failed jobs para procesamiento asíncrono real;
+- proveedores reales de comunicaciones cuando el lanzamiento los requiera.
+
+Los siguientes IDs DT deben obtenerse exclusivamente desde Jira al crear formalmente cada ticket.

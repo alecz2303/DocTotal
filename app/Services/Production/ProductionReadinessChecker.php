@@ -9,7 +9,7 @@ class ProductionReadinessChecker
      */
     public function failures(): array
     {
-        $failures = [];
+        $failures = app(DataDurabilityChecker::class)->failures();
 
         $this->require(
             $failures,

@@ -73,6 +73,16 @@ class ProductionRuntimeGuardTest extends TestCase
             'services.stripe.key' => 'pk_test_doctotal',
             'services.stripe.secret' => 'sk_test_doctotal',
             'services.stripe.webhook_secret' => 'whsec_doctotal',
+            'data_durability.backup.enabled' => true,
+            'data_durability.backup.database' => true,
+            'data_durability.backup.private_files' => true,
+            'data_durability.backup.provider' => 'managed-backup',
+            'data_durability.backup.frequency_hours' => 24,
+            'data_durability.backup.retention_copies' => 7,
+            'data_durability.restore.runbook' => 'docs/OPERATIONS_DATA_DURABILITY.md',
+            'data_durability.restore.verification_required' => true,
+            'data_durability.retention.mode' => 'manual',
+            'data_durability.retention.automatic_deletion_enabled' => false,
         ]);
     }
 }
