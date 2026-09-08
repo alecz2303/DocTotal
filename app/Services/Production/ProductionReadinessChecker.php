@@ -12,6 +12,7 @@ class ProductionReadinessChecker
         $failures = array_merge(
             app(DataDurabilityChecker::class)->failures(),
             app(ObservabilityChecker::class)->failures(),
+            app(QueueOperationsChecker::class)->failures(),
         );
 
         $this->require(
