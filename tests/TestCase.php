@@ -24,14 +24,19 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // DT-45 makes observability part of production readiness. Keep the
-        // shared test baseline operational; tests for unsafe observability
-        // explicitly override these values themselves.
+        // Production foundations added after the historical feature suite must
+        // start from a safe baseline. Tests for unsafe states override these
+        // values explicitly.
         config([
             'observability.enabled' => true,
             'observability.channel' => 'stack',
             'observability.alerting_enabled' => true,
             'observability.runbook' => 'docs/OPERATIONS_INCIDENT_RESPONSE.md',
+            'queue_operations.mode' => 'scheduler_only',
+            'queue_operations.worker.enabled' => false,
+            'queue_operations.failed_jobs.monitoring_enabled' => true,
+            'queue_operations.failed_jobs.alert_threshold' => 1,
+            'queue_operations.runbook' => 'docs/OPERATIONS_QUEUE_WORKERS.md',
         ]);
     }
 

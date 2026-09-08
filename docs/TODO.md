@@ -6,13 +6,13 @@
 
 `███████████████████░` 94%
 
-> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-45. No representa cobertura de tests.
+> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-46. No representa cobertura de tests.
 
-## Estado canónico al iniciar DT-45
+## Estado canónico al iniciar DT-46
 
-- DT-1 a DT-44 están cerrados en Jira (`Listo`).
-- DT-45 está `En curso`.
-- `master` post-DT-44: `108a5c79038c1986f5081a5aa9e8b34ed994f105`.
+- DT-1 a DT-45 están cerrados en Jira (`Listo`).
+- DT-46 está `En curso`.
+- `master` post-DT-45: `084aec1564c256d43a01663974a71b1298e47c80`.
 - GitHub Actions es la validación técnica canónica; no se inventan baselines de tests/assertions.
 
 ## Leyenda
@@ -79,7 +79,11 @@
 - [x] Foundation de observabilidad y error tracking con contexto técnico mínimo y sin payload clínico — DT-45.
 - [x] Readiness bloquea observabilidad incompleta: reporting, canal válido, alertamiento y runbook — DT-45.
 - [x] Runbook versionado de respuesta operacional a incidentes — DT-45.
-- [ ] Definir queue/worker topology del entorno objetivo y monitoreo de failed jobs para procesamiento asíncrono real.
+- [x] Topología canónica `scheduler_only` basada en auditoría real del código — DT-46.
+- [x] Workers permanecen deshabilitados hasta existir un job `ShouldQueue` real — DT-46.
+- [x] Checker y comando `doctotal:check-queue-operations` para configuración y failed jobs — DT-46.
+- [x] Monitoreo agregado de pending/failed jobs sin exponer payloads o excepciones — DT-46.
+- [x] Runbook de activación futura de workers, diagnóstico y retry seguro — DT-46.
 - [D] Impersonación, herramientas destructivas masivas y SIEM completo.
 
 # 6. Decisiones de producto todavía abiertas
@@ -93,13 +97,14 @@
 
 # 7. Trabajo realmente pendiente priorizado
 
-DT-45 cubre la brecha de observabilidad productiva y respuesta operacional. No convierte DocTotal en un SIEM ni registra PHI para diagnosticar errores.
+DT-46 establece la topología operativa real de V1.0 sin inventar workers: hoy los procesos periódicos de billing/comunicaciones corren por Scheduler y no existen jobs `ShouldQueue` en el código auditado.
 
 **Siguientes candidatos recomendados (sin asignar ID DT):**
 
-1. **Queue/worker topology + failed-job monitoring para procesamiento asíncrono real.**
-2. **Proveedor real de correo para producción si forma parte del alcance de lanzamiento V1.0.**
-3. Proveedores de WhatsApp/SMS si el lanzamiento los requiere.
-4. **Cierre formal de V1.0 / release readiness y reconciliación canónica final.**
+1. **Proveedor real de correo para producción si forma parte del alcance de lanzamiento V1.0.**
+2. Proveedores de WhatsApp/SMS si el lanzamiento los requiere.
+3. **Cierre formal de V1.0 / release readiness y reconciliación canónica final.**
+
+La activación futura de workers deberá abrir un nuevo cambio versionado cuando exista el primer job asíncrono real.
 
 Los siguientes IDs DT deben obtenerse exclusivamente desde Jira cuando se decida crear cada ticket.

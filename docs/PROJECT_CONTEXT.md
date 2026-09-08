@@ -7,9 +7,9 @@ Documento de continuidad técnica y funcional. `TODO.md` describe estado/pending
 - PHP 8.4 / Laravel 13 / Blade + Livewire/Volt / Tailwind CSS.
 - MySQL en desarrollo/producción; SQLite in-memory en tests.
 - Repo: `alecz2303/DocTotal`; rama principal: `master`.
-- Baseline al iniciar DT-45: `108a5c79038c1986f5081a5aa9e8b34ed994f105` (post-DT-44).
-- DT-1 a DT-44: `Listo`; DT-45: `En curso`.
-- Avance global ponderado formal: `94%`; no se recalcula en DT-45.
+- Baseline al iniciar DT-46: `084aec1564c256d43a01663974a71b1298e47c80` (post-DT-45).
+- DT-1 a DT-45: `Listo`; DT-46: `En curso`.
+- Avance global ponderado formal: `94%`; no se recalcula en DT-46.
 - GitHub Actions es la validación técnica canónica.
 - Antes de PR: rama en exactamente un commit, CI verde sobre ese SHA; luego PR, reviewer `aruedaboldr`, CI PR, Jira `En revisión` y espera de aprobación humana.
 
@@ -45,15 +45,28 @@ DT-45 cierra la brecha de monitoreo/error tracking productivo con una foundation
 
 - `config/observability.php` declara enabled, canal, alertamiento, runbook y política de ubicación de excepción;
 - `ObservabilityChecker` exige observabilidad habilitada, canal válido, alertamiento declarado y runbook existente;
-- `ProductionReadinessChecker` incorpora sus fallos, por lo que producción no se considera ready con observabilidad incompleta;
-- `ProductionExceptionReporter` se registra en `bootstrap/app.php` mediante el pipeline de reportes de excepciones;
-- el reporter solo actúa en `production` y cuando observabilidad está habilitada;
-- contexto permitido: clase de excepción, código entero, fingerprint SHA-256, método HTTP, nombre de ruta y opcionalmente basename/line de origen;
+- `ProductionReadinessChecker` incorpora sus fallos;
+- `ProductionExceptionReporter` se registra en `bootstrap/app.php`;
+- contexto permitido: clase/código/fingerprint, método HTTP, nombre de ruta y opcionalmente basename/line;
 - no registra mensaje de excepción, stack trace completo, body, query string, headers, cookies, URL completa, email, nombres de pacientes ni contenido clínico;
-- `docs/OPERATIONS_INCIDENT_RESPONSE.md` define severidad, detección, diagnóstico, mitigación, escalamiento, recuperación y verificación posterior;
-- un incidente no se cierra solo porque la app responda: debe comprobarse integridad, aislamiento multi-tenant y ausencia de pérdida/corrupción cuando aplique.
+- `docs/OPERATIONS_INCIDENT_RESPONSE.md` define severidad, detección, diagnóstico, mitigación, escalamiento, recuperación y verificación posterior.
 
-La salida puede conectarse a infraestructura/proveedor externo mediante el canal de logging configurado. DocTotal no necesita acoplar el dominio clínico a un SDK concreto ni almacenar credenciales del proveedor en modelos de aplicación.
+## Scheduler, queues y workers — DT-46
+
+La auditoría real del código durante DT-46 no encontró jobs que implementen `ShouldQueue`. Los procesos recurrentes actuales de billing y comunicaciones se ejecutan desde `routes/console.php` mediante Laravel Scheduler.
+
+La topología canónica de V1.0 queda declarada como `scheduler_only`:
+
+- el servidor debe ejecutar `php artisan schedule:run` cada minuto;
+- no debe mantenerse un `queue:work` activo mientras no exista trabajo asíncrono real;
+- `config/queue_operations.php` declara modo, parámetros futuros de worker, monitoreo de failed jobs y runbook;
+- `QueueOperationsChecker` forma parte de `ProductionReadinessChecker`;
+- el modo `workers` exige worker habilitado, cola explícita, tries/timeout válidos y `retry_after > timeout` cuando el driver lo soporta;
+- `QueueOperationsMonitor` solo expone modo y conteos agregados de pending/failed jobs; no lee ni retorna payloads o excepciones;
+- `doctotal:check-queue-operations` puede utilizarse desde infraestructura para detectar configuración insegura o alcanzar el umbral de failed jobs;
+- `docs/OPERATIONS_QUEUE_WORKERS.md` documenta activación futura, supervisión, diagnóstico y retry seguro.
+
+El primer job `ShouldQueue` futuro debe revisar explícitamente idempotencia, tenant context, payload mínimo y efectos externos antes de cambiar la topología a `workers`.
 
 ## Comunicaciones
 
@@ -63,9 +76,8 @@ La arquitectura continúa independiente de proveedor (`CommunicationTransport`, 
 
 No se documenta un conteo nuevo de tests/assertions hasta que GitHub Actions valide el SHA consolidado. No se inventan cifras. Avance formal vigente: `94%`.
 
-## Pendientes reales después de DT-45
+## Pendientes reales después de DT-46
 
-- queue/worker topology y failed-job monitoring del entorno objetivo;
 - proveedor real de correo si es requisito de lanzamiento V1.0;
 - WhatsApp/SMS si se incluyen en lanzamiento;
 - decisiones de cuotas/proveedor de almacenamiento;

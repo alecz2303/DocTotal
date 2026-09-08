@@ -2,14 +2,14 @@
 
 Jira es la fuente de verdad para identificadores y estados. Este documento registra la evolución canónica del producto.
 
-## Baseline canónico al iniciar DT-45
+## Baseline canónico al iniciar DT-46
 
-- `master`: `108a5c79038c1986f5081a5aa9e8b34ed994f105`
-- Último bloque integrado: **DT-44 — Add operational backup visibility to internal administration**
-- DT-1 … DT-44: **Listo**
-- DT-45: **En curso**
+- `master`: `084aec1564c256d43a01663974a71b1298e47c80`
+- Último bloque integrado: **DT-45 — Add production observability, error tracking and operational response**
+- DT-1 … DT-45: **Listo**
+- DT-46: **En curso**
 - Avance global ponderado formal vigente: **94%**
-- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-45.
+- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-46.
 
 ## Historial DT
 
@@ -22,7 +22,8 @@ Jira es la fuente de verdad para identificadores y estados. Este documento regis
 | DT-42 | Centro global de archivos clínicos y documento fuente de laboratorios | Listo |
 | DT-43 | Foundation de backup, restauración y retención operativa | Listo |
 | DT-44 | Visibilidad operativa de backups en administración interna | Listo |
-| DT-45 | Observabilidad, error tracking seguro y respuesta operacional | En curso |
+| DT-45 | Observabilidad, error tracking seguro y respuesta operacional | Listo |
+| DT-46 | Topología queue/worker y monitoreo seguro de failed jobs | En curso |
 
 ## Evolución por etapas
 
@@ -40,24 +41,30 @@ DT-42 consolidó el centro de archivos clínicos. DT-43 estableció backup/resta
 
 ### Observabilidad operativa — DT-45
 
-DT-45 añade una estrategia explícita y verificable de observabilidad de producción:
+DT-45 añadió configuración explícita de observabilidad, checker integrado a Production Readiness, reporter de excepciones con contexto técnico mínimo y runbook de respuesta a incidentes, manteniendo privacidad clínica y desacoplamiento de proveedor.
 
-- `config/observability.php`;
-- `ObservabilityChecker` integrado a `ProductionReadinessChecker`;
-- `ProductionExceptionReporter` conectado al pipeline de excepciones de Laravel;
-- contexto mínimo: clase/código/fingerprint, método HTTP y nombre de ruta, con ubicación opcional;
-- no incluye mensaje de excepción, body, query string, headers, cookies, email, nombres ni contenido clínico;
-- alertamiento operativo debe declararse habilitado;
-- runbook versionado `docs/OPERATIONS_INCIDENT_RESPONSE.md`;
-- tests de readiness y privacidad del reporter.
+### Scheduler, workers y failed jobs — DT-46
 
-La integración real con un proveedor externo puede realizarse mediante el canal de logging/infraestructura configurado; DocTotal permanece desacoplado del proveedor y no almacena credenciales de observabilidad en su dominio.
+La auditoría de DT-46 confirma que el código actual no contiene jobs `ShouldQueue`. Billing y comunicaciones periódicas se ejecutan mediante Laravel Scheduler, por lo que la topología canónica V1.0 es `scheduler_only`.
 
-## Próximos candidatos después de DT-45
+DT-46 añade:
 
-1. Queue/worker topology + failed-job monitoring del entorno objetivo.
-2. Proveedor real de correo si es requisito de lanzamiento V1.0.
-3. WhatsApp/SMS cuando el lanzamiento lo requiera.
-4. Cierre formal de V1.0 / release readiness y reconciliación canónica final.
+- `config/queue_operations.php` con modo operativo explícito;
+- workers deshabilitados mientras no exista trabajo asíncrono real;
+- parámetros versionados para activación futura de workers;
+- `QueueOperationsChecker` integrado a `ProductionReadinessChecker`;
+- validación de modo, worker, tries, timeout y relación `retry_after > timeout` cuando aplica;
+- monitoreo de pending/failed jobs mediante conteos agregados, sin payloads;
+- `doctotal:check-queue-operations` con exit code utilizable por infraestructura de alertamiento;
+- runbook `docs/OPERATIONS_QUEUE_WORKERS.md` para scheduler, activación futura, diagnóstico y retry seguro;
+- tests de readiness, privacidad y umbral de failed jobs.
+
+La introducción del primer job asíncrono real deberá ser un cambio versionado que revise idempotencia, tenant context y privacidad antes de cambiar a modo `workers`.
+
+## Próximos candidatos después de DT-46
+
+1. Proveedor real de correo si es requisito de lanzamiento V1.0.
+2. WhatsApp/SMS cuando el lanzamiento lo requiera.
+3. Cierre formal de V1.0 / release readiness y reconciliación canónica final.
 
 Los siguientes IDs DT deben obtenerse exclusivamente desde Jira al crear formalmente cada ticket.
