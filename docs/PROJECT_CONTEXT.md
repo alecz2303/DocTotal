@@ -7,9 +7,9 @@ Documento de continuidad técnica y funcional. `TODO.md` describe estado/pending
 - PHP 8.4 / Laravel 13 / Blade + Livewire/Volt / Tailwind CSS.
 - MySQL en desarrollo/producción; SQLite in-memory en tests.
 - Repo: `alecz2303/DocTotal`; rama principal: `master`.
-- Baseline al iniciar DT-46: `084aec1564c256d43a01663974a71b1298e47c80` (post-DT-45).
-- DT-1 a DT-45: `Listo`; DT-46: `En curso`.
-- Avance global ponderado formal: `94%`; no se recalcula en DT-46.
+- Baseline al iniciar DT-47: `8c3ffb80f6c1d87050d2ea3025217576e71fb53e` (post-DT-46).
+- DT-1 a DT-46: `Listo`; DT-47: `En curso`.
+- Avance global ponderado formal: `94%`; no se recalcula en DT-47.
 - GitHub Actions es la validación técnica canónica.
 - Antes de PR: rama en exactamente un commit, CI verde sobre ese SHA; luego PR, reviewer `aruedaboldr`, CI PR, Jira `En revisión` y espera de aprobación humana.
 
@@ -68,17 +68,31 @@ La topología canónica de V1.0 queda declarada como `scheduler_only`:
 
 El primer job `ShouldQueue` futuro debe revisar explícitamente idempotencia, tenant context, payload mínimo y efectos externos antes de cambiar la topología a `workers`.
 
+## Email productivo — DT-47
+
+DT-47 prepara la entrega real de correo manteniendo el desacoplamiento de proveedor:
+
+- `LaravelMailCommunicationTransport` implementa `CommunicationTransport` para email mediante Laravel Mail;
+- `DOCTOTAL_EMAIL_COMMUNICATIONS_ENABLED` controla explícitamente la activación del canal transaccional;
+- `EmailDeliveryChecker` se integra a `ProductionReadinessChecker`;
+- readiness rechaza `log`/`array`, remitentes placeholder, transport deshabilitado, SMTP localhost/puerto inválido y runbook inexistente;
+- `docs/OPERATIONS_EMAIL_DELIVERY.md` documenta configuración, autenticación SPF/DKIM/DMARC, prueba controlada, diagnóstico y rollback;
+- credenciales reales, DNS y selección concreta de proveedor permanecen fuera del repositorio;
+- los flujos existentes de verificación de correo y recuperación de contraseña continúan usando Laravel Mail y deben validarse con cuentas de prueba antes del lanzamiento.
+
+No se deben registrar destinatarios, tokens de recuperación/verificación, cuerpo completo de emails, secretos ni contenido clínico como parte de diagnóstico operacional.
+
 ## Comunicaciones
 
-La arquitectura continúa independiente de proveedor (`CommunicationTransport`, manager, processor, reminders y preferencias). Sin transport configurado no se simula éxito. Email/WhatsApp/SMS reales siguen siendo decisiones de despliegue/producto.
+La arquitectura continúa independiente de proveedor (`CommunicationTransport`, manager, processor, reminders y preferencias). Sin transport configurado no se simula éxito. DT-47 habilita una implementación real para email cuando la configuración productiva lo activa; WhatsApp/SMS permanecen pendientes de decisión de lanzamiento.
 
 ## Baseline de calidad
 
 No se documenta un conteo nuevo de tests/assertions hasta que GitHub Actions valide el SHA consolidado. No se inventan cifras. Avance formal vigente: `94%`.
 
-## Pendientes reales después de DT-46
+## Pendientes reales después de DT-47
 
-- proveedor real de correo si es requisito de lanzamiento V1.0;
+- credenciales/proveedor real y validación DNS de email en la infraestructura de lanzamiento;
 - WhatsApp/SMS si se incluyen en lanzamiento;
 - decisiones de cuotas/proveedor de almacenamiento;
 - política legal definitiva de retención/eliminación;

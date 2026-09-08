@@ -2,14 +2,14 @@
 
 Jira es la fuente de verdad para identificadores y estados. Este documento registra la evolución canónica del producto.
 
-## Baseline canónico al iniciar DT-46
+## Baseline canónico al iniciar DT-47
 
-- `master`: `084aec1564c256d43a01663974a71b1298e47c80`
-- Último bloque integrado: **DT-45 — Add production observability, error tracking and operational response**
-- DT-1 … DT-45: **Listo**
-- DT-46: **En curso**
+- `master`: `8c3ffb80f6c1d87050d2ea3025217576e71fb53e`
+- Último bloque integrado: **DT-46 — Define production queue/worker topology and failed-job monitoring**
+- DT-1 … DT-46: **Listo**
+- DT-47: **En curso**
 - Avance global ponderado formal vigente: **94%**
-- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-46.
+- No se recalcula porcentaje ni se inventan cifras de tests/assertions en DT-47.
 
 ## Historial DT
 
@@ -23,7 +23,8 @@ Jira es la fuente de verdad para identificadores y estados. Este documento regis
 | DT-43 | Foundation de backup, restauración y retención operativa | Listo |
 | DT-44 | Visibilidad operativa de backups en administración interna | Listo |
 | DT-45 | Observabilidad, error tracking seguro y respuesta operacional | Listo |
-| DT-46 | Topología queue/worker y monitoreo seguro de failed jobs | En curso |
+| DT-46 | Topología queue/worker y monitoreo seguro de failed jobs | Listo |
+| DT-47 | Foundation productiva de email, readiness y runbook operacional | En curso |
 
 ## Evolución por etapas
 
@@ -45,9 +46,9 @@ DT-45 añadió configuración explícita de observabilidad, checker integrado a 
 
 ### Scheduler, workers y failed jobs — DT-46
 
-La auditoría de DT-46 confirma que el código actual no contiene jobs `ShouldQueue`. Billing y comunicaciones periódicas se ejecutan mediante Laravel Scheduler, por lo que la topología canónica V1.0 es `scheduler_only`.
+La auditoría de DT-46 confirmó que el código actual no contiene jobs `ShouldQueue`. Billing y comunicaciones periódicas se ejecutan mediante Laravel Scheduler, por lo que la topología canónica V1.0 es `scheduler_only`.
 
-DT-46 añade:
+DT-46 añadió:
 
 - `config/queue_operations.php` con modo operativo explícito;
 - workers deshabilitados mientras no exista trabajo asíncrono real;
@@ -61,10 +62,26 @@ DT-46 añade:
 
 La introducción del primer job asíncrono real deberá ser un cambio versionado que revise idempotencia, tenant context y privacidad antes de cambiar a modo `workers`.
 
-## Próximos candidatos después de DT-46
+### Entrega de email productivo — DT-47
 
-1. Proveedor real de correo si es requisito de lanzamiento V1.0.
-2. WhatsApp/SMS cuando el lanzamiento lo requiera.
-3. Cierre formal de V1.0 / release readiness y reconciliación canónica final.
+DT-47 prepara el correo real necesario para verificación de cuenta, recuperación y comunicaciones transaccionales sin acoplar el dominio a un proveedor único.
+
+DT-47 añade:
+
+- `LaravelMailCommunicationTransport` para el canal email;
+- activación explícita mediante `DOCTOTAL_EMAIL_COMMUNICATIONS_ENABLED`;
+- `EmailDeliveryChecker` integrado a Production Readiness;
+- validación de mailer real, remitente válido, SMTP remoto cuando aplica y runbook versionado;
+- `docs/OPERATIONS_EMAIL_DELIVERY.md` con configuración, SPF/DKIM/DMARC, prueba controlada, diagnóstico y rollback;
+- tests de estados productivos seguros/inseguros;
+- continuidad de flujos existentes de verificación y recuperación a través de Laravel Mail.
+
+Las credenciales reales, DNS y proveedor concreto permanecen como responsabilidad de infraestructura/despliegue y nunca se versionan.
+
+## Próximos candidatos después de DT-47
+
+1. WhatsApp/SMS solo si forman parte del lanzamiento V1.0.
+2. Cierre formal de V1.0 / release readiness y reconciliación canónica final.
+3. Decisiones legales/operativas pendientes que bloqueen realmente el lanzamiento.
 
 Los siguientes IDs DT deben obtenerse exclusivamente desde Jira al crear formalmente cada ticket.

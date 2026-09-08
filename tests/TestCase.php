@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Services\Communications\Transports\LaravelMailCommunicationTransport;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -37,6 +38,9 @@ abstract class TestCase extends BaseTestCase
             'queue_operations.failed_jobs.monitoring_enabled' => true,
             'queue_operations.failed_jobs.alert_threshold' => 1,
             'queue_operations.runbook' => 'docs/OPERATIONS_QUEUE_WORKERS.md',
+            'communications.transports.email' => LaravelMailCommunicationTransport::class,
+            'mail.mailers.smtp.host' => 'smtp.test',
+            'mail.mailers.smtp.port' => 587,
         ]);
     }
 

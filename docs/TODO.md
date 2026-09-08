@@ -6,13 +6,13 @@
 
 `███████████████████░` 94%
 
-> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-46. No representa cobertura de tests.
+> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-47. No representa cobertura de tests.
 
-## Estado canónico al iniciar DT-46
+## Estado canónico al iniciar DT-47
 
-- DT-1 a DT-45 están cerrados en Jira (`Listo`).
-- DT-46 está `En curso`.
-- `master` post-DT-45: `084aec1564c256d43a01663974a71b1298e47c80`.
+- DT-1 a DT-46 están cerrados en Jira (`Listo`).
+- DT-47 está `En curso`.
+- `master` post-DT-46: `8c3ffb80f6c1d87050d2ea3025217576e71fb53e`.
 - GitHub Actions es la validación técnica canónica; no se inventan baselines de tests/assertions.
 
 ## Leyenda
@@ -64,7 +64,8 @@
 - [x] Foundation multi-tenant de comunicaciones y recordatorios — DT-20/DT-32.
 - [x] Preferencias, elegibilidad, claim transaccional, processing y redacción de errores.
 - [x] Enlaces de gestión de cita integrados.
-- [ ] Seleccionar/configurar proveedor real de correo para producción si el lanzamiento lo requiere.
+- [x] Foundation productiva de email desacoplada de proveedor, con transport Laravel Mail, readiness y runbook — DT-47.
+- [~] Configurar credenciales/proveedor real y validar SPF/DKIM/DMARC en la infraestructura de lanzamiento.
 - [ ] Seleccionar/configurar proveedor real de WhatsApp si el lanzamiento lo requiere.
 - [ ] Seleccionar/configurar proveedor real de SMS si el lanzamiento lo requiere.
 - [D] Campañas de marketing/envíos masivos.
@@ -84,6 +85,8 @@
 - [x] Checker y comando `doctotal:check-queue-operations` para configuración y failed jobs — DT-46.
 - [x] Monitoreo agregado de pending/failed jobs sin exponer payloads o excepciones — DT-46.
 - [x] Runbook de activación futura de workers, diagnóstico y retry seguro — DT-46.
+- [x] Production Readiness valida mailer real, remitente válido, transport de email, SMTP remoto y runbook — DT-47.
+- [x] Runbook de email productivo con verificación DNS, prueba de entrega, diagnóstico y rollback — DT-47.
 - [D] Impersonación, herramientas destructivas masivas y SIEM completo.
 
 # 6. Decisiones de producto todavía abiertas
@@ -97,13 +100,13 @@
 
 # 7. Trabajo realmente pendiente priorizado
 
-DT-46 establece la topología operativa real de V1.0 sin inventar workers: hoy los procesos periódicos de billing/comunicaciones corren por Scheduler y no existen jobs `ShouldQueue` en el código auditado.
+DT-47 prepara email real para V1.0 sin versionar secretos ni acoplar DocTotal a un proveedor. La activación productiva final exige credenciales reales y validación del dominio en la infraestructura objetivo.
 
 **Siguientes candidatos recomendados (sin asignar ID DT):**
 
-1. **Proveedor real de correo para producción si forma parte del alcance de lanzamiento V1.0.**
-2. Proveedores de WhatsApp/SMS si el lanzamiento los requiere.
-3. **Cierre formal de V1.0 / release readiness y reconciliación canónica final.**
+1. WhatsApp/SMS solo si forman parte del alcance de lanzamiento V1.0.
+2. **Cierre formal de V1.0 / release readiness y reconciliación canónica final.**
+3. Decisiones operativas/legal-comerciales pendientes que sean bloqueo real de lanzamiento.
 
 La activación futura de workers deberá abrir un nuevo cambio versionado cuando exista el primer job asíncrono real.
 
