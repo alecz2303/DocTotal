@@ -13,6 +13,7 @@ class ProductionReadinessChecker
             app(DataDurabilityChecker::class)->failures(),
             app(ObservabilityChecker::class)->failures(),
             app(QueueOperationsChecker::class)->failures(),
+            app(EmailDeliveryChecker::class)->failures(),
         );
 
         $this->require(

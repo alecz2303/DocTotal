@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\Communications\Transports\LaravelMailCommunicationTransport;
+
 return [
 
     /*
@@ -8,21 +10,28 @@ return [
     |--------------------------------------------------------------------------
     |
     | Cada canal puede tener una implementación concreta de
-    | CommunicationTransport.
-    |
-    | Un valor null significa que el canal todavía no tiene un proveedor
-    | configurado y, por lo tanto, no debe intentar enviar comunicaciones.
+    | CommunicationTransport. Los canales externos permanecen deshabilitados
+    | hasta que su configuración productiva sea explícita.
     |
     */
 
     'transports' => [
 
-        'email' => null,
+        'email' => env('DOCTOTAL_EMAIL_COMMUNICATIONS_ENABLED', false)
+            ? LaravelMailCommunicationTransport::class
+            : null,
 
         'whatsapp' => null,
 
         'sms' => null,
 
+    ],
+
+    'email' => [
+        'runbook' => env(
+            'DOCTOTAL_EMAIL_RUNBOOK',
+            'docs/OPERATIONS_EMAIL_DELIVERY.md'
+        ),
     ],
 
 ];
