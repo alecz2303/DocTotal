@@ -2,26 +2,27 @@
 
 ## Progreso general
 
-**94% completado**
+**100% del alcance V1.0 versionado**
 
-`███████████████████░` 94%
+`████████████████████` 100%
 
-> Este porcentaje es el último avance global ponderado formalmente establecido. No se recalcula en DT-47. No representa cobertura de tests.
+> Este porcentaje corresponde exclusivamente al alcance comprometido de DocTotal V1.0. No representa cobertura de tests, ausencia absoluta de bugs ni preparación automática de cualquier entorno productivo.
 
-## Estado canónico al iniciar DT-47
+## Estado canónico en DT-48
 
-- DT-1 a DT-46 están cerrados en Jira (`Listo`).
-- DT-47 está `En curso`.
-- `master` post-DT-46: `8c3ffb80f6c1d87050d2ea3025217576e71fb53e`.
+- DT-1 a DT-47 están cerrados en Jira (`Listo`).
+- DT-48 está `En curso` y formaliza el cierre/release readiness de V1.0.
+- `master` post-DT-47: `eba60d9881f510da40127462154de4858502333d`.
 - GitHub Actions es la validación técnica canónica; no se inventan baselines de tests/assertions.
+- `docs/RELEASE_V1_0_READINESS.md` documenta el criterio de cierre y los gates de despliegue.
 
 ## Leyenda
 
-- `[x]` Implementado.
-- `[~]` Implementado parcialmente / evolución futura.
+- `[x]` Implementado para V1.0.
+- `[~]` Implementado parcialmente / evolución futura no bloqueante.
 - `[ ]` Trabajo realmente pendiente.
-- `[!]` Decisión de producto/operación todavía no cerrada.
-- `[D]` Diferido deliberadamente.
+- `[!]` Decisión de producto/operación todavía abierta y no bloqueante salvo cambio de alcance.
+- `[D]` Diferido deliberadamente fuera de V1.0.
 
 # 1. Producto clínico
 
@@ -66,8 +67,8 @@
 - [x] Enlaces de gestión de cita integrados.
 - [x] Foundation productiva de email desacoplada de proveedor, con transport Laravel Mail, readiness y runbook — DT-47.
 - [~] Configurar credenciales/proveedor real y validar SPF/DKIM/DMARC en la infraestructura de lanzamiento.
-- [ ] Seleccionar/configurar proveedor real de WhatsApp si el lanzamiento lo requiere.
-- [ ] Seleccionar/configurar proveedor real de SMS si el lanzamiento lo requiere.
+- [D] WhatsApp para V1.0 mientras no forme parte explícita del alcance comercial del lanzamiento.
+- [D] SMS para V1.0 mientras no forme parte explícita del alcance comercial del lanzamiento.
 - [D] Campañas de marketing/envíos masivos.
 
 # 5. Operación interna y producción
@@ -87,27 +88,39 @@
 - [x] Runbook de activación futura de workers, diagnóstico y retry seguro — DT-46.
 - [x] Production Readiness valida mailer real, remitente válido, transport de email, SMTP remoto y runbook — DT-47.
 - [x] Runbook de email productivo con verificación DNS, prueba de entrega, diagnóstico y rollback — DT-47.
+- [x] Release-readiness V1.0 y clasificación de gates de despliegue — DT-48.
 - [D] Impersonación, herramientas destructivas masivas y SIEM completo.
 
-# 6. Decisiones de producto todavía abiertas
+# 6. Decisiones abiertas no bloqueantes de V1.0
 
 - [!] Reembolsos y efecto en créditos/comisiones.
 - [!] Retención/eliminación legal definitiva.
 - [!] Cuotas de almacenamiento.
-- [!] Proveedores definitivos de comunicación y almacenamiento externo.
+- [!] Proveedores futuros de comunicación y almacenamiento externo.
 - [!] Requisitos legales de recetas/firma/verificación/CFDI.
 - [!] Activación de passkeys ligada al origen HTTPS definitivo.
 
-# 7. Trabajo realmente pendiente priorizado
+# 7. Gates de despliegue productivo
 
-DT-47 prepara email real para V1.0 sin versionar secretos ni acoplar DocTotal a un proveedor. La activación productiva final exige credenciales reales y validación del dominio en la infraestructura objetivo.
+No son trabajo pendiente del codebase V1.0, pero deben validarse en el entorno objetivo antes de tráfico real:
 
-**Siguientes candidatos recomendados (sin asignar ID DT):**
+- HTTPS/hostname canónico y variables productivas.
+- MySQL, cache y locks operativos.
+- Stripe real y webhook configurado.
+- Email real, remitente y SPF/DKIM/DMARC validados.
+- Backup/restauración operativos.
+- Scheduler cada minuto.
+- Observabilidad y alertamiento configurados.
+- `php artisan doctotal:check-production-readiness --probe` exitoso.
 
-1. WhatsApp/SMS solo si forman parte del alcance de lanzamiento V1.0.
-2. **Cierre formal de V1.0 / release readiness y reconciliación canónica final.**
-3. Decisiones operativas/legal-comerciales pendientes que sean bloqueo real de lanzamiento.
+Ver detalle en `docs/RELEASE_V1_0_READINESS.md`.
+
+# 8. Trabajo posterior a V1.0
+
+No queda trabajo de código pendiente que bloquee el cierre del alcance V1.0 identificado en DT-48.
+
+Los nuevos desarrollos deben abrir tickets nuevos en Jira únicamente cuando exista una decisión de producto, necesidad clínica, requisito legal o cambio de alcance concreto.
 
 La activación futura de workers deberá abrir un nuevo cambio versionado cuando exista el primer job asíncrono real.
 
-Los siguientes IDs DT deben obtenerse exclusivamente desde Jira cuando se decida crear cada ticket.
+Los siguientes IDs DT deben obtenerse exclusivamente desde Jira.

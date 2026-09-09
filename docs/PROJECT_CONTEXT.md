@@ -7,9 +7,9 @@ Documento de continuidad técnica y funcional. `TODO.md` describe estado/pending
 - PHP 8.4 / Laravel 13 / Blade + Livewire/Volt / Tailwind CSS.
 - MySQL en desarrollo/producción; SQLite in-memory en tests.
 - Repo: `alecz2303/DocTotal`; rama principal: `master`.
-- Baseline al iniciar DT-47: `8c3ffb80f6c1d87050d2ea3025217576e71fb53e` (post-DT-46).
-- DT-1 a DT-46: `Listo`; DT-47: `En curso`.
-- Avance global ponderado formal: `94%`; no se recalcula en DT-47.
+- Baseline al iniciar DT-48: `eba60d9881f510da40127462154de4858502333d` (post-DT-47).
+- DT-1 a DT-47: `Listo`; DT-48: `En curso`.
+- Alcance V1.0 versionado: `100%` al integrar DT-48, según `docs/RELEASE_V1_0_READINESS.md`.
 - GitHub Actions es la validación técnica canónica.
 - Antes de PR: rama en exactamente un commit, CI verde sobre ese SHA; luego PR, reviewer `aruedaboldr`, CI PR, Jira `En revisión` y espera de aprobación humana.
 
@@ -41,7 +41,7 @@ DT-44 añadió la pantalla interna de Backups de solo lectura, reutilizando `Dat
 
 ## Observabilidad — DT-45
 
-DT-45 cierra la brecha de monitoreo/error tracking productivo con una foundation desacoplada del proveedor:
+DT-45 cerró la brecha de monitoreo/error tracking productivo con una foundation desacoplada del proveedor:
 
 - `config/observability.php` declara enabled, canal, alertamiento, runbook y política de ubicación de excepción;
 - `ObservabilityChecker` exige observabilidad habilitada, canal válido, alertamiento declarado y runbook existente;
@@ -84,20 +84,42 @@ No se deben registrar destinatarios, tokens de recuperación/verificación, cuer
 
 ## Comunicaciones
 
-La arquitectura continúa independiente de proveedor (`CommunicationTransport`, manager, processor, reminders y preferencias). Sin transport configurado no se simula éxito. DT-47 habilita una implementación real para email cuando la configuración productiva lo activa; WhatsApp/SMS permanecen pendientes de decisión de lanzamiento.
+La arquitectura continúa independiente de proveedor (`CommunicationTransport`, manager, processor, reminders y preferencias). Sin transport configurado no se simula éxito. DT-47 habilita una implementación real para email cuando la configuración productiva lo activa. WhatsApp/SMS permanecen fuera del alcance V1.0 salvo decisión comercial explícita posterior.
+
+## Release readiness V1.0 — DT-48
+
+DT-48 formaliza el cierre del alcance V1.0 y separa el estado del codebase de la preparación de un entorno concreto.
+
+Estado canónico al integrar DT-48:
+
+- el **codebase V1.0 está release-ready**;
+- no se identifican bloqueos técnicos críticos pendientes dentro del repositorio;
+- no existen marcadores `FIXME` encontrados en la auditoría de cierre;
+- no se identifican marcadores `TODO` técnicos críticos ocultos;
+- los pendientes conocidos quedan clasificados como gates de despliegue, decisiones abiertas no bloqueantes o evolución deliberadamente diferida;
+- el avance formal del alcance V1.0 versionado queda en **100%**.
+
+El 100% no representa cobertura de tests ni garantiza que un servidor esté listo sin configuración. La instalación objetivo debe completar HTTPS/hostname, Stripe real, email/DNS, backups, scheduler, observabilidad y ejecutar `php artisan doctotal:check-production-readiness --probe` con éxito.
+
+El documento canónico de release es `docs/RELEASE_V1_0_READINESS.md`.
 
 ## Baseline de calidad
 
-No se documenta un conteo nuevo de tests/assertions hasta que GitHub Actions valide el SHA consolidado. No se inventan cifras. Avance formal vigente: `94%`.
+GitHub Actions continúa siendo la validación técnica canónica. No se documentan cifras de tests/assertions sin evidencia del CI correspondiente. El porcentaje de avance no es una métrica de cobertura.
 
-## Pendientes reales después de DT-47
+## Pendientes posteriores a V1.0
 
 - credenciales/proveedor real y validación DNS de email en la infraestructura de lanzamiento;
-- WhatsApp/SMS si se incluyen en lanzamiento;
+- WhatsApp/SMS si se incorporan explícitamente al alcance comercial;
 - decisiones de cuotas/proveedor de almacenamiento;
 - política legal definitiva de retención/eliminación;
-- cierre formal de V1.0 / release readiness.
+- política comercial de reembolsos/promociones;
+- evolución futura según necesidad real.
 
 ## Diferidos deliberadamente
 
 Passkeys hasta fijar origen productivo; DICOM/PACS; OCR/IA clínica; HL7/FHIR; firma/QR de recetas; CFDI; SIEM completo; impersonación/herramientas destructivas; multi-plan mientras no sea necesario.
+
+## Tag / referencia V1.0
+
+No debe crearse antes del merge de DT-48. Después de aprobación humana, CI verde y merge por rebase, se verificará el `master` resultante y sobre ese baseline final podrá crearse la referencia/tag V1.0.
