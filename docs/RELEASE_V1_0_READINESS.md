@@ -39,7 +39,7 @@ Antes de habilitar tráfico real en una instalación concreta debe verificarse, 
 
 - HTTPS y hostname canónico definitivos.
 - Variables productivas y `APP_KEY` correctas.
-- MySQL, cache y locks operativos.
+- MySQL, cache y locks operativos. Para conexiones MySQL, DocTotal fuerza `InnoDB` y no depende del motor predeterminado del proveedor de hosting.
 - Stripe real, webhook secret y endpoint configurado.
 - Proveedor de email real, remitente, SPF, DKIM y DMARC validados.
 - `DOCTOTAL_EMAIL_COMMUNICATIONS_ENABLED=true` cuando el canal email sea requerido.
@@ -51,6 +51,10 @@ Antes de habilitar tráfico real en una instalación concreta debe verificarse, 
 - `php artisan doctotal:check-production-readiness --probe` con resultado exitoso en el entorno objetivo.
 
 Estos gates no deben satisfacerse introduciendo secretos en Git.
+
+## Compatibilidad de producción posterior a V1.0.0
+
+DT-49 documenta el ajuste de compatibilidad descubierto durante el primer despliegue productivo: algunos proveedores mantienen MyISAM como motor predeterminado del servidor. DocTotal debe crear sus tablas MySQL con InnoDB de forma explícita para preservar `utf8mb4`, transacciones, claves foráneas y los índices definidos por el esquema sin depender de defaults del hosting. Este ajuste corresponde al patch candidate V1.0.1.
 
 ## WhatsApp y SMS
 
