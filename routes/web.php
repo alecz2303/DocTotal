@@ -18,6 +18,9 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::view('/aviso-de-privacidad', 'public.privacy')->name('privacy');
+Route::view('/terminos-y-condiciones', 'public.terms')->name('terms');
+
 Route::prefix('a')->name('public.appointments.')->group(function () {
     Route::get('/{token}', [PublicAppointmentController::class, 'show'])
         ->name('show');

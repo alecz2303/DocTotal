@@ -47,6 +47,7 @@ class AccountEmailVerificationTest extends TestCase
             'email' => 'elena@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
+            'terms_accepted' => '1',
         ])->assertRedirect('/dashboard');
 
         $user = User::query()->where('email', 'elena@example.com')->firstOrFail();

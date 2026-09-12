@@ -612,6 +612,38 @@
 
                         </div>
 
+                        {{-- Legal acceptance --}}
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <label for="terms_accepted" class="flex items-start gap-3 text-sm leading-6 text-slate-600">
+                                <input
+                                    id="terms_accepted"
+                                    name="terms_accepted"
+                                    type="checkbox"
+                                    value="1"
+                                    required
+                                    @checked(old('terms_accepted'))
+                                    class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+
+                                <span>
+                                    Acepto los
+                                    <a href="{{ route('terms') }}" target="_blank" class="font-semibold text-blue-600 hover:underline">
+                                        Términos y Condiciones
+                                    </a>
+                                    y el
+                                    <a href="{{ route('privacy') }}" target="_blank" class="font-semibold text-blue-600 hover:underline">
+                                        Aviso de Privacidad
+                                    </a>
+                                    de DocTotal.
+                                </span>
+                            </label>
+
+                            @error('terms_accepted')
+                            <p class="mt-2 text-xs text-rose-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+                        </div>
+
                         <button
                             type="submit"
                             class="w-full rounded-xl
@@ -654,7 +686,10 @@
                 </div>
 
                 <p class="mt-5 text-center text-xs leading-5 text-slate-400">
-                    Al crear una cuenta aceptas los términos y políticas de DocTotal.
+                    Consulta nuestros
+                    <a href="{{ route('terms') }}" class="font-medium text-slate-500 hover:underline">Términos y Condiciones</a>
+                    y
+                    <a href="{{ route('privacy') }}" class="font-medium text-slate-500 hover:underline">Aviso de Privacidad</a>.
                 </p>
 
             </div>

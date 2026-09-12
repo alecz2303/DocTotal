@@ -3,6 +3,7 @@
 namespace App\Actions\Registration;
 
 use App\Models\DoctorProfile;
+use App\Models\LegalAcceptance;
 use App\Models\PracticeProfile;
 use App\Models\Referral;
 use App\Models\Tenant;
@@ -68,6 +69,19 @@ class RegisterDoctor
                 'tenant_id' => $tenant->id,
                 'public_name' => $data['practice_name'],
             ]);
+
+            if (! empty($data['legal_acceptance'])) {
+                LegalAcceptance::create([
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
+                    'email_snapshot' => $user->email,
+                    'terms_version' => $data['legal_acceptance']['terms_version'],
+                    'privacy_version' => $data['legal_acceptance']['privacy_version'],
+                    'ip_address' => $data['legal_acceptance']['ip_address'] ?? null,
+                    'user_agent' => $data['legal_acceptance']['user_agent'] ?? null,
+                    'accepted_at' => now(),
+                ]);
+            }
 
             if (! empty($data['referral_code'])) {
                 $referrer = Tenant::query()
