@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -10,6 +11,31 @@ Artisan::command('inspire', function () {
     );
 })->purpose(
     'Display an inspiring quote'
+);
+
+Artisan::command('doctotal:test-alert', function () {
+    if (! config('observability.enabled', false)) {
+        $this->error('DocTotal observability is disabled.');
+
+        return 1;
+    }
+
+    $channel = (string) config('observability.channel', 'stack');
+
+    Log::channel($channel)->error(
+        'DocTotal controlled production alert test.',
+        [
+            'source' => 'artisan',
+            'environment' => app()->environment(),
+            'timestamp' => now()->toIso8601String(),
+        ]
+    );
+
+    $this->info("Controlled alert emitted to logging channel [{$channel}].");
+
+    return 0;
+})->purpose(
+    'Emit a controlled observability alert without modifying application data'
 );
 
 /*
