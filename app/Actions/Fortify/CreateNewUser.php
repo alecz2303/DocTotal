@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Actions\Registration\RegisterDoctor;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Commercial\PromoCodeResolver;
 use Illuminate\Support\Facades\Validator;
@@ -20,6 +21,12 @@ class CreateNewUser implements CreatesNewUsers
 
     public function create(array $input): User
     {
+        if (! empty($input['code'])) {
+            $input['code'] = strtoupper(
+                trim($input['code'])
+            );
+        }
+
         if (! empty($input['referral_code'])) {
             $input['referral_code'] = strtoupper(
                 trim($input['referral_code'])
@@ -61,11 +68,17 @@ class CreateNewUser implements CreatesNewUsers
                 Password::default(),
                 'confirmed',
             ],
+            'code' => [
+                'nullable',
+                'string',
+                'max:32',
+                'prohibits:referral_code,promo_code',
+            ],
             'referral_code' => [
                 'nullable',
                 'string',
                 'max:16',
-                'prohibits:promo_code',
+                'prohibits:promo_code,code',
                 Rule::exists('tenants', 'referral_code')
                     ->whereNull('deleted_at'),
             ],
@@ -73,7 +86,7 @@ class CreateNewUser implements CreatesNewUsers
                 'nullable',
                 'string',
                 'max:32',
-                'prohibits:referral_code',
+                'prohibits:referral_code,code',
             ],
             'terms_accepted' => [
                 'accepted',
@@ -85,9 +98,30 @@ class CreateNewUser implements CreatesNewUsers
             'Usa sólo un código: referido o promocional.',
             'promo_code.prohibits' =>
             'Usa sólo un código: referido o promocional.',
+            'code.prohibits' =>
+            'Usa sólo un código por registro.',
             'terms_accepted.accepted' =>
             'Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.',
         ])->validate();
+
+        if (! empty($input['code'])) {
+            $referrerExists = Tenant::query()
+                ->where('referral_code', $input['code'])
+                ->whereNull('deleted_at')
+                ->exists();
+
+            if ($referrerExists) {
+                $input['referral_code'] = $input['code'];
+            } elseif ($this->promoCodeResolver->findValid($input['code'])) {
+                $input['promo_code'] = $input['code'];
+            } else {
+                throw ValidationException::withMessages([
+                    'code' => 'El código ingresado no es válido o ya no está vigente.',
+                ]);
+            }
+
+            unset($input['code']);
+        }
 
         if (
             ! empty($input['promo_code'])
