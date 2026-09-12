@@ -35,6 +35,7 @@ class RegistrationTest extends TestCase
             'email' => 'juan@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => '1',
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -76,6 +77,7 @@ class RegistrationTest extends TestCase
             'email' => 'maria@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => '1',
         ]);
 
         $tenant = Tenant::firstOrFail();
@@ -99,6 +101,7 @@ class RegistrationTest extends TestCase
             'email' => 'pedro@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => '1',
         ]);
 
         $tenant = Tenant::firstOrFail();
@@ -151,10 +154,55 @@ class RegistrationTest extends TestCase
                 'last_name',
                 'email',
                 'password',
+                'terms_accepted',
             ]);
 
         $this->assertDatabaseCount('tenants', 0);
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_registration_requires_legal_acceptance(): void
+    {
+        $response = $this->from('/register')
+            ->post('/register', [
+                'practice_name' => 'Consultorio Legal',
+                'first_name' => 'Laura',
+                'last_name' => 'Méndez',
+                'email' => 'laura@example.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ]);
+
+        $response
+            ->assertRedirect('/register')
+            ->assertSessionHasErrors('terms_accepted');
+
+        $this->assertDatabaseCount('tenants', 0);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_registration_persists_legal_acceptance_versions(): void
+    {
+        config([
+            'legal.terms_version' => 'terms-test',
+            'legal.privacy_version' => 'privacy-test',
+        ]);
+
+        $this->post('/register', [
+            'practice_name' => 'Consultorio Legal',
+            'first_name' => 'Laura',
+            'last_name' => 'Méndez',
+            'email' => 'legal@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'terms_accepted' => '1',
+        ])->assertRedirect('/dashboard');
+
+        $this->assertDatabaseHas('legal_acceptances', [
+            'email_snapshot' => 'legal@example.com',
+            'terms_version' => 'terms-test',
+            'privacy_version' => 'privacy-test',
+        ]);
     }
 
     public function test_registration_rejects_duplicate_email(): void
@@ -180,6 +228,7 @@ class RegistrationTest extends TestCase
                 'email' => 'doctor@example.com',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
+                'terms_accepted' => '1',
             ]);
 
         $response
@@ -218,6 +267,9 @@ class RegistrationTest extends TestCase
 
             'referral_code' =>
             $referrer->referral_code,
+
+            'terms_accepted' =>
+            '1',
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -285,6 +337,9 @@ class RegistrationTest extends TestCase
 
             'password_confirmation' =>
             'password123',
+
+            'terms_accepted' =>
+            '1',
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -319,6 +374,9 @@ class RegistrationTest extends TestCase
 
                 'referral_code' =>
                 'INVALIDO',
+
+                'terms_accepted' =>
+                '1',
             ]);
 
         $response
@@ -373,6 +431,9 @@ class RegistrationTest extends TestCase
             strtolower(
                 $referrer->referral_code
             ),
+
+            'terms_accepted' =>
+            '1',
         ]);
 
         $response->assertRedirect(

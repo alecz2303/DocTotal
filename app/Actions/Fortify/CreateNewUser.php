@@ -75,6 +75,9 @@ class CreateNewUser implements CreatesNewUsers
                 'max:32',
                 'prohibits:referral_code',
             ],
+            'terms_accepted' => [
+                'accepted',
+            ],
         ], [
             'referral_code.exists' =>
             'El código de referido no es válido.',
@@ -82,6 +85,8 @@ class CreateNewUser implements CreatesNewUsers
             'Usa sólo un código: referido o promocional.',
             'promo_code.prohibits' =>
             'Usa sólo un código: referido o promocional.',
+            'terms_accepted.accepted' =>
+            'Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.',
         ])->validate();
 
         if (
@@ -92,6 +97,13 @@ class CreateNewUser implements CreatesNewUsers
                 'promo_code' => 'El código promocional no es válido o ya no está vigente.',
             ]);
         }
+
+        $input['legal_acceptance'] = [
+            'terms_version' => (string) config('legal.terms_version'),
+            'privacy_version' => (string) config('legal.privacy_version'),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ];
 
         return $this->registerDoctor->handle(
             $input

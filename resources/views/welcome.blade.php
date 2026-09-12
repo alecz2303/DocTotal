@@ -8,6 +8,26 @@
     <title>DocTotal | Tu consulta médica, organizada</title>
     <meta name="description" content="Agenda, pacientes, expediente clínico, consultas y recetas en una sola experiencia para tu práctica médica.">
     <meta name="theme-color" content="#07142f">
+    <link rel="canonical" href="{{ route('home') }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="DocTotal">
+    <meta property="og:title" content="DocTotal | Tu consulta médica, organizada">
+    <meta property="og:description" content="Agenda, pacientes, expediente clínico, consultas y recetas en una sola experiencia para tu práctica médica.">
+    <meta property="og:url" content="{{ route('home') }}">
+    <meta property="og:image" content="{{ asset('images/social/doctotal-social-card.png') }}">
+    <meta property="og:image:secure_url" content="{{ asset('images/social/doctotal-social-card.png') }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1733">
+    <meta property="og:image:height" content="907">
+    <meta property="og:image:alt" content="DocTotal, gestión médica inteligente">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DocTotal | Tu consulta médica, organizada">
+    <meta name="twitter:description" content="Agenda, pacientes, expediente clínico, consultas y recetas en una sola experiencia para tu práctica médica.">
+    <meta name="twitter:image" content="{{ asset('images/social/doctotal-social-card.png') }}">
+    <meta name="twitter:image:alt" content="DocTotal, gestión médica inteligente">
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/branding/favicon-16x16.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/branding/favicon-32x32.png') }}">
@@ -1875,6 +1895,8 @@
             </div>
         </div>
     </section>
+
+    @include('public.marketing-extras')
 
     <section class="cta">
         <div class="wrap">

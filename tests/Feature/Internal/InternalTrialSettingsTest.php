@@ -140,6 +140,7 @@ class InternalTrialSettingsTest extends TestCase
             'email' => 'maria@example.test',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
+            'terms_accepted' => '1',
         ]);
 
         $tenant = Tenant::query()
