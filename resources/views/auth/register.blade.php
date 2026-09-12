@@ -509,49 +509,20 @@
                         </div>
 
                         @php
-                        $referralCode = old(
-                        'referral_code',
-                        request('ref')
+                        $registrationCode = old(
+                        'code',
+                        request('ref') ?: request('promo')
                         );
                         @endphp
 
-                        {{-- Referral --}}
-                        @if ($referralCode)
-
-                        <div
-                            class="rounded-2xl border border-emerald-200
-                               bg-emerald-50 p-4">
-
-                            <input
-                                type="hidden"
-                                name="referral_code"
-                                value="{{ $referralCode }}">
-
-                            <p class="text-sm font-semibold text-emerald-900">
-
-                                Código de referido aplicado:
-
-                                <span class="uppercase">
-                                    {{ strtoupper($referralCode) }}
-                                </span>
-
-                            </p>
-
-                            <p class="mt-1 text-xs leading-5 text-emerald-700">
-                                Tu invitación será asociada automáticamente al crear tu cuenta.
-                            </p>
-
-                        </div>
-
-                        @else
-
+                        {{-- Registration code --}}
                         <div>
 
                             <label
-                                for="referral_code"
+                                for="code"
                                 class="mb-1.5 block text-sm font-medium text-slate-700">
 
-                                Código de referido
+                                Código
 
                                 <span class="font-normal text-slate-400">
                                     (opcional)
@@ -560,14 +531,14 @@
                             </label>
 
                             <input
-                                id="referral_code"
-                                name="referral_code"
+                                id="code"
+                                name="code"
                                 type="text"
-                                value="{{ old('referral_code') }}"
+                                value="{{ $registrationCode }}"
                                 autocomplete="off"
-                                placeholder="Ej. ABC12345"
+                                placeholder="Ej. ABC12345 o VENDE20"
                                 class="w-full rounded-xl border
-                                   @error('referral_code')
+                                   @error('code')
                                        border-rose-300
                                    @else
                                        border-slate-300
@@ -579,11 +550,11 @@
                                    focus:ring-4 focus:ring-blue-100">
 
                             <p class="mt-1.5 text-xs leading-5 text-slate-500">
-                                ¿Alguien te invitó a DocTotal?
-                                Escribe aquí su código de referido.
+                                Si alguien te invitó a DocTotal o tienes un código promocional,
+                                escríbelo aquí.
                             </p>
 
-                            @error('referral_code')
+                            @error('code')
 
                             <p class="mt-1.5 text-xs text-rose-600">
                                 {{ $message }}
@@ -592,8 +563,6 @@
                             @enderror
 
                         </div>
-
-                        @endif
 
                         {{-- Trial --}}
                         <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">

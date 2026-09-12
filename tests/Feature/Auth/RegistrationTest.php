@@ -468,7 +468,7 @@ class RegistrationTest extends TestCase
         )
             ->assertOk()
             ->assertSee(
-                'name="referral_code"',
+                'name="code"',
                 false
             )
             ->assertSee(
