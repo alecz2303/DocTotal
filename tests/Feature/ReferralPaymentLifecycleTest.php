@@ -56,12 +56,12 @@ class ReferralPaymentLifecycleTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            6000,
             $payment->referral_discount_amount
         );
 
         $this->assertSame(
-            55000,
+            54000,
             $payment->amount
         );
 
@@ -155,13 +155,13 @@ class ReferralPaymentLifecycleTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            6000,
             $successfulPayment
                 ->referral_discount_amount
         );
 
         $this->assertSame(
-            55000,
+            54000,
             $successfulPayment->amount
         );
 
@@ -196,7 +196,7 @@ class ReferralPaymentLifecycleTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            10000,
             $credits->first()->amount
         );
     }
@@ -236,12 +236,12 @@ class ReferralPaymentLifecycleTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            6000,
             $payment->referral_discount_amount
         );
 
         $this->assertSame(
-            55000,
+            54000,
             $payment->amount
         );
 

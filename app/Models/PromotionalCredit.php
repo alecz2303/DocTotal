@@ -19,7 +19,8 @@ class PromotionalCredit extends Model
     public const STATUS_CONSUMED = 'consumed';
     public const STATUS_RESERVED = 'reserved';
 
-    public const REFERRAL_REWARD_AMOUNT = 5000;
+    public const REFERRAL_REWARD_AMOUNT = 10000;
+    public const REFERRAL_DISCOUNT_AMOUNT = 6000;
 
     protected $fillable = [
         'uuid',

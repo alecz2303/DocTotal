@@ -19,7 +19,7 @@ class CalculatePaymentAmount
 
         if (
             $grossAmount >=
-            PromotionalCredit::REFERRAL_REWARD_AMOUNT
+            PromotionalCredit::REFERRAL_DISCOUNT_AMOUNT
         ) {
             $hasPendingReferral = Referral::query()
                 ->where('referred_tenant_id', $tenant->id)
@@ -28,7 +28,7 @@ class CalculatePaymentAmount
 
             if ($hasPendingReferral) {
                 $referralDiscount =
-                    PromotionalCredit::REFERRAL_REWARD_AMOUNT;
+                    PromotionalCredit::REFERRAL_DISCOUNT_AMOUNT;
             }
         }
 

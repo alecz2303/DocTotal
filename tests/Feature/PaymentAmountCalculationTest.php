@@ -46,7 +46,7 @@ class PaymentAmountCalculationTest extends TestCase
         );
     }
 
-    public function test_pending_referral_receives_fifty_peso_discount(): void
+    public function test_pending_referral_receives_sixty_peso_discount(): void
     {
         [$referrer, $referred] =
             $this->createReferral();
@@ -64,17 +64,17 @@ class PaymentAmountCalculationTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            6000,
             $result['referral_discount_amount']
         );
 
         $this->assertSame(
-            55000,
+            54000,
             $result['amount']
         );
     }
 
-    public function test_annual_plan_receives_same_fifty_peso_discount(): void
+    public function test_annual_plan_receives_same_sixty_peso_discount(): void
     {
         [$referrer, $referred] =
             $this->createReferral();
@@ -92,12 +92,12 @@ class PaymentAmountCalculationTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            6000,
             $result['referral_discount_amount']
         );
 
         $this->assertSame(
-            595000,
+            594000,
             $result['amount']
         );
     }
