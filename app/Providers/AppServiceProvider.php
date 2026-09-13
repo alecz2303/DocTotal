@@ -161,6 +161,11 @@ class AppServiceProvider extends ServiceProvider
                 [InternalSalesController::class, 'togglePartner']
             )->name('internal.sales.partners.toggle');
 
+            Route::put(
+                '/internal/sales/partners/{partner}/commissions/paid',
+                [InternalSalesController::class, 'markPartnerCommissionsPaid']
+            )->name('internal.sales.partners.commissions.paid');
+
             Route::post(
                 '/internal/sales/promo-codes',
                 [InternalSalesController::class, 'storePromoCode']
