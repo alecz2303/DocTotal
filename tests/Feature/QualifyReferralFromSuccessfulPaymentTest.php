@@ -116,7 +116,7 @@ class QualifyReferralFromSuccessfulPaymentTest extends TestCase
         );
     }
 
-    public function test_qualification_creates_fifty_peso_credit_for_referrer(): void
+    public function test_qualification_creates_one_hundred_peso_credit_for_referrer(): void
     {
         [$referrer, $referred, $referral] =
             $this->createReferral();
@@ -153,7 +153,7 @@ class QualifyReferralFromSuccessfulPaymentTest extends TestCase
         );
 
         $this->assertSame(
-            5000,
+            10000,
             $credit->amount
         );
 
@@ -557,13 +557,13 @@ class QualifyReferralFromSuccessfulPaymentTest extends TestCase
             60000,
 
             'referral_discount_amount' =>
-            5000,
+            6000,
 
             'promotional_credit_amount' =>
             0,
 
             'amount' =>
-            55000,
+            54000,
 
             'currency' =>
             'MXN',

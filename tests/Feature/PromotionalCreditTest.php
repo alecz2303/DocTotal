@@ -75,11 +75,19 @@ class PromotionalCreditTest extends TestCase
         );
     }
 
-    public function test_referral_reward_is_fifty_mxn_in_minor_units(): void
+    public function test_referral_reward_is_one_hundred_mxn_in_minor_units(): void
     {
         $this->assertSame(
-            5000,
+            10000,
             PromotionalCredit::REFERRAL_REWARD_AMOUNT
+        );
+    }
+
+    public function test_referral_discount_is_sixty_mxn_in_minor_units(): void
+    {
+        $this->assertSame(
+            6000,
+            PromotionalCredit::REFERRAL_DISCOUNT_AMOUNT
         );
     }
 
