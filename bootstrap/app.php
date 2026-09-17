@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveTenant::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/stripe',
+        ]);
+
         $middleware->prependToPriorityList(
             SubstituteBindings::class,
             ResolveTenant::class
