@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Subscription;
 
+use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Tests\TestCase;
 
@@ -13,140 +14,88 @@ class BillingSchedulerTest extends TestCase
             'billing.automatic_charging_enabled' => false,
         ]);
 
-        $events = app(
-            Schedule::class
-        )->events();
-
-        $commands = collect($events)
-            ->map(
-                fn($event) =>
-                $event->command
-            )
-            ->filter()
-            ->values();
+        $summaries = $this->summaries();
 
         $this->assertTrue(
-            $commands->contains(
-                fn($command) =>
-                str_contains(
-                    $command,
-                    'billing:process-cancellations'
-                )
-            )
+            $summaries->contains('doctotal:billing:process-cancellations')
         );
 
         $this->assertTrue(
-            $commands->contains(
-                fn($command) =>
-                str_contains(
-                    $command,
-                    'billing:process-expired-grace-periods'
-                )
-            )
+            $summaries->contains('doctotal:billing:process-expired-grace-periods')
         );
 
         $this->assertFalse(
-            $commands->contains(
-                fn($command) =>
-                str_contains(
-                    $command,
-                    'billing:process-renewals'
-                )
-            )
+            $summaries->contains('doctotal:billing:process-renewals')
         );
 
         $this->assertFalse(
-            $commands->contains(
-                fn($command) =>
-                str_contains(
-                    $command,
-                    'billing:process-retries'
-                )
-            )
+            $summaries->contains('doctotal:billing:process-retries')
         );
     }
 
     public function test_safe_billing_tasks_run_every_minute(): void
     {
-        config([
-            'billing.automatic_charging_enabled' => false,
-        ]);
-
-        $events = collect(
-            app(Schedule::class)->events()
+        $cancellation = $this->event(
+            'doctotal:billing:process-cancellations'
         );
 
-        $cancellation =
-            $events->first(
-                fn($event) =>
-                str_contains(
-                    (string) $event->command,
-                    'billing:process-cancellations'
-                )
-            );
-
-        $grace =
-            $events->first(
-                fn($event) =>
-                str_contains(
-                    (string) $event->command,
-                    'billing:process-expired-grace-periods'
-                )
-            );
-
-        $this->assertNotNull(
-            $cancellation
+        $grace = $this->event(
+            'doctotal:billing:process-expired-grace-periods'
         );
 
-        $this->assertNotNull(
-            $grace
-        );
+        $this->assertNotNull($cancellation);
+        $this->assertNotNull($grace);
 
-        $this->assertSame(
-            '* * * * *',
-            $cancellation->expression
-        );
-
-        $this->assertSame(
-            '* * * * *',
-            $grace->expression
-        );
+        $this->assertSame('* * * * *', $cancellation->expression);
+        $this->assertSame('* * * * *', $grace->expression);
     }
 
     public function test_safe_billing_tasks_prevent_overlapping(): void
     {
-        config([
-            'billing.automatic_charging_enabled' => false,
-        ]);
-
-        $events = collect(
-            app(Schedule::class)->events()
+        $cancellation = $this->event(
+            'doctotal:billing:process-cancellations'
         );
 
-        $cancellation =
-            $events->first(
-                fn($event) =>
-                str_contains(
-                    (string) $event->command,
-                    'billing:process-cancellations'
+        $grace = $this->event(
+            'doctotal:billing:process-expired-grace-periods'
+        );
+
+        $this->assertNotNull($cancellation);
+        $this->assertNotNull($grace);
+        $this->assertTrue($cancellation->withoutOverlapping);
+        $this->assertTrue($grace->withoutOverlapping);
+    }
+
+    public function test_scheduled_tasks_run_as_in_process_callbacks(): void
+    {
+        $events = collect(app(Schedule::class)->events())
+            ->filter(
+                fn ($event) => str_starts_with(
+                    $event->getSummaryForDisplay(),
+                    'doctotal:'
                 )
             );
 
-        $grace =
-            $events->first(
-                fn($event) =>
-                str_contains(
-                    (string) $event->command,
-                    'billing:process-expired-grace-periods'
-                )
+        $this->assertNotEmpty($events);
+
+        $events->each(function ($event): void {
+            $this->assertInstanceOf(CallbackEvent::class, $event);
+            $this->assertNull($event->command);
+            $this->assertTrue($event->withoutOverlapping);
+        });
+    }
+
+    private function summaries()
+    {
+        return collect(app(Schedule::class)->events())
+            ->map(fn ($event) => $event->getSummaryForDisplay());
+    }
+
+    private function event(string $summary): ?object
+    {
+        return collect(app(Schedule::class)->events())
+            ->first(
+                fn ($event) => $event->getSummaryForDisplay() === $summary
             );
-
-        $this->assertTrue(
-            $cancellation->withoutOverlapping
-        );
-
-        $this->assertTrue(
-            $grace->withoutOverlapping
-        );
     }
 }

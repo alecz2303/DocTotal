@@ -48,17 +48,25 @@ Artisan::command('doctotal:test-alert', function () {
 |     php artisan schedule:run
 |
 | Laravel será responsable de decidir qué procesos corresponden en cada
-| minuto.
+| minuto. Las tareas se invocan dentro del mismo proceso PHP para mantener
+| compatibilidad con producción, donde proc_open no está disponible.
 |
 */
+
+$scheduledArtisan = static function (
+    string $name,
+    array $parameters = [],
+) {
+    return Schedule::call(
+        static fn () => Artisan::call($name, $parameters)
+    )->name('doctotal:'.$name);
+};
 
 /*
  * Las cancelaciones programadas no realizan cargos y pueden procesarse
  * independientemente del proveedor de pagos.
  */
-Schedule::command(
-    'billing:process-cancellations'
-)
+$scheduledArtisan('billing:process-cancellations')
     ->everyMinute()
     ->withoutOverlapping();
 
@@ -68,15 +76,11 @@ Schedule::command(
  * Solamente cambian el estado operativo del Tenant cuando el proceso de
  * recuperación ya terminó.
  */
-Schedule::command(
-    'billing:process-expired-grace-periods'
-)
+$scheduledArtisan('billing:process-expired-grace-periods')
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command(
-    'billing:cleanup-abandoned-checkouts'
-)
+$scheduledArtisan('billing:cleanup-abandoned-checkouts')
     ->hourly()
     ->withoutOverlapping();
 
@@ -92,15 +96,11 @@ if (
         false
     )
 ) {
-    Schedule::command(
-        'billing:process-renewals'
-    )
+    $scheduledArtisan('billing:process-renewals')
         ->everyMinute()
         ->withoutOverlapping();
 
-    Schedule::command(
-        'billing:process-retries'
-    )
+    $scheduledArtisan('billing:process-retries')
         ->everyMinute()
         ->withoutOverlapping();
 }
@@ -123,7 +123,7 @@ if (
 |
 */
 
-Schedule::command(
+$scheduledArtisan(
     'communications:generate-appointment-reminders',
     [
         '--channel' => 'whatsapp',
@@ -142,8 +142,6 @@ Schedule::command(
  * Actualmente puede operar con el transport de infraestructura
  * sin depender todavía de un proveedor externo.
  */
-Schedule::command(
-    'communications:process-due'
-)
+$scheduledArtisan('communications:process-due')
     ->everyMinute()
     ->withoutOverlapping();
